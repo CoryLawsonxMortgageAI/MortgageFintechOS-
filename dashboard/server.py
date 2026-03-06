@@ -46,19 +46,48 @@ class DashboardServer:
         self._app.router.add_get("/api/schedule", self._handle_schedule)
         self._app.router.add_get("/api/alerts", self._handle_alerts)
         self._app.router.add_get("/api/kernel", self._handle_kernel)
+        self._app.router.add_get("/api/references", self._handle_references)
+        self._app.router.add_get("/api/references/search/{keyword}", self._handle_reference_search)
+        self._app.router.add_get("/api/references/{name}", self._handle_reference_detail)
+        self._app.router.add_post("/api/references/{name}", self._handle_reference_save)
         self._app.router.add_static("/static", STATIC_DIR, show_index=False)
 
     def _setup_integrations(self) -> None:
-        """Register webhook and Agent UI API routes."""
+        """Register webhook, Agent UI API, Telegram bot, and Twitter routes."""
         from integrations.webhooks import WebhookReceiver
         from integrations.agent_ui_api import AgentUIAPI
+        from integrations.telegram_bot import TelegramBot
+        from integrations.twitter_client import TwitterClient
 
-        webhook_secret = self.orchestrator.settings.github_token if hasattr(self.orchestrator, 'settings') else ""
+        settings = self.orchestrator.settings
+
+        webhook_secret = settings.webhook_secret if hasattr(settings, 'webhook_secret') else ""
         self._webhook_receiver = WebhookReceiver(self.orchestrator, secret=webhook_secret)
         self._webhook_receiver.register_routes(self._app)
 
         self._agent_ui = AgentUIAPI(self.orchestrator)
         self._agent_ui.register_routes(self._app)
+
+        # Telegram bot
+        self._telegram_bot = None
+        if settings.telegram_bot_token:
+            self._telegram_bot = TelegramBot(
+                orchestrator=self.orchestrator,
+                token=settings.telegram_bot_token,
+                webhook_secret=settings.telegram_webhook_secret,
+            )
+            self._telegram_bot.register_routes(self._app)
+            self._log.info("telegram_bot_enabled")
+
+        # Twitter client (stored on orchestrator for agent access)
+        self._twitter_client = TwitterClient(
+            api_key=settings.x_api_key,
+            api_secret=settings.x_api_secret,
+            access_token=settings.x_access_token,
+            access_secret=settings.x_access_secret,
+        )
+        if self._twitter_client.available:
+            self._log.info("twitter_integration_enabled")
 
     async def start(self) -> None:
         self._runner = web.AppRunner(self._app)
@@ -119,6 +148,45 @@ class DashboardServer:
     async def _handle_kernel(self, request: web.Request) -> web.Response:
         data = self.orchestrator._kernel.get_kernel_status()
         return web.json_response(data, dumps=_json_dumps)
+
+    # --- Reference store endpoints ---
+
+    async def _handle_references(self, request: web.Request) -> web.Response:
+        if hasattr(self.orchestrator, '_reference_store'):
+            data = self.orchestrator._reference_store.list_files()
+        else:
+            data = []
+        return web.json_response(data, dumps=_json_dumps)
+
+    async def _handle_reference_detail(self, request: web.Request) -> web.Response:
+        name = request.match_info["name"]
+        if not hasattr(self.orchestrator, '_reference_store'):
+            return web.json_response({"error": "Reference store not available"}, status=404)
+        ref = self.orchestrator._reference_store.get(name)
+        if not ref:
+            return web.json_response({"error": f"Reference '{name}' not found"}, status=404)
+        data = ref.to_dict()
+        data["content"] = ref.raw_content
+        data["sections_content"] = ref.sections
+        return web.json_response(data, dumps=_json_dumps)
+
+    async def _handle_reference_save(self, request: web.Request) -> web.Response:
+        name = request.match_info["name"]
+        if not hasattr(self.orchestrator, '_reference_store'):
+            return web.json_response({"error": "Reference store not available"}, status=404)
+        body = await request.json()
+        content = body.get("content", "")
+        if not content:
+            return web.json_response({"error": "Content is required"}, status=400)
+        result = self.orchestrator._reference_store.save_file(name, content)
+        return web.json_response(result, dumps=_json_dumps)
+
+    async def _handle_reference_search(self, request: web.Request) -> web.Response:
+        keyword = request.match_info["keyword"]
+        if not hasattr(self.orchestrator, '_reference_store'):
+            return web.json_response([], dumps=_json_dumps)
+        results = self.orchestrator._reference_store.search(keyword)
+        return web.json_response(results, dumps=_json_dumps)
 
 
 def _json_dumps(obj: Any) -> str:

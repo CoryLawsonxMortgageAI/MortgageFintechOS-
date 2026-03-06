@@ -105,3 +105,25 @@ class Settings:
     webhook_secret: str = field(
         default_factory=lambda: os.getenv("WEBHOOK_SECRET", "")
     )
+
+    # Telegram Bot
+    telegram_bot_token: str = field(
+        default_factory=lambda: os.getenv("TELEGRAM_BOT_TOKEN", "")
+    )
+    telegram_webhook_secret: str = field(
+        default_factory=lambda: os.getenv("TELEGRAM_WEBHOOK_SECRET", "")
+    )
+
+    # X.com (Twitter)
+    x_api_key: str = field(
+        default_factory=lambda: os.getenv("X_API_KEY", "")
+    )
+    x_api_secret: str = field(
+        default_factory=lambda: os.getenv("X_API_SECRET", "")
+    )
+    x_access_token: str = field(
+        default_factory=lambda: os.getenv("X_ACCESS_TOKEN", "")
+    )
+    x_access_secret: str = field(
+        default_factory=lambda: os.getenv("X_ACCESS_SECRET", "")
+    )

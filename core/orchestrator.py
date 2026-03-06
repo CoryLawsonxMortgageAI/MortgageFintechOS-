@@ -28,7 +28,9 @@ from core.aios_kernel import AIOSKernel
 from core.task_queue import Task, TaskQueue, TaskPriority, TaskStatus
 from dashboard.server import DashboardServer
 from integrations.github_client import GitHubClient
+from integrations.twitter_client import TwitterClient
 from monitoring.health_monitor import HealthMonitor
+from knowledge.reference_store import ReferenceStore
 from persistence.state_store import StateStore
 from schedulers.daily_scheduler import DailyScheduler, ScheduledJob
 
@@ -52,6 +54,8 @@ class Orchestrator:
         self._state_store = StateStore(data_dir=self.settings.data_dir)
         self._kernel = AIOSKernel()
         self._github: GitHubClient | None = None
+        self._twitter: TwitterClient | None = None
+        self._reference_store = ReferenceStore()
         self._dashboard: DashboardServer | None = None
         self._running = False
         self._start_time: datetime | None = None
@@ -104,6 +108,18 @@ class Orchestrator:
                 repo=self.settings.github_repo,
             )
             self._log.info("github_integration_enabled")
+
+    def _setup_twitter(self) -> None:
+        self._twitter = TwitterClient(
+            api_key=self.settings.x_api_key,
+            api_secret=self.settings.x_api_secret,
+            access_token=self.settings.x_access_token,
+            access_secret=self.settings.x_access_secret,
+        )
+        if self._twitter.available:
+            self._log.info("twitter_integration_enabled")
+        else:
+            self._twitter = None
 
     def _setup_schedule(self) -> None:
         # === Mortgage Operations Schedule ===
@@ -233,6 +249,8 @@ class Orchestrator:
 
         # 5. Setup integrations
         self._setup_github()
+        self._setup_twitter()
+        self._reference_store.start()
         self._setup_schedule()
         self._scheduler.set_state_store(self._state_store)
         self._health_monitor.set_task_queue(self._task_queue)
@@ -253,6 +271,10 @@ class Orchestrator:
             dashboard=f"http://{dashboard_host}:{dashboard_port}",
             kernel="AIOS Kernel v1.0.0",
         )
+
+        # Post system status to X.com on startup
+        if self._twitter:
+            asyncio.create_task(self._twitter.post_system_status())
 
         # 8. Launch subsystems with watchdog supervision
         await self._watchdog_loop()
