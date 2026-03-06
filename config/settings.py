@@ -52,7 +52,7 @@ class Settings:
 
     # Dashboard
     dashboard_port: int = field(
-        default_factory=lambda: int(os.getenv("DASHBOARD_PORT", "8080"))
+        default_factory=lambda: int(os.getenv("PORT", os.getenv("DASHBOARD_PORT", "8080")))
     )
     dashboard_host: str = field(
         default_factory=lambda: os.getenv("DASHBOARD_HOST", "0.0.0.0")

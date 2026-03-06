@@ -16,9 +16,12 @@ RUN mkdir -p /app/data
 
 ENV PYTHONUNBUFFERED=1
 ENV LOG_LEVEL=INFO
+ENV PORT=8080
+
+EXPOSE ${PORT}
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-    CMD curl -f http://localhost:8080/api/healthz || exit 1
+    CMD curl -f http://localhost:${PORT}/api/healthz || exit 1
 
 ENTRYPOINT ["python", "main.py"]
-CMD ["start"]
+CMD ["start", "--host", "0.0.0.0"]

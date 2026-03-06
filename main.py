@@ -16,6 +16,7 @@ Author: Cory Lawson / The Lawson Group
 """
 
 import asyncio
+import os
 import sys
 
 import click
@@ -56,7 +57,7 @@ def cli():
 
 @cli.command()
 @click.option("--host", default="0.0.0.0", help="Dashboard bind address")
-@click.option("--port", default=8080, type=int, help="Dashboard port")
+@click.option("--port", default=int(os.environ.get("PORT", "8080")), type=int, help="Dashboard port")
 def start(host, port):
     """Start the autonomous AI operating system with integrated dashboard."""
     click.echo("=" * 60)
@@ -185,7 +186,7 @@ def agents():
 
 @cli.command()
 @click.option("--host", default="0.0.0.0", help="Dashboard bind address")
-@click.option("--port", default=8080, type=int, help="Dashboard port")
+@click.option("--port", default=int(os.environ.get("PORT", "8080")), type=int, help="Dashboard port")
 def dashboard(host, port):
     """Launch the web dashboard in view-only mode (no orchestrator)."""
     click.echo("=" * 60)
