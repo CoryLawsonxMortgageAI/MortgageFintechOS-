@@ -1,0 +1,35 @@
+# Koyeb deployment configuration
+# https://koyeb.com — Free tier: 1 nano instance
+
+name: mortgagefintechos
+type: WEB
+
+definition:
+  name: mortgagefintechos
+  docker:
+    dockerfile: docker/Dockerfile
+  instance_types:
+    - type: nano
+  ports:
+    - port: 8080
+      protocol: http
+  scaling:
+    min: 1
+    max: 1
+  health_checks:
+    - type: http
+      path: /api/healthz
+      port: 8080
+      interval_seconds: 30
+      timeout_seconds: 10
+      healthy_threshold: 1
+      unhealthy_threshold: 3
+  env:
+    - key: PORT
+      value: "8080"
+    - key: LOG_LEVEL
+      value: INFO
+    - key: DATA_DIR
+      value: /app/data
+    - key: GITHUB_REPO
+      value: CoryLawsonxMortgageAI/MortgageFintechOS-

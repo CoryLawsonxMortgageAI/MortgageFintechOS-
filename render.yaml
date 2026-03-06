@@ -1,0 +1,26 @@
+# Render.com deployment configuration
+# https://render.com — Free tier: 750 hours/month
+
+services:
+  - type: web
+    name: mortgagefintechos
+    runtime: docker
+    dockerfilePath: docker/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /api/healthz
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: GITHUB_REPO
+        value: CoryLawsonxMortgageAI/MortgageFintechOS-
+      - key: DATA_DIR
+        value: /app/data
+    disk:
+      name: app-data
+      mountPath: /app/data
+      sizeGB: 1

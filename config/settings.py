@@ -34,7 +34,7 @@ class Settings:
         default_factory=lambda: os.getenv("ENCRYPTION_KEY", "")
     )
 
-    # Scheduler defaults
+    # Scheduler defaults — Mortgage Operations
     document_audit_hour: int = 6
     document_audit_minute: int = 0
     income_recalc_hour: int = 6
@@ -66,3 +66,42 @@ class Settings:
     # Watchdog
     watchdog_interval: int = 30
     watchdog_max_crashes: int = 5
+
+    # Notifications
+    slack_webhook_url: str = field(
+        default_factory=lambda: os.getenv("SLACK_WEBHOOK_URL", "")
+    )
+    discord_webhook_url: str = field(
+        default_factory=lambda: os.getenv("DISCORD_WEBHOOK_URL", "")
+    )
+
+    # LLM Integration — Free models for agent intelligence
+    # Primary: Groq (free, fast inference for Llama 3.3 70B)
+    # Secondary: Google Gemini 2.0 Flash (free tier, great for code)
+    # Tertiary: Together AI (free credits, Llama 3.1 70B)
+    llm_provider: str = field(
+        default_factory=lambda: os.getenv("LLM_PROVIDER", "groq")
+    )
+    groq_api_key: str = field(
+        default_factory=lambda: os.getenv("GROQ_API_KEY", "")
+    )
+    groq_model: str = field(
+        default_factory=lambda: os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+    )
+    together_api_key: str = field(
+        default_factory=lambda: os.getenv("TOGETHER_API_KEY", "")
+    )
+    together_model: str = field(
+        default_factory=lambda: os.getenv("TOGETHER_MODEL", "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo")
+    )
+    google_api_key: str = field(
+        default_factory=lambda: os.getenv("GOOGLE_API_KEY", "")
+    )
+    google_model: str = field(
+        default_factory=lambda: os.getenv("GOOGLE_MODEL", "gemini-2.0-flash")
+    )
+
+    # GitHub Webhook Secret
+    webhook_secret: str = field(
+        default_factory=lambda: os.getenv("WEBHOOK_SECRET", "")
+    )

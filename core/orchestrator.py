@@ -1,7 +1,8 @@
 """Central orchestrator daemon for MortgageFintechOS.
 
 Manages agent lifecycle, task dispatch, scheduling, health monitoring,
-dashboard, and state persistence. Designed for 24/7 autonomous operation.
+dashboard, AIOS Kernel, and state persistence. Designed for 24/7 autonomous
+operation with 9 AI agents (4 mortgage ops + 5 coding experts).
 """
 
 import asyncio
@@ -17,7 +18,13 @@ from agents.diego import DiegoAgent
 from agents.martin import MartinAgent
 from agents.nova import NovaAgent
 from agents.jarvis import JarvisAgent
+from agents.atlas import AtlasAgent
+from agents.cipher import CipherAgent
+from agents.forge import ForgeAgent
+from agents.nexus import NexusAgent
+from agents.storm import StormAgent
 from config.settings import Settings
+from core.aios_kernel import AIOSKernel
 from core.task_queue import Task, TaskQueue, TaskPriority, TaskStatus
 from dashboard.server import DashboardServer
 from integrations.github_client import GitHubClient
@@ -29,7 +36,7 @@ logger = structlog.get_logger()
 
 
 class Orchestrator:
-    """Central daemon managing all agents, task queue, and system health."""
+    """Central daemon managing all agents, task queue, AIOS Kernel, and system health."""
 
     def __init__(self, settings: Settings | None = None):
         self.settings = settings or Settings()
@@ -43,6 +50,7 @@ class Orchestrator:
             error_rate_window=self.settings.error_rate_window_seconds,
         )
         self._state_store = StateStore(data_dir=self.settings.data_dir)
+        self._kernel = AIOSKernel()
         self._github: GitHubClient | None = None
         self._dashboard: DashboardServer | None = None
         self._running = False
@@ -65,10 +73,29 @@ class Orchestrator:
 
     def _register_default_agents(self) -> None:
         retry = self.settings.agent_retry_count
+
+        # Mortgage Operations Agents
         self.register_agent(DiegoAgent(max_retries=retry))
         self.register_agent(MartinAgent(max_retries=retry))
         self.register_agent(NovaAgent(max_retries=retry))
         self.register_agent(JarvisAgent(max_retries=retry))
+
+        # Agentic Coding Expert Agents
+        self.register_agent(AtlasAgent(max_retries=retry))
+        self.register_agent(CipherAgent(max_retries=retry))
+        self.register_agent(ForgeAgent(max_retries=retry))
+        self.register_agent(NexusAgent(max_retries=retry))
+        self.register_agent(StormAgent(max_retries=retry))
+
+    def _setup_kernel(self) -> None:
+        """Initialize the AIOS Kernel with all registered agents."""
+        self._kernel.initialize(list(self._agents.keys()))
+        self._kernel.set_pipeline_callback(self._pipeline_trigger)
+        self._log.info("aios_kernel_initialized", agents=len(self._agents))
+
+    async def _pipeline_trigger(self, agent_name: str, action: str, upstream_result: dict[str, Any]) -> None:
+        """Callback for AIOS Kernel pipeline triggers."""
+        await self.submit_task(agent_name, action, payload=upstream_result, priority=TaskPriority.HIGH)
 
     def _setup_github(self) -> None:
         if self.settings.github_token:
@@ -79,6 +106,8 @@ class Orchestrator:
             self._log.info("github_integration_enabled")
 
     def _setup_schedule(self) -> None:
+        # === Mortgage Operations Schedule ===
+
         # 06:00 — MARTIN document audit
         self._scheduler.add_job(ScheduledJob(
             name="document_audit",
@@ -112,6 +141,68 @@ class Orchestrator:
             day_of_week=self.settings.weekly_report_day,
         ))
 
+        # === Coding Expert Agent Schedule ===
+
+        # 00:00 — CIPHER security scan (daily midnight)
+        self._scheduler.add_job(ScheduledJob(
+            name="security_audit",
+            run_time=time(0, 0),
+            callback=self._scheduled_security_audit,
+        ))
+        # 01:00 — NEXUS code quality analysis
+        self._scheduler.add_job(ScheduledJob(
+            name="code_quality_analysis",
+            run_time=time(1, 0),
+            callback=self._scheduled_quality_analysis,
+        ))
+        # 02:00 — STORM data quality checks
+        self._scheduler.add_job(ScheduledJob(
+            name="data_quality_check",
+            run_time=time(2, 0),
+            callback=self._scheduled_data_quality,
+        ))
+        # 03:00 — FORGE environment health check
+        self._scheduler.add_job(ScheduledJob(
+            name="environment_health_check",
+            run_time=time(3, 0),
+            callback=self._scheduled_environment_check,
+        ))
+        # Every 4 hours — ATLAS shipping report
+        self._scheduler.add_job(ScheduledJob(
+            name="shipping_report",
+            run_time=time(0, 0),
+            callback=self._scheduled_shipping_report,
+            interval_minutes=240,
+        ))
+        # Every 2 hours — CIPHER compliance check
+        self._scheduler.add_job(ScheduledJob(
+            name="compliance_check",
+            run_time=time(0, 0),
+            callback=self._scheduled_compliance_check,
+            interval_minutes=120,
+        ))
+        # Every 6 hours — NEXUS tech debt scan
+        self._scheduler.add_job(ScheduledJob(
+            name="tech_debt_scan",
+            run_time=time(0, 0),
+            callback=self._scheduled_tech_debt_scan,
+            interval_minutes=360,
+        ))
+        # Weekly — STORM regulatory report (Friday 22:00)
+        self._scheduler.add_job(ScheduledJob(
+            name="weekly_regulatory_report",
+            run_time=time(22, 0),
+            callback=self._scheduled_regulatory_report,
+            day_of_week=4,  # Friday
+        ))
+        # Weekly — FORGE secret rotation (Sunday 03:00)
+        self._scheduler.add_job(ScheduledJob(
+            name="secret_rotation",
+            run_time=time(3, 0),
+            callback=self._scheduled_secret_rotation,
+            day_of_week=6,  # Sunday
+        ))
+
     async def start(self, dashboard_host: str = "0.0.0.0", dashboard_port: int = 8080) -> None:
         """Start the orchestrator and all subsystems."""
         self._running = True
@@ -121,29 +212,36 @@ class Orchestrator:
         # 1. Start state store
         await self._state_store.start()
 
-        # 2. Register agents and attach state stores
+        # 2. Register all 9 agents and attach state stores
         self._register_default_agents()
         for agent in self._agents.values():
             agent.set_state_store(self._state_store)
             await agent.load_state()
 
-        # 3. Restore task queue history
+        # 3. Initialize AIOS Kernel
+        self._setup_kernel()
+        kernel_state = await self._state_store.load("aios_kernel")
+        if kernel_state:
+            self._kernel.restore_state(kernel_state)
+            self._log.info("aios_kernel_state_restored")
+
+        # 4. Restore task queue history
         queue_data = await self._state_store.load("task_queue")
         if queue_data:
             self._task_queue.restore_from_dict(queue_data)
             self._log.info("task_queue_restored", history_count=len(queue_data.get("history", [])))
 
-        # 4. Setup integrations
+        # 5. Setup integrations
         self._setup_github()
         self._setup_schedule()
         self._scheduler.set_state_store(self._state_store)
         self._health_monitor.set_task_queue(self._task_queue)
 
-        # 5. Start dashboard
+        # 6. Start dashboard
         self._dashboard = DashboardServer(self, host=dashboard_host, port=dashboard_port)
         await self._dashboard.start()
 
-        # 6. Setup signal handlers
+        # 7. Setup signal handlers
         loop = asyncio.get_event_loop()
         for sig in (signal.SIGINT, signal.SIGTERM):
             loop.add_signal_handler(sig, lambda: asyncio.create_task(self.stop()))
@@ -153,9 +251,10 @@ class Orchestrator:
             agents=list(self._agents.keys()),
             scheduled_jobs=len(self._scheduler.list_jobs()),
             dashboard=f"http://{dashboard_host}:{dashboard_port}",
+            kernel="AIOS Kernel v1.0.0",
         )
 
-        # 7. Launch subsystems with watchdog supervision
+        # 8. Launch subsystems with watchdog supervision
         await self._watchdog_loop()
 
     async def stop(self) -> None:
@@ -168,13 +267,14 @@ class Orchestrator:
             if not task.done():
                 task.cancel()
 
-        # Stop agents
+        # Stop agents and persist state
         for agent in self._agents.values():
             agent.stop()
             await agent.save_state()
 
-        # Persist task queue
+        # Persist task queue and kernel state
         await self._state_store.save("task_queue", self._task_queue.to_dict())
+        await self._state_store.save("aios_kernel", self._kernel.get_state())
 
         # Stop subsystems
         self._scheduler.stop()
@@ -245,7 +345,7 @@ class Orchestrator:
         )
         return recent >= self.settings.watchdog_max_crashes
 
-    # --- Task dispatch ---
+    # --- Task dispatch with AIOS Kernel integration ---
 
     async def submit_task(
         self,
@@ -267,7 +367,7 @@ class Orchestrator:
         return task_id
 
     async def _dispatch_loop(self) -> None:
-        """Main loop: dequeue tasks and route to agents."""
+        """Main loop: dequeue tasks, check kernel quotas, route to agents."""
         while self._running:
             try:
                 task = await asyncio.wait_for(self._task_queue.dequeue(), timeout=5.0)
@@ -280,10 +380,29 @@ class Orchestrator:
                 self._task_queue.fail(task, f"Agent {task.agent_name} not found")
                 continue
 
+            # AIOS Kernel: check if agent can accept task
+            if not self._kernel.can_schedule(task.agent_name):
+                self._log.warning("agent_at_capacity", agent=task.agent_name, task_id=task.id)
+                # Re-queue with slight delay
+                await asyncio.sleep(1)
+                await self._task_queue.enqueue(task)
+                continue
+
+            # Acquire execution slot
+            self._kernel.acquire_slot(task.agent_name)
+
             try:
                 result = await agent.run_task(task)
                 self._task_queue.complete(task, result)
                 self._health_monitor.record_task(success=True)
+
+                # AIOS Kernel: record resource usage
+                self._kernel.record_resource_usage(task.agent_name, cpu_time_ms=50, io_ops=1)
+
+                # AIOS Kernel: trigger downstream pipeline agents
+                triggered = await self._kernel.trigger_downstream(task.agent_name, task.action, result)
+                if triggered:
+                    self._log.info("pipeline_triggered", agent=task.agent_name, downstream=triggered)
 
                 # Auto-create GitHub issue for completed high-priority tasks
                 if self._github and task.priority <= TaskPriority.HIGH:
@@ -302,10 +421,14 @@ class Orchestrator:
                 if task.status == TaskStatus.RETRYING:
                     await self._task_queue.enqueue(task)
 
+            finally:
+                # Always release kernel slot
+                self._kernel.release_slot(task.agent_name)
+
             # Persist queue state periodically
             await self._state_store.save_debounced("task_queue", self._task_queue.to_dict())
 
-    # --- Scheduled callbacks ---
+    # --- Scheduled callbacks: Mortgage Operations ---
 
     async def _scheduled_document_audit(self) -> None:
         await self.submit_task("MARTIN", "run_document_audit", priority=TaskPriority.MEDIUM)
@@ -326,6 +449,35 @@ class Orchestrator:
             report = self.get_status()
             await self._github.post_daily_report(report)
 
+    # --- Scheduled callbacks: Coding Expert Agents ---
+
+    async def _scheduled_security_audit(self) -> None:
+        await self.submit_task("CIPHER", "run_security_audit", payload={"scope": "full"}, priority=TaskPriority.HIGH)
+
+    async def _scheduled_quality_analysis(self) -> None:
+        await self.submit_task("NEXUS", "analyze_quality", payload={"scope": "project"}, priority=TaskPriority.MEDIUM)
+
+    async def _scheduled_data_quality(self) -> None:
+        await self.submit_task("STORM", "run_data_quality", payload={"table": "loans"}, priority=TaskPriority.MEDIUM)
+
+    async def _scheduled_environment_check(self) -> None:
+        await self.submit_task("FORGE", "check_environment_health", priority=TaskPriority.HIGH)
+
+    async def _scheduled_shipping_report(self) -> None:
+        await self.submit_task("ATLAS", "get_shipping_report", priority=TaskPriority.LOW)
+
+    async def _scheduled_compliance_check(self) -> None:
+        await self.submit_task("CIPHER", "run_compliance_check", payload={"framework": "SOC2"}, priority=TaskPriority.MEDIUM)
+
+    async def _scheduled_tech_debt_scan(self) -> None:
+        await self.submit_task("NEXUS", "track_tech_debt", payload={"action": "scan"}, priority=TaskPriority.LOW)
+
+    async def _scheduled_regulatory_report(self) -> None:
+        await self.submit_task("STORM", "generate_regulatory_report", payload={"type": "HMDA"}, priority=TaskPriority.HIGH)
+
+    async def _scheduled_secret_rotation(self) -> None:
+        await self.submit_task("FORGE", "rotate_secrets", payload={"scope": "all"}, priority=TaskPriority.HIGH)
+
     # --- Status methods ---
 
     def get_status(self) -> dict[str, Any]:
@@ -344,6 +496,7 @@ class Orchestrator:
             "queue": self._task_queue.get_stats(),
             "health": self._health_monitor.get_full_health().get("overall", "unknown"),
             "scheduled_jobs": self._scheduler.list_jobs(),
+            "kernel": self._kernel.get_kernel_status(),
         }
 
     def get_health(self) -> dict[str, Any]:

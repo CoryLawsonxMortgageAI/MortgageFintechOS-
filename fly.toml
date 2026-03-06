@@ -1,0 +1,40 @@
+# Fly.io deployment configuration
+# https://fly.io — Free tier: 3 shared VMs, 256MB RAM each
+
+app = "mortgagefintechos"
+primary_region = "iad"
+
+[build]
+  dockerfile = "docker/Dockerfile"
+
+[env]
+  LOG_LEVEL = "INFO"
+  DATA_DIR = "/app/data"
+  GITHUB_REPO = "CoryLawsonxMortgageAI/MortgageFintechOS-"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 250
+    soft_limit = 200
+
+[[http_service.checks]]
+  grace_period = "15s"
+  interval = "30s"
+  method = "GET"
+  timeout = "10s"
+  path = "/api/healthz"
+
+[mounts]
+  source = "app_data"
+  destination = "/app/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MortgageFintechOS — Dashboard</title>
+    <title>MortgageFintechOS — AIOS Dashboard</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
 <header class="header">
     <div class="header-left">
         <div class="header-logo">Mortgage<span>FintechOS</span></div>
-        <div class="header-subtitle">Autonomous AI Operating System</div>
+        <div class="header-subtitle">AIOS Kernel v1.0 &bull; 9 Agents &bull; 24/7 Autonomous</div>
     </div>
     <div class="header-right">
         <span id="overall-status" class="status-badge healthy">
@@ -33,6 +33,7 @@
         <div class="metric-card">
             <div class="metric-label">Active Agents</div>
             <div id="metric-agents" class="metric-value">0</div>
+            <div class="metric-sub">4 Ops + 5 Coding</div>
         </div>
         <div class="metric-card">
             <div class="metric-label">Queue Pending</div>
@@ -47,6 +48,10 @@
             <div id="metric-failed" class="metric-value">0</div>
         </div>
         <div class="metric-card">
+            <div class="metric-label">Pipeline Triggers</div>
+            <div id="metric-pipelines" class="metric-value">0</div>
+        </div>
+        <div class="metric-card">
             <div class="metric-label">CPU</div>
             <div id="metric-cpu" class="metric-value">—</div>
         </div>
@@ -56,11 +61,27 @@
         </div>
     </section>
 
-    <!-- Agents + Schedule -->
+    <!-- AIOS Kernel Status -->
+    <section class="grid-full">
+        <div class="card card-kernel">
+            <div class="card-header">
+                <span class="card-title">AIOS Kernel — Agent Resource Manager</span>
+                <span id="kernel-version" class="kernel-badge">v1.0.0</span>
+            </div>
+            <div class="card-body">
+                <div class="kernel-grid" id="kernel-grid">
+                    <div class="empty-state">Loading kernel status...</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mortgage Ops Agents + Coding Expert Agents -->
     <section class="grid-2col">
         <div class="card">
             <div class="card-header">
-                <span class="card-title">AI Agents</span>
+                <span class="card-title">Mortgage Operations Agents</span>
+                <span class="card-badge ops">4 AGENTS</span>
             </div>
             <div class="card-body">
                 <table>
@@ -71,11 +92,10 @@
                             <th>Status</th>
                             <th>Tasks</th>
                             <th>Errors</th>
-                            <th>Heartbeat</th>
                         </tr>
                     </thead>
-                    <tbody id="agents-tbody">
-                        <tr><td colspan="6" class="empty-state">Loading...</td></tr>
+                    <tbody id="ops-agents-tbody">
+                        <tr><td colspan="5" class="empty-state">Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -83,7 +103,43 @@
 
         <div class="card">
             <div class="card-header">
+                <span class="card-title">Agentic Coding Experts</span>
+                <span class="card-badge coding">5 AGENTS</span>
+            </div>
+            <div class="card-body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Agent</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Tasks</th>
+                            <th>Errors</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coding-agents-tbody">
+                        <tr><td colspan="5" class="empty-state">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dependency Graph + Schedule -->
+    <section class="grid-2col">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Agent Pipeline Dependencies</span>
+            </div>
+            <div class="card-body" id="dependency-graph">
+                <div class="empty-state">Loading...</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
                 <span class="card-title">Scheduled Jobs</span>
+                <span id="schedule-count" class="card-badge">0</span>
             </div>
             <div class="card-body">
                 <table>
@@ -143,7 +199,7 @@
 </main>
 
 <footer class="footer">
-    MortgageFintechOS v1.0.0 &mdash; Cory Lawson / The Lawson Group &mdash; Autonomous AI Operating System
+    MortgageFintechOS v1.0.0 &mdash; Cory Lawson / The Lawson Group &mdash; AIOS Kernel &bull; 9 AI Agents &bull; 24/7 Autonomous
 </footer>
 
 <script src="/static/app.js"></script>
