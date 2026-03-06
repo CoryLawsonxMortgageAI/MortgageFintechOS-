@@ -1,0 +1,18 @@
+[Unit]
+Description=MortgageFintechOS Autonomous AI Operating System
+After=network.target postgresql.service redis.service
+Wants=postgresql.service redis.service
+
+[Service]
+Type=simple
+User=mortgageos
+WorkingDirectory=/opt/mortgagefintechos
+ExecStart=/opt/mortgagefintechos/venv/bin/python main.py start
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mortgagefintechos
+
+[Install]
+WantedBy=multi-user.target

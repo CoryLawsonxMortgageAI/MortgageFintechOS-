@@ -1,0 +1,62 @@
+version: "3.9"
+
+services:
+  mortgagefintechos:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: mortgagefintechos
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    env_file:
+      - ../.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - mortgageos
+    volumes:
+      - app-logs:/app/logs
+      - app-data:/app/data
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: mortgageos-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mortgageos
+      POSTGRES_USER: mortgageos
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mortgageos"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mortgageos
+
+  redis:
+    image: redis:7-alpine
+    container_name: mortgageos-redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mortgageos
+
+volumes:
+  postgres-data:
+  app-logs:
+  app-data:
+
+networks:
+  mortgageos:
+    driver: bridge

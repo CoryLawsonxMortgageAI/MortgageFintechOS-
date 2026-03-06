@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MortgageFintechOS — Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+    <div class="header-left">
+        <div class="header-logo">Mortgage<span>FintechOS</span></div>
+        <div class="header-subtitle">Autonomous AI Operating System</div>
+    </div>
+    <div class="header-right">
+        <span id="overall-status" class="status-badge healthy">
+            <span class="status-dot"></span>healthy
+        </span>
+        <span id="last-updated" class="last-updated">Loading...</span>
+    </div>
+</header>
+
+<main class="main">
+
+    <!-- Metric cards -->
+    <section class="metrics-row">
+        <div class="metric-card">
+            <div class="metric-label">Uptime</div>
+            <div id="metric-uptime" class="metric-value">—</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Active Agents</div>
+            <div id="metric-agents" class="metric-value">0</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Queue Pending</div>
+            <div id="metric-pending" class="metric-value">0</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Tasks Completed</div>
+            <div id="metric-completed" class="metric-value success">0</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Tasks Failed</div>
+            <div id="metric-failed" class="metric-value">0</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">CPU</div>
+            <div id="metric-cpu" class="metric-value">—</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Memory</div>
+            <div id="metric-mem" class="metric-value">—</div>
+        </div>
+    </section>
+
+    <!-- Agents + Schedule -->
+    <section class="grid-2col">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">AI Agents</span>
+            </div>
+            <div class="card-body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Agent</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Tasks</th>
+                            <th>Errors</th>
+                            <th>Heartbeat</th>
+                        </tr>
+                    </thead>
+                    <tbody id="agents-tbody">
+                        <tr><td colspan="6" class="empty-state">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Scheduled Jobs</span>
+            </div>
+            <div class="card-body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:30px"></th>
+                            <th>Job</th>
+                            <th>Schedule</th>
+                            <th>Last Run</th>
+                        </tr>
+                    </thead>
+                    <tbody id="schedule-tbody">
+                        <tr><td colspan="4" class="empty-state">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Task Queue -->
+    <section class="grid-full">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Recent Tasks</span>
+            </div>
+            <div class="card-body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Agent</th>
+                            <th>Action</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="queue-tbody">
+                        <tr><td colspan="5" class="empty-state">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Alerts -->
+    <section class="grid-full">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Alerts</span>
+            </div>
+            <div class="card-body" id="alerts-container">
+                <div class="empty-state">Loading...</div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<footer class="footer">
+    MortgageFintechOS v1.0.0 &mdash; Cory Lawson / The Lawson Group &mdash; Autonomous AI Operating System
+</footer>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
