@@ -23,6 +23,7 @@ import structlog
 
 from config.settings import Settings
 from core.orchestrator import Orchestrator
+from dashboard.server import DashboardServer
 
 structlog.configure(
     processors=[
@@ -177,6 +178,46 @@ def agents():
         click.echo(f"    Tasks:  {agent['tasks_completed']} completed")
         click.echo(f"    Errors: {agent['error_count']}")
         click.echo()
+
+
+@cli.command()
+@click.option("--host", default="0.0.0.0", help="Dashboard bind address")
+@click.option("--port", default=8080, type=int, help="Dashboard port")
+def dashboard(host, port):
+    """Launch the web dashboard with live system monitoring."""
+    click.echo("=" * 60)
+    click.echo("  MortgageFintechOS — Web Dashboard")
+    click.echo("=" * 60)
+    click.echo()
+    click.echo(f"  URL: http://{host}:{port}")
+    click.echo()
+
+    orchestrator = _get_orchestrator()
+    orchestrator._register_default_agents()
+    orchestrator._setup_schedule()
+
+    server = DashboardServer(orchestrator, host=host, port=port)
+
+    async def _run():
+        await server.start()
+        orchestrator._running = True
+        orchestrator._start_time = __import__("datetime").datetime.now(
+            __import__("datetime").timezone.utc
+        )
+        orchestrator._health_monitor.set_task_queue(orchestrator._task_queue)
+        click.echo(f"  Dashboard running at http://{host}:{port}")
+        click.echo("  Press Ctrl+C to stop.")
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            pass
+        finally:
+            await server.stop()
+
+    try:
+        asyncio.run(_run())
+    except KeyboardInterrupt:
+        click.echo("\nDashboard stopped.")
 
 
 if __name__ == "__main__":
