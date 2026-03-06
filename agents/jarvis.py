@@ -164,6 +164,12 @@ class JarvisAgent(BaseAgent):
             "open_conditions": open_count,
         }
 
+    def _get_state(self) -> dict[str, Any]:
+        return {"conditions": self._conditions}
+
+    def _restore_state(self, data: dict[str, Any]) -> None:
+        self._conditions = data.get("conditions", {})
+
     async def _draft_loe(self, payload: dict[str, Any]) -> dict[str, Any]:
         loe_type = payload.get("loe_type", "general")
         template = LOE_TEMPLATES.get(loe_type, LOE_TEMPLATES["general"])
@@ -230,6 +236,7 @@ class JarvisAgent(BaseAgent):
         }
 
         self._conditions.setdefault(loan_id, []).append(condition)
+        await self.save_state()
         logger.info("condition_added", loan_id=loan_id, condition_id=condition["id"])
         return condition
 
@@ -243,6 +250,7 @@ class JarvisAgent(BaseAgent):
                 condition["status"] = ConditionStatus.CLEARED.value
                 condition["cleared_at"] = datetime.now(timezone.utc).isoformat()
                 condition["cleared_by"] = payload.get("cleared_by", "JARVIS")
+                await self.save_state()
                 logger.info("condition_cleared", loan_id=loan_id, condition_id=condition_id)
                 return condition
 

@@ -90,6 +90,12 @@ class MartinAgent(BaseAgent):
             "total_documents": total_docs,
         }
 
+    def _get_state(self) -> dict[str, Any]:
+        return {"document_store": self._document_store}
+
+    def _restore_state(self, data: dict[str, Any]) -> None:
+        self._document_store = data.get("document_store", {})
+
     async def _classify_document(self, payload: dict[str, Any]) -> dict[str, Any]:
         text_content = payload.get("text_content", "").lower()
         filename = payload.get("filename", "").lower()
@@ -111,6 +117,7 @@ class MartinAgent(BaseAgent):
                 "confidence": confidence,
                 "classified_at": datetime.now(timezone.utc).isoformat(),
             })
+            await self.save_state()
 
         logger.info("document_classified", type=detected_type.value, confidence=confidence)
         return {

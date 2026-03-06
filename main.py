@@ -5,17 +5,17 @@ Entry point for the mortgage lending AI operating system.
 Manages DIEGO, MARTIN, NOVA, and JARVIS agents.
 
 Usage:
-    python main.py start       Start the autonomous system
+    python main.py start       Start the autonomous system (includes dashboard)
     python main.py status      Show system status
     python main.py health      Run health checks
     python main.py schedule    View scheduled tasks
     python main.py agents      List registered agents
+    python main.py dashboard   Launch dashboard only (view-only mode)
 
 Author: Cory Lawson / The Lawson Group
 """
 
 import asyncio
-import json
 import sys
 
 import click
@@ -55,15 +55,18 @@ def cli():
 
 
 @cli.command()
-def start():
-    """Start the autonomous AI operating system."""
+@click.option("--host", default="0.0.0.0", help="Dashboard bind address")
+@click.option("--port", default=8080, type=int, help="Dashboard port")
+def start(host, port):
+    """Start the autonomous AI operating system with integrated dashboard."""
     click.echo("=" * 60)
     click.echo("  MortgageFintechOS — Autonomous AI Operating System")
     click.echo("  Version 1.0.0 | Cory Lawson / The Lawson Group")
     click.echo("=" * 60)
     click.echo()
-    click.echo("  Agents: DIEGO | MARTIN | NOVA | JARVIS")
-    click.echo("  Mode:   24/7 Autonomous Operation")
+    click.echo("  Agents:    DIEGO | MARTIN | NOVA | JARVIS")
+    click.echo("  Mode:      24/7 Autonomous Operation")
+    click.echo(f"  Dashboard: http://{host}:{port}")
     click.echo()
     click.echo("  Starting system...")
     click.echo()
@@ -71,10 +74,9 @@ def start():
     orchestrator = _get_orchestrator()
 
     try:
-        asyncio.run(orchestrator.start())
+        asyncio.run(orchestrator.start(dashboard_host=host, dashboard_port=port))
     except KeyboardInterrupt:
         click.echo("\nShutdown requested. Stopping gracefully...")
-        asyncio.run(orchestrator.stop())
         click.echo("System stopped.")
 
 
@@ -88,8 +90,9 @@ def status():
     click.echo("=" * 60)
     click.echo("  MortgageFintechOS — System Status")
     click.echo("=" * 60)
-    click.echo(f"  Running: {data['running']}")
-    click.echo(f"  Uptime:  {data['uptime'] or 'Not started'}")
+    click.echo(f"  Running:  {data['running']}")
+    click.echo(f"  Degraded: {data.get('degraded', False)}")
+    click.echo(f"  Uptime:   {data['uptime'] or 'Not started'}")
     click.echo()
 
     click.echo("  Queue:")
@@ -184,9 +187,9 @@ def agents():
 @click.option("--host", default="0.0.0.0", help="Dashboard bind address")
 @click.option("--port", default=8080, type=int, help="Dashboard port")
 def dashboard(host, port):
-    """Launch the web dashboard with live system monitoring."""
+    """Launch the web dashboard in view-only mode (no orchestrator)."""
     click.echo("=" * 60)
-    click.echo("  MortgageFintechOS — Web Dashboard")
+    click.echo("  MortgageFintechOS — Web Dashboard (View Only)")
     click.echo("=" * 60)
     click.echo()
     click.echo(f"  URL: http://{host}:{port}")
@@ -201,9 +204,8 @@ def dashboard(host, port):
     async def _run():
         await server.start()
         orchestrator._running = True
-        orchestrator._start_time = __import__("datetime").datetime.now(
-            __import__("datetime").timezone.utc
-        )
+        from datetime import datetime, timezone
+        orchestrator._start_time = datetime.now(timezone.utc)
         orchestrator._health_monitor.set_task_queue(orchestrator._task_queue)
         click.echo(f"  Dashboard running at http://{host}:{port}")
         click.echo("  Press Ctrl+C to stop.")

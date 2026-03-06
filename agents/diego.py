@@ -94,6 +94,12 @@ class DiegoAgent(BaseAgent):
             "stages": self._stage_counts(),
         }
 
+    def _get_state(self) -> dict[str, Any]:
+        return {"pipeline": self._pipeline}
+
+    def _restore_state(self, data: dict[str, Any]) -> None:
+        self._pipeline = data.get("pipeline", {})
+
     async def _triage_loan(self, payload: dict[str, Any]) -> dict[str, Any]:
         loan_id = payload["loan_id"]
         loan_type_str = payload.get("loan_type", "CONV").upper()
@@ -118,6 +124,7 @@ class DiegoAgent(BaseAgent):
             "required_docs": rules["required_docs"],
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
+        await self.save_state()
 
         logger.info("loan_triaged", loan_id=loan_id, loan_type=loan_type.value, flags=len(flags))
         return {
@@ -142,6 +149,7 @@ class DiegoAgent(BaseAgent):
 
         next_stage = STAGE_ORDER[current_idx + 1]
         loan["stage"] = next_stage.value
+        await self.save_state()
         logger.info("stage_advanced", loan_id=loan_id, from_stage=current.value, to_stage=next_stage.value)
 
         return {"loan_id": loan_id, "previous_stage": current.value, "new_stage": next_stage.value}
@@ -165,6 +173,7 @@ class DiegoAgent(BaseAgent):
             priority = "low"
 
         loan["priority"] = priority
+        await self.save_state()
         return {"loan_id": loan_id, "priority": priority, "lock_expiry_days": lock_expiry}
 
     async def _check_pipeline_health(self, _payload: dict[str, Any]) -> dict[str, Any]:

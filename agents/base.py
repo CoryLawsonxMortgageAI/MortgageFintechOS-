@@ -4,11 +4,14 @@ import asyncio
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
 from core.task_queue import Task
+
+if TYPE_CHECKING:
+    from persistence.state_store import StateStore
 
 logger = structlog.get_logger()
 
@@ -31,6 +34,7 @@ class BaseAgent(ABC):
         self.tasks_completed: int = 0
         self.max_retries = max_retries
         self._running = False
+        self._state_store: "StateStore | None" = None
         self._log = logger.bind(agent=name)
 
     @abstractmethod
@@ -73,6 +77,33 @@ class BaseAgent(ABC):
 
     def _update_heartbeat(self) -> None:
         self.last_heartbeat = datetime.now(timezone.utc)
+
+    # --- Persistence hooks ---
+
+    def set_state_store(self, store: "StateStore") -> None:
+        self._state_store = store
+
+    async def save_state(self) -> None:
+        """Persist agent state to disk (debounced)."""
+        if self._state_store:
+            data = self._get_state()
+            if data:
+                await self._state_store.save_debounced(f"agent_{self.name.lower()}", data)
+
+    async def load_state(self) -> None:
+        """Restore agent state from disk."""
+        if self._state_store:
+            data = await self._state_store.load(f"agent_{self.name.lower()}")
+            if data:
+                self._restore_state(data)
+                self._log.info("state_restored", keys=list(data.keys()))
+
+    def _get_state(self) -> dict[str, Any]:
+        """Return serializable agent state. Override in subclasses."""
+        return {}
+
+    def _restore_state(self, data: dict[str, Any]) -> None:
+        """Restore agent state from dict. Override in subclasses."""
 
     def get_info(self) -> dict[str, Any]:
         return {

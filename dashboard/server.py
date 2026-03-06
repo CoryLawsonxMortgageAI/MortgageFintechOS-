@@ -13,8 +13,10 @@ from typing import Any
 import structlog
 from aiohttp import web
 
-from config.settings import Settings
-from core.orchestrator import Orchestrator
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from core.orchestrator import Orchestrator
 
 logger = structlog.get_logger()
 
@@ -24,7 +26,7 @@ STATIC_DIR = Path(__file__).parent / "static"
 class DashboardServer:
     """HTTP server providing dashboard UI and status API."""
 
-    def __init__(self, orchestrator: Orchestrator, host: str = "0.0.0.0", port: int = 8080):
+    def __init__(self, orchestrator: "Orchestrator", host: str = "0.0.0.0", port: int = 8080):
         self.orchestrator = orchestrator
         self.host = host
         self.port = port
@@ -35,6 +37,7 @@ class DashboardServer:
 
     def _setup_routes(self) -> None:
         self._app.router.add_get("/", self._handle_index)
+        self._app.router.add_get("/api/healthz", self._handle_healthz)
         self._app.router.add_get("/api/status", self._handle_status)
         self._app.router.add_get("/api/health", self._handle_health)
         self._app.router.add_get("/api/agents", self._handle_agents)
@@ -56,6 +59,9 @@ class DashboardServer:
         self._log.info("dashboard_stopped")
 
     # --- Route handlers ---
+
+    async def _handle_healthz(self, request: web.Request) -> web.Response:
+        return web.json_response({"status": "ok"})
 
     async def _handle_index(self, request: web.Request) -> web.Response:
         index_path = STATIC_DIR / "index.html"

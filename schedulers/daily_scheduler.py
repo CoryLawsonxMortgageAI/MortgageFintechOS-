@@ -7,9 +7,12 @@ document audits, income recalculations, and pipeline health checks.
 import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime, time, timezone
-from typing import Any, Callable, Coroutine
+from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
 import structlog
+
+if TYPE_CHECKING:
+    from persistence.state_store import StateStore
 
 logger = structlog.get_logger()
 
@@ -32,7 +35,11 @@ class DailyScheduler:
     def __init__(self):
         self._jobs: list[ScheduledJob] = []
         self._running = False
+        self._state_store: "StateStore | None" = None
         self._log = logger.bind(component="scheduler")
+
+    def set_state_store(self, store: "StateStore") -> None:
+        self._state_store = store
 
     def add_job(self, job: ScheduledJob) -> None:
         self._jobs.append(job)
@@ -58,6 +65,8 @@ class DailyScheduler:
 
     async def start(self) -> None:
         self._running = True
+        await self._load_last_runs()
+        await self.recover_missed_jobs()
         self._log.info("scheduler_started", jobs=len(self._jobs))
         while self._running:
             await self._check_and_run()
@@ -103,11 +112,48 @@ class DailyScheduler:
             if should_run:
                 await self._execute_job(job, now)
 
+    async def recover_missed_jobs(self) -> None:
+        """Run any daily jobs that were missed while the system was down."""
+        now = datetime.now(timezone.utc)
+        for job in self._jobs:
+            if not job.enabled or job.interval_minutes is not None:
+                continue
+            if job.last_run is None or job.last_run.date() < now.date():
+                # This daily/weekly job hasn't run today — run it now
+                if job.day_of_week is not None and now.weekday() != job.day_of_week:
+                    continue
+                self._log.info("recovering_missed_job", name=job.name)
+                await self._execute_job(job, now)
+
+    async def _load_last_runs(self) -> None:
+        """Restore last-run timestamps from state store."""
+        if not self._state_store:
+            return
+        data = await self._state_store.load("scheduler")
+        if not data:
+            return
+        last_runs = data.get("last_runs", {})
+        for job in self._jobs:
+            if job.name in last_runs:
+                job.last_run = datetime.fromisoformat(last_runs[job.name])
+        self._log.info("scheduler_state_restored", jobs_restored=len(last_runs))
+
+    async def _save_last_runs(self) -> None:
+        """Persist last-run timestamps to state store."""
+        if not self._state_store:
+            return
+        last_runs = {}
+        for job in self._jobs:
+            if job.last_run:
+                last_runs[job.name] = job.last_run.isoformat()
+        await self._state_store.save_debounced("scheduler", {"last_runs": last_runs})
+
     async def _execute_job(self, job: ScheduledJob, now: datetime) -> None:
         try:
             self._log.info("job_executing", name=job.name)
             await job.callback(**job.kwargs)
             job.last_run = now
+            await self._save_last_runs()
             self._log.info("job_completed", name=job.name)
         except Exception as e:
             self._log.error("job_failed", name=job.name, error=str(e))

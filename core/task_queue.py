@@ -87,3 +87,43 @@ class TaskQueue:
             "failed": failed,
             "total_processed": len(self._history),
         }
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize queue history for persistence."""
+        return {
+            "history": [
+                {
+                    "id": t.id,
+                    "priority": t.priority.value,
+                    "agent_name": t.agent_name,
+                    "action": t.action,
+                    "payload": t.payload,
+                    "retries": t.retries,
+                    "max_retries": t.max_retries,
+                    "status": t.status.value,
+                    "created_at": t.created_at.isoformat(),
+                    "result": t.result,
+                    "error": t.error,
+                }
+                for t in self._history
+            ]
+        }
+
+    def restore_from_dict(self, data: dict[str, Any]) -> None:
+        """Restore queue history from persisted data."""
+        for item in data.get("history", []):
+            task = Task(
+                priority=TaskPriority(item["priority"]),
+                id=item["id"],
+                agent_name=item["agent_name"],
+                action=item["action"],
+                payload=item.get("payload", {}),
+                retries=item.get("retries", 0),
+                max_retries=item.get("max_retries", 3),
+                status=TaskStatus(item["status"]),
+                result=item.get("result"),
+                error=item.get("error"),
+            )
+            if "created_at" in item:
+                task.created_at = datetime.fromisoformat(item["created_at"])
+            self._history.append(task)

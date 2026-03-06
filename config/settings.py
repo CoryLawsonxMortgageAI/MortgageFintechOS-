@@ -49,3 +49,20 @@ class Settings:
     queue_backlog_threshold: int = 50
     error_rate_threshold: float = 0.10
     error_rate_window_seconds: int = 300
+
+    # Dashboard
+    dashboard_port: int = field(
+        default_factory=lambda: int(os.getenv("DASHBOARD_PORT", "8080"))
+    )
+    dashboard_host: str = field(
+        default_factory=lambda: os.getenv("DASHBOARD_HOST", "0.0.0.0")
+    )
+
+    # Persistence
+    data_dir: str = field(
+        default_factory=lambda: os.getenv("DATA_DIR", "data")
+    )
+
+    # Watchdog
+    watchdog_interval: int = 30
+    watchdog_max_crashes: int = 5
