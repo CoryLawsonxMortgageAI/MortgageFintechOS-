@@ -17,6 +17,11 @@ from agents.diego import DiegoAgent
 from agents.martin import MartinAgent
 from agents.nova import NovaAgent
 from agents.jarvis import JarvisAgent
+from agents.atlas import AtlasAgent
+from agents.cipher import CipherAgent
+from agents.forge import ForgeAgent
+from agents.nexus import NexusAgent
+from agents.storm import StormAgent
 from config.settings import Settings
 from core.task_queue import Task, TaskQueue, TaskPriority, TaskStatus
 from dashboard.server import DashboardServer
@@ -65,10 +70,17 @@ class Orchestrator:
 
     def _register_default_agents(self) -> None:
         retry = self.settings.agent_retry_count
+        # Mortgage Operations
         self.register_agent(DiegoAgent(max_retries=retry))
         self.register_agent(MartinAgent(max_retries=retry))
         self.register_agent(NovaAgent(max_retries=retry))
         self.register_agent(JarvisAgent(max_retries=retry))
+        # Coding & Engineering
+        self.register_agent(AtlasAgent(max_retries=retry))
+        self.register_agent(CipherAgent(max_retries=retry))
+        self.register_agent(ForgeAgent(max_retries=retry))
+        self.register_agent(NexusAgent(max_retries=retry))
+        self.register_agent(StormAgent(max_retries=retry))
 
     def _setup_github(self) -> None:
         if self.settings.github_token:

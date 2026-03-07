@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MortgageFintechOS — System Orchestration Map</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0a0a;--s:#141414;--s2:#1a1a1a;--b:#2a2a2a;--b2:#333;
+  --t:#e4e4e7;--t2:#a1a1aa;--t3:#71717a;--t4:#52525b;
+  --ok:#22c55e;--ok2:#16a34a;--err:#ef4444;--warn:#f59e0b;
+  --f:'Instrument Sans',sans-serif;--m:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--f);background:var(--bg);color:var(--t);overflow-x:hidden}
+.hdr{background:var(--s);border-bottom:1px solid var(--b);padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.hdr h1{font-size:13px;font-weight:700;letter-spacing:-.2px;display:flex;align-items:center;gap:8px}
+.hdr h1 em{font-style:normal;font-weight:400;color:var(--t3)}
+.hdr-r{display:flex;gap:12px;align-items:center}
+.hdr-pill{font-size:9px;font-family:var(--m);padding:3px 10px;border-radius:99px;background:rgba(34,197,94,.1);color:var(--ok);border:1px solid rgba(34,197,94,.2);display:flex;align-items:center;gap:5px}
+.hdr-pill .dot{width:5px;height:5px;border-radius:50%;background:var(--ok);animation:p 2s ease infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.2}}
+.back{font-size:10px;color:var(--t3);text-decoration:none;font-family:var(--m);padding:4px 10px;border:1px solid var(--b);border-radius:4px;transition:all .15s}
+.back:hover{color:var(--t);border-color:var(--t4)}
+
+.canvas{padding:24px;max-width:1500px;margin:0 auto}
+
+/* Legend */
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px;padding:12px 16px;background:var(--s);border:1px solid var(--b);border-radius:6px}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:10px;font-family:var(--m);color:var(--t2)}
+.leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* Architecture SVG area */
+.arch{position:relative;width:100%;min-height:800px;background:var(--s);border:1px solid var(--b);border-radius:8px;overflow:hidden}
+.arch svg{width:100%;height:100%}
+
+/* Nodes */
+.node{position:absolute;background:var(--s2);border:1px solid var(--b);border-radius:6px;padding:10px 14px;cursor:default;transition:border-color .2s,box-shadow .2s}
+.node:hover{border-color:var(--t4);box-shadow:0 0 20px rgba(255,255,255,.03)}
+.node-label{font-size:11px;font-weight:700;font-family:var(--m);margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.node-sub{font-size:9px;color:var(--t3);line-height:1.3}
+.node-status{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.node-status.on{background:var(--ok)}
+.node-status.off{background:var(--t4)}
+.node-status.warn{background:var(--warn)}
+
+/* Node categories */
+.node-kernel{border-color:var(--ok);border-width:2px}
+.node-ops{border-left:3px solid var(--t)}
+.node-code{border-left:3px solid var(--t3)}
+.node-ext{border-left:3px solid var(--warn)}
+.node-data{border-left:3px solid var(--t4)}
+.node-llm{border-left:3px solid var(--ok)}
+
+/* Connection lines drawn via CSS */
+.conn{position:absolute;pointer-events:none}
+
+/* Info panels */
+.info{position:fixed;right:0;top:48px;width:320px;height:calc(100vh - 48px);background:var(--s);border-left:1px solid var(--b);padding:16px;overflow-y:auto;transform:translateX(100%);transition:transform .25s ease;z-index:99}
+.info.open{transform:translateX(0)}
+.info-title{font-size:13px;font-weight:700;margin-bottom:4px}
+.info-sub{font-size:10px;color:var(--t3);font-family:var(--m);margin-bottom:12px}
+.info-section{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--t4);font-family:var(--m);margin-top:14px;margin-bottom:6px}
+.info-row{font-size:11px;color:var(--t2);margin-bottom:4px;padding:4px 0;border-bottom:1px solid var(--b)}
+.info-row b{color:var(--t);font-weight:600}
+.info-close{position:absolute;top:12px;right:12px;background:none;border:1px solid var(--b);color:var(--t3);width:24px;height:24px;border-radius:4px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
+.info-close:hover{color:var(--t);border-color:var(--t4)}
+
+/* Flow table */
+.flow-tbl{width:100%;border-collapse:collapse;margin-top:12px}
+.flow-tbl th{text-align:left;font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);font-family:var(--m);padding:6px 10px;background:var(--s2);border-bottom:1px solid var(--b)}
+.flow-tbl td{padding:6px 10px;font-size:10px;color:var(--t2);border-bottom:1px solid rgba(255,255,255,.04)}
+.flow-tbl tr:hover td{background:rgba(255,255,255,.02)}
+
+.tag{display:inline-flex;padding:1px 6px;border-radius:3px;font-size:8px;font-weight:600;font-family:var(--m)}
+.tag-ok{background:rgba(34,197,94,.12);color:var(--ok)}
+.tag-warn{background:rgba(245,158,11,.12);color:var(--warn)}
+.tag-off{background:rgba(255,255,255,.05);color:var(--t4)}
+.tag-err{background:rgba(239,68,68,.12);color:var(--err)}
+
+@media(max-width:900px){.canvas{padding:12px}.info{width:100%}}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <h1>⬡ MortgageFintechOS <em>Orchestration Map</em></h1>
+  <div class="hdr-r">
+    <div class="hdr-pill"><span class="dot"></span>LIVE SYSTEM</div>
+    <a href="/" class="back">← Dashboard</a>
+  </div>
+</header>
+<div class="canvas">
+  <div class="legend">
+    <div class="leg-item"><div class="leg-dot" style="background:var(--ok)"></div>AIOS Kernel</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--t)"></div>Mortgage Ops Agents</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--t3)"></div>Coding Agents</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--warn)"></div>External Services</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--t4)"></div>Data / Storage</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--ok2)"></div>LLM Models</div>
+    <div class="leg-item" style="margin-left:auto"><span style="font-size:9px;color:var(--t4)">Click any node for details</span></div>
+  </div>
+
+  <div id="map" style="position:relative;width:100%;height:850px;background:var(--s);border:1px solid var(--b);border-radius:8px;overflow:hidden">
+    <svg id="lines" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none">
+      <defs>
+        <marker id="arrow" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto"><path d="M0,0 L6,2 L0,4" fill="#52525b"/></marker>
+        <marker id="arrow-ok" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto"><path d="M0,0 L6,2 L0,4" fill="#22c55e"/></marker>
+      </defs>
+    </svg>
+  </div>
+
+  <!-- Connection Details Table -->
+  <div style="margin-top:16px">
+    <div style="background:var(--s);border:1px solid var(--b);border-radius:8px;overflow:hidden">
+      <div style="padding:10px 16px;border-bottom:1px solid var(--b);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Agent Connection Matrix</div>
+      <table class="flow-tbl">
+        <thead><tr><th>Agent</th><th>Type</th><th>Receives From</th><th>Sends To</th><th>External Services</th><th>Status</th></tr></thead>
+        <tbody id="matrix"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Data Flow Table -->
+  <div style="margin-top:12px">
+    <div style="background:var(--s);border:1px solid var(--b);border-radius:8px;overflow:hidden">
+      <div style="padding:10px 16px;border-bottom:1px solid var(--b);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Live Data Flows</div>
+      <table class="flow-tbl">
+        <thead><tr><th>Flow</th><th>From</th><th>To</th><th>Protocol</th><th>Data</th><th>Status</th></tr></thead>
+        <tbody id="flows"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Panel -->
+<div id="info" class="info">
+  <button class="info-close" onclick="closeInfo()">×</button>
+  <div id="info-content"></div>
+</div>
+
+<script>
+const NODES = [
+  // KERNEL
+  {id:"kernel",label:"AIOS KERNEL",sub:"Office Manager\nScheduler · Queue · Health Monitor",x:42,y:6,w:16,h:8,cat:"kernel",status:"on",
+   detail:{role:"Central orchestrator daemon",port:"Internal",tech:"Python asyncio",connects:["All 9 agents","Task Queue","Scheduler","Health Monitor","State Store"],actions:["Dispatch tasks","Monitor heartbeats","Auto-restart crashed subsystems","Budget enforcement","Approval gates"]}},
+
+  // MORTGAGE OPS
+  {id:"diego",label:"DIEGO",sub:"Pipeline Orchestration\nLoan triage · Stage tracking",x:8,y:22,w:14,h:8,cat:"ops",status:"on",
+   detail:{role:"Pipeline Orchestration",port:"Internal",tech:"Python",connects:["AIOS Kernel","MARTIN","NOVA","JARVIS"],actions:["triage_loan","check_pipeline_health","get_pipeline_report","advance_stage","assign_priority"],citations:"FHA/VA/CONV/USDA routing rules"}},
+  {id:"martin",label:"MARTIN",sub:"Document Intelligence\nOCR · Classification · Fraud",x:8,y:36,w:14,h:8,cat:"ops",status:"on",
+   detail:{role:"Document Intelligence",port:"Internal",tech:"Python",connects:["AIOS Kernel","DIEGO","Open Notebook"],actions:["classify_document","validate_ocr","detect_fraud","audit_completeness","run_document_audit"],citations:"W-2, paystub, bank statement, tax return classification"}},
+  {id:"nova",label:"NOVA",sub:"Income & DTI Analysis\nW-2 dual-method · Schedule C",x:8,y:50,w:14,h:8,cat:"ops",status:"on",
+   detail:{role:"Income & DTI Analysis",port:"Internal",tech:"Python (Decimal)",connects:["AIOS Kernel","DIEGO","JARVIS"],actions:["calculate_w2_income","analyze_schedule_c","calculate_dti","evaluate_collections","full_income_analysis"],citations:"FHA HB 4000.1 II.A.5.b, II.A.4.c.ii, II.A.4.b, II.A.4.d.v"}},
+  {id:"jarvis",label:"JARVIS",sub:"Condition Resolution\nLOE drafting · Compliance",x:8,y:64,w:14,h:8,cat:"ops",status:"on",
+   detail:{role:"Condition Resolution",port:"Internal",tech:"Python",connects:["AIOS Kernel","DIEGO","NOVA"],actions:["draft_loe","map_conditions","lookup_citation","add_condition","get_condition_status"],citations:"FHA HB 4000.1, FNMA Selling Guide, FHLMC Guide"}},
+
+  // CODING AGENTS
+  {id:"atlas",label:"ATLAS",sub:"Full-Stack Engineering\nAPI gen · Features · Migrations",x:42,y:22,w:14,h:8,cat:"code",status:"on",
+   detail:{role:"Full-Stack Engineering",port:"Internal",tech:"Python",connects:["AIOS Kernel","NEXUS (output)","GitHub"],actions:["generate_api","build_feature","run_migration","scaffold_component"]}},
+  {id:"nexus",label:"NEXUS",sub:"Code Quality\nPR review · Tests · Tech debt",x:42,y:36,w:14,h:8,cat:"code",status:"on",
+   detail:{role:"Code Quality",port:"Internal",tech:"Python",connects:["AIOS Kernel","ATLAS (input)","CIPHER (output)"],actions:["review_pr","generate_tests","analyze_debt","refactor"]}},
+  {id:"cipher",label:"CIPHER",sub:"Security Engineering\nOWASP · SOC2 · PCI · GLBA",x:42,y:50,w:14,h:8,cat:"code",status:"on",
+   detail:{role:"Security Engineering",port:"Internal",tech:"Python",connects:["AIOS Kernel","NEXUS (input)","FORGE (output)"],actions:["owasp_scan","compliance_check","encryption_audit","patch_vulnerability"]}},
+  {id:"forge",label:"FORGE",sub:"DevOps Engineering\nDeploy · Rollback · CI/CD",x:42,y:64,w:14,h:8,cat:"code",status:"on",
+   detail:{role:"DevOps Engineering",port:"Internal",tech:"Python",connects:["AIOS Kernel","CIPHER (input)","Netlify","Vercel"],actions:["deploy","rollback","build_pipeline","rotate_secrets"]}},
+  {id:"storm",label:"STORM",sub:"Data Engineering\nETL · HMDA · ULDD · Query opt",x:42,y:78,w:14,h:8,cat:"code",status:"on",
+   detail:{role:"Data Engineering",port:"Internal",tech:"Python",connects:["AIOS Kernel","PostgreSQL","Redis"],actions:["build_etl","optimize_query","hmda_report","uldd_export"]}},
+
+  // EXTERNAL SERVICES
+  {id:"puter",label:"PUTER.JS",sub:"500+ LLM Models\nFree · No API keys",x:76,y:6,w:14,h:7,cat:"llm",status:"on",
+   detail:{role:"LLM Gateway",port:"https://js.puter.com/v2/",tech:"JavaScript CDN",connects:["AI Chat page","Intelligence Reports","All agents (via chat)"],models:"Claude 4.5, GPT-5, DeepSeek R1/V3, Qwen 3.5, Mistral Large 3, Llama 4, Kimi K2.5, Hermes 4, Dolphin 3.0, Codestral, Devstral, Nemotron, Phi-4"}},
+  {id:"paperclip",label:"PAPERCLIP AI",sub:"Agent Orchestration\nPort 3100 · Approvals · Budgets",x:76,y:17,w:14,h:7,cat:"ext",status:"warn",
+   detail:{role:"Enterprise Orchestration",port:"localhost:3100",tech:"TypeScript / Node.js",connects:["AIOS Kernel","All 9 agents","Ticket system"],features:"Approval workflows, cost tracking, org chart, immutable audit log, budget enforcement, governance gates"}},
+  {id:"opennotebook",label:"OPEN NOTEBOOK",sub:"Research Backend\nPort 5055 · RAG · Podcasts",x:76,y:28,w:14,h:7,cat:"ext",status:"warn",
+   detail:{role:"Knowledge Management",port:"localhost:5055",tech:"Python FastAPI + SurrealDB",connects:["MARTIN","All agents (research)","Notion","Wispr","Google Drive"],endpoints:"GET /api/notebooks, POST /api/notebooks, POST /sources, POST /ask, POST /api/chat/sessions"}},
+  {id:"telegram",label:"TELEGRAM",sub:"Bot API\nNotifications · Remote control",x:76,y:39,w:14,h:7,cat:"ext",status:"warn",
+   detail:{role:"Notifications & Remote Control",port:"api.telegram.org",tech:"HTTP REST",connects:["AIOS Kernel","All agents (commands)"],commands:"/status, /agents, /diego, /nova, /atlas, /cipher, /ask, /report, /models"}},
+  {id:"notion",label:"NOTION",sub:"Knowledge Sync\nAPI v1 · Page creation",x:76,y:50,w:14,h:6,cat:"ext",status:"warn",
+   detail:{role:"Knowledge Sync",port:"api.notion.com/v1",tech:"REST API",connects:["Open Notebook","Research notes"]}},
+  {id:"wispr",label:"WISPR FLOW",sub:"Voice-to-Text\nDictation → Notes",x:76,y:59,w:14,h:6,cat:"ext",status:"warn",
+   detail:{role:"Voice Input",port:"Webhook",tech:"HTTP Webhook",connects:["Open Notebook"]}},
+  {id:"gdrive",label:"GOOGLE DRIVE",sub:"Document Import\nPDFs → Sources",x:76,y:68,w:14,h:6,cat:"ext",status:"warn",
+   detail:{role:"Document Import",port:"Drive API v3",tech:"REST API",connects:["Open Notebook","MARTIN"]}},
+
+  // DATA
+  {id:"github",label:"GITHUB",sub:"CoryLawsonxMortgageAI\nIssues · Daily reports",x:28,y:86,w:14,h:6,cat:"data",status:"on",
+   detail:{role:"Code Repository & Issue Tracking",port:"api.github.com",tech:"REST API",connects:["ATLAS","FORGE","AIOS Kernel (daily reports)"]}},
+  {id:"netlify",label:"NETLIFY",sub:"Dashboard Deploy\nSite d8f73846",x:42,y:92,w:12,h:5,cat:"data",status:"on",
+   detail:{role:"Static Site Hosting",port:"api.netlify.com",tech:"REST API",connects:["FORGE","Dashboard UI"],site:"mortgagefintechos-dashboard.netlify.app"}},
+  {id:"postgres",label:"POSTGRESQL",sub:"Database\nPort 5432",x:56,y:86,w:12,h:6,cat:"data",status:"off",
+   detail:{role:"Primary Database",port:"localhost:5432",tech:"PostgreSQL 15",connects:["STORM","AIOS Kernel"],note:"Configured but not yet connected — using JSON state store"}},
+  {id:"redis",label:"REDIS",sub:"Cache\nPort 6379",x:70,y:86,w:10,h:5,cat:"data",status:"off",
+   detail:{role:"Cache & Queue",port:"localhost:6379",tech:"Redis 7",connects:["Task Queue"],note:"Configured but not yet connected"}},
+];
+
+// CONNECTION LINES
+const CONNECTIONS = [
+  // Kernel to all agents
+  {from:"kernel",to:"diego",label:"dispatch"},{from:"kernel",to:"martin"},{from:"kernel",to:"nova"},{from:"kernel",to:"jarvis"},
+  {from:"kernel",to:"atlas"},{from:"kernel",to:"nexus"},{from:"kernel",to:"cipher"},{from:"kernel",to:"forge"},{from:"kernel",to:"storm"},
+  // Mortgage ops chain
+  {from:"diego",to:"martin",label:"docs needed",color:"#e4e4e7"},{from:"martin",to:"nova",label:"income docs",color:"#e4e4e7"},{from:"nova",to:"jarvis",label:"conditions",color:"#e4e4e7"},
+  // Coding pipeline
+  {from:"atlas",to:"nexus",label:"PR review",color:"#a1a1aa"},{from:"nexus",to:"cipher",label:"security scan",color:"#a1a1aa"},{from:"cipher",to:"forge",label:"deploy",color:"#a1a1aa"},
+  // External
+  {from:"kernel",to:"puter",label:"LLM calls",color:"#22c55e"},
+  {from:"kernel",to:"paperclip",label:"HTTP :3100",color:"#f59e0b"},
+  {from:"martin",to:"opennotebook",label:"RAG",color:"#f59e0b"},
+  {from:"kernel",to:"telegram",label:"Bot API",color:"#f59e0b"},
+  {from:"opennotebook",to:"notion",label:"sync",color:"#52525b"},
+  {from:"opennotebook",to:"wispr",label:"webhook",color:"#52525b"},
+  {from:"opennotebook",to:"gdrive",label:"import",color:"#52525b"},
+  // Data
+  {from:"atlas",to:"github",label:"commits",color:"#52525b"},
+  {from:"forge",to:"netlify",label:"deploy",color:"#52525b"},
+  {from:"storm",to:"postgres",label:"queries",color:"#333"},
+];
+
+function pct(v,dim){return (v/100)*document.getElementById("map").getBoundingClientRect()[dim==="x"?"width":"height"];}
+
+function renderNodes(){
+  const map=document.getElementById("map");
+  NODES.forEach(n=>{
+    const el=document.createElement("div");
+    el.className=`node node-${n.cat}`;
+    el.style.cssText=`left:${n.x}%;top:${n.y}%;width:${n.w}%;`;
+    el.innerHTML=`<div class="node-label"><span class="node-status ${n.status}"></span>${n.label}</div><div class="node-sub">${n.sub.replace(/\n/g,"<br>")}</div>`;
+    el.onclick=()=>showInfo(n);
+    map.appendChild(el);
+    n._el=el;
+  });
+}
+
+function renderLines(){
+  const svg=document.getElementById("lines");
+  const map=document.getElementById("map");
+  const rect=map.getBoundingClientRect();
+  svg.setAttribute("viewBox",`0 0 ${rect.width} ${rect.height}`);
+
+  CONNECTIONS.forEach(c=>{
+    const from=NODES.find(n=>n.id===c.from);
+    const to=NODES.find(n=>n.id===c.to);
+    if(!from||!to)return;
+    const fx=(from.x+from.w/2)/100*rect.width;
+    const fy=(from.y+4)/100*rect.height;
+    const tx=(to.x+to.w/2)/100*rect.width;
+    const ty=(to.y+4)/100*rect.height;
+    const mx=(fx+tx)/2;
+    const color=c.color||"#333";
+    const line=document.createElementNS("http://www.w3.org/2000/svg","path");
+    line.setAttribute("d",`M${fx},${fy} C${mx},${fy} ${mx},${ty} ${tx},${ty}`);
+    line.setAttribute("stroke",color);
+    line.setAttribute("stroke-width","1");
+    line.setAttribute("fill","none");
+    line.setAttribute("stroke-dasharray",color==="#333"?"4,4":"");
+    line.setAttribute("marker-end",color==="#22c55e"?"url(#arrow-ok)":"url(#arrow)");
+    line.setAttribute("opacity","0.5");
+    svg.appendChild(line);
+  });
+}
+
+function showInfo(node){
+  const panel=document.getElementById("info");
+  const content=document.getElementById("info-content");
+  const d=node.detail||{};
+  let html=`<div class="info-title">${node.label}</div>`;
+  html+=`<div class="info-sub">${d.role||node.sub}</div>`;
+  html+=`<div class="info-section">Connection</div>`;
+  html+=`<div class="info-row"><b>Port:</b> ${d.port||"Internal"}</div>`;
+  html+=`<div class="info-row"><b>Tech:</b> ${d.tech||"Python"}</div>`;
+  html+=`<div class="info-row"><b>Status:</b> <span class="tag tag-${node.status==="on"?"ok":node.status==="warn"?"warn":"off"}">${node.status==="on"?"CONNECTED":node.status==="warn"?"CONFIGURABLE":"NOT CONNECTED"}</span></div>`;
+  if(d.connects){html+=`<div class="info-section">Connected To</div>`;d.connects.forEach(c=>{html+=`<div class="info-row">→ ${c}</div>`;});}
+  if(d.actions){html+=`<div class="info-section">Actions</div>`;d.actions.forEach(a=>{html+=`<div class="info-row" style="font-family:var(--m);font-size:10px">${a}</div>`;});}
+  if(d.models){html+=`<div class="info-section">Available Models</div><div class="info-row" style="font-size:10px">${d.models}</div>`;}
+  if(d.endpoints){html+=`<div class="info-section">API Endpoints</div><div class="info-row" style="font-family:var(--m);font-size:9px">${d.endpoints}</div>`;}
+  if(d.citations){html+=`<div class="info-section">Compliance Citations</div><div class="info-row" style="font-size:10px">${d.citations}</div>`;}
+  if(d.features){html+=`<div class="info-section">Features</div><div class="info-row" style="font-size:10px">${d.features}</div>`;}
+  if(d.commands){html+=`<div class="info-section">Commands</div><div class="info-row" style="font-family:var(--m);font-size:9px">${d.commands}</div>`;}
+  if(d.note){html+=`<div class="info-section">Note</div><div class="info-row" style="color:var(--warn);font-size:10px">${d.note}</div>`;}
+  if(d.site){html+=`<div class="info-section">URL</div><div class="info-row"><a href="https://${d.site}" target="_blank" style="color:var(--ok);font-size:10px">${d.site}</a></div>`;}
+  content.innerHTML=html;
+  panel.classList.add("open");
+}
+
+function closeInfo(){document.getElementById("info").classList.remove("open");}
+
+// Connection Matrix
+function renderMatrix(){
+  const agents=[
+    {n:"DIEGO",type:"Ops",from:"AIOS Kernel",to:"MARTIN, NOVA, JARVIS",ext:"GitHub (issues)",s:"on"},
+    {n:"MARTIN",type:"Ops",from:"DIEGO, AIOS Kernel",to:"NOVA",ext:"Open Notebook (RAG), Google Drive",s:"on"},
+    {n:"NOVA",type:"Ops",from:"MARTIN, AIOS Kernel",to:"JARVIS",ext:"—",s:"on"},
+    {n:"JARVIS",type:"Ops",from:"NOVA, AIOS Kernel",to:"—",ext:"—",s:"on"},
+    {n:"ATLAS",type:"Code",from:"AIOS Kernel",to:"NEXUS",ext:"GitHub (commits)",s:"on"},
+    {n:"NEXUS",type:"Code",from:"ATLAS, AIOS Kernel",to:"CIPHER",ext:"—",s:"on"},
+    {n:"CIPHER",type:"Code",from:"NEXUS, AIOS Kernel",to:"FORGE",ext:"—",s:"on"},
+    {n:"FORGE",type:"Code",from:"CIPHER, AIOS Kernel",to:"—",ext:"Netlify, Vercel, GitHub",s:"on"},
+    {n:"STORM",type:"Code",from:"AIOS Kernel",to:"—",ext:"PostgreSQL, Redis",s:"off"},
+  ];
+  document.getElementById("matrix").innerHTML=agents.map(a=>`<tr><td style="font-family:var(--m);font-weight:700;color:var(--t)">${a.n}</td><td><span class="tag tag-${a.type==="Ops"?"ok":"warn"}">${a.type}</span></td><td>${a.from}</td><td>${a.to}</td><td>${a.ext}</td><td><span class="tag tag-${a.s}">${a.s==="on"?"ACTIVE":"CONFIG"}</span></td></tr>`).join("");
+}
+
+// Data Flows
+function renderFlows(){
+  const flows=[
+    {flow:"Task Dispatch",from:"AIOS Kernel",to:"Any Agent",proto:"Internal Queue",data:"Task JSON (id, action, payload, priority)",s:"ok"},
+    {flow:"Heartbeat",from:"Agents",to:"Health Monitor",proto:"Internal (30s)",data:"Status, error count, last activity",s:"ok"},
+    {flow:"State Persist",from:"Agents",to:"State Store",proto:"JSON Files",data:"Agent state (debounced 5s)",s:"ok"},
+    {flow:"LLM Inference",from:"Dashboard",to:"Puter.js",proto:"HTTPS (CDN)",data:"Prompt + model ID → response",s:"ok"},
+    {flow:"Paperclip Sync",from:"AIOS Kernel",to:"Paperclip AI",proto:"HTTP :3100",data:"Tickets, budgets, approvals",s:"warn"},
+    {flow:"RAG Query",from:"Chat UI",to:"Open Notebook",proto:"HTTP :5055",data:"Question + notebook_id → SSE answer",s:"warn"},
+    {flow:"Source Upload",from:"Dashboard",to:"Open Notebook",proto:"HTTP POST",data:"PDF/URL → indexed source",s:"warn"},
+    {flow:"Notion Sync",from:"Open Notebook",to:"Notion",proto:"HTTPS API v1",data:"Research notes → Notion pages",s:"warn"},
+    {flow:"Voice Dictation",from:"Wispr Flow",to:"Open Notebook",proto:"Webhook",data:"Speech text → note source",s:"warn"},
+    {flow:"Drive Import",from:"Google Drive",to:"Open Notebook",proto:"Drive API v3",data:"PDFs/Docs → indexed sources",s:"warn"},
+    {flow:"Telegram Notify",from:"AIOS Kernel",to:"Telegram",proto:"HTTPS Bot API",data:"Status alerts, agent results",s:"warn"},
+    {flow:"GitHub Reports",from:"AIOS Kernel",to:"GitHub",proto:"HTTPS API",data:"Daily reports, issue creation",s:"ok"},
+    {flow:"Deploy",from:"FORGE",to:"Netlify",proto:"HTTPS API",data:"Static files → CDN deploy",s:"ok"},
+    {flow:"DB Queries",from:"STORM",to:"PostgreSQL",proto:"TCP :5432",data:"SQL queries, ETL pipelines",s:"off"},
+    {flow:"Cache",from:"Task Queue",to:"Redis",proto:"TCP :6379",data:"Queue state, session cache",s:"off"},
+  ];
+  document.getElementById("flows").innerHTML=flows.map(f=>`<tr><td style="font-weight:600;color:var(--t)">${f.flow}</td><td>${f.from}</td><td>${f.to}</td><td style="font-family:var(--m);font-size:9px">${f.proto}</td><td style="font-size:10px;color:var(--t3)">${f.data}</td><td><span class="tag tag-${f.s}">${f.s==="ok"?"ACTIVE":f.s==="warn"?"READY":"NOT YET"}</span></td></tr>`).join("");
+}
+
+// Init
+renderNodes();
+renderMatrix();
+renderFlows();
+setTimeout(renderLines,100);
+window.addEventListener("resize",()=>{document.getElementById("lines").innerHTML='<defs><marker id="arrow" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto"><path d="M0,0 L6,2 L0,4" fill="#52525b"/></marker><marker id="arrow-ok" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto"><path d="M0,0 L6,2 L0,4" fill="#22c55e"/></marker></defs>';renderLines();});
+document.addEventListener("click",e=>{if(!e.target.closest(".node")&&!e.target.closest(".info"))closeInfo();});
+</script>
+</body>
+</html>
