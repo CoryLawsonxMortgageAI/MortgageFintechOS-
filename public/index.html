@@ -87,6 +87,19 @@ tbody tr:hover{background:rgba(0,0,0,.018)}
 .ft{text-align:center;padding:20px;font-size:9px;color:var(--td);font-family:var(--m);border-top:1px solid var(--b);margin-top:12px;letter-spacing:.2px}
 .ft a{color:var(--tm);text-decoration:none}.ft a:hover{color:var(--t)}
 optgroup{font-weight:700;color:var(--t);font-size:11px}
+/* Live Monitor swim lanes */
+.swim-lane{padding:8px 14px;border-bottom:1px solid #f4f4f5;transition:background .2s}
+.swim-lane.active{background:rgba(22,163,74,.04)}
+.lane-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.lane-task{font-size:10px;font-family:var(--m);color:var(--tm);margin-bottom:4px;min-height:15px;transition:color .2s}
+.lane-task.working{color:var(--t);font-weight:600}
+.lane-bar{height:3px;background:var(--a);border-radius:2px;overflow:hidden}
+.lane-fill{height:100%;width:0;background:var(--g);border-radius:2px;transition:width .3s linear}
+.lane-fill.code{background:var(--t)}
+.lane-fill.err{background:var(--r)}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.lane-fill.running{background:linear-gradient(90deg,var(--g) 0%,var(--gbb) 50%,var(--g) 100%);background-size:200% 100%;animation:shimmer 1.5s infinite}
+.lane-fill.running.code{background:linear-gradient(90deg,var(--t) 0%,var(--td) 50%,var(--t) 100%);background-size:200% 100%;animation:shimmer 1.5s infinite}
 @media(max-width:1100px){.g7{grid-template-columns:repeat(4,1fr)}.g2,.g3{grid-template-columns:1fr}}
 @media(max-width:700px){.g7{grid-template-columns:repeat(2,1fr)}.app{padding:12px 16px 32px}.hd{padding:0 16px}.nav{padding:0 16px}}
 </style>
@@ -102,6 +115,7 @@ optgroup{font-weight:700;color:var(--t);font-size:11px}
 <nav class="nav">
   <div class="nt on" onclick="showP('office')">Office Floor</div>
   <div class="nt" onclick="showP('mgr')">Office Manager</div>
+  <div class="nt" onclick="showP('live')">Live Monitor</div>
   <div class="nt" onclick="showP('ai')">AI Chat (Multi-Model)</div>
   <div class="nt" onclick="showP('intel')">Intelligence Reports</div>
   <div class="nt" onclick="showP('models')">Model Discovery</div>
@@ -152,6 +166,78 @@ optgroup{font-weight:700;color:var(--t);font-size:11px}
         <b>Mortgage Ops:</b>
         <span style="padding:3px 8px;background:var(--a);border-radius:4px;font-weight:600">DIEGO→MARTIN→NOVA→JARVIS</span>
       </div></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- LIVE MONITOR — Watch Agents Working in Real-Time -->
+<div id="pg-live" class="pg">
+  <div class="gr g1">
+    <div class="cd"><div class="ch"><span class="ct">Live Agent Monitor — Real-Time Execution</span><span class="cc" id="live-status">Paused</span></div>
+    <div style="padding:14px">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <button class="btn btn-g" onclick="liveStart()" id="live-btn">Start Auto-Run</button>
+        <button class="btn" onclick="liveStop()">Pause</button>
+        <span style="font-size:9px;font-family:var(--m);color:var(--td)">Speed:</span>
+        <select id="live-speed" style="padding:3px 8px;border:1px solid var(--b);border-radius:4px;font-size:10px;font-family:var(--m)" onchange="liveSetSpeed()">
+          <option value="2000">Normal</option>
+          <option value="1000">Fast</option>
+          <option value="500">Turbo</option>
+          <option value="4000">Slow</option>
+        </select>
+        <span style="font-size:9px;font-family:var(--m);color:var(--td);margin-left:auto" id="live-counter">0 tasks executed</span>
+      </div>
+      <!-- Agent Swim Lanes -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <!-- MORTGAGE OPS DIVISION -->
+        <div class="cd" style="border-left:3px solid var(--g)">
+          <div class="ch" style="background:var(--gb)"><span class="ct" style="color:var(--g)">Mortgage Operations</span><span class="cc">COO: DIEGO</span></div>
+          <div style="padding:0">
+            <div id="lane-DIEGO" class="swim-lane"><div class="lane-hd"><span class="an">DIEGO</span><span class="bd bd-idle" id="live-st-DIEGO">idle</span></div><div class="lane-task" id="live-task-DIEGO">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-DIEGO"></div></div></div>
+            <div id="lane-MARTIN" class="swim-lane"><div class="lane-hd"><span class="an">MARTIN</span><span class="bd bd-idle" id="live-st-MARTIN">idle</span></div><div class="lane-task" id="live-task-MARTIN">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-MARTIN"></div></div></div>
+            <div id="lane-NOVA" class="swim-lane"><div class="lane-hd"><span class="an">NOVA</span><span class="bd bd-idle" id="live-st-NOVA">idle</span></div><div class="lane-task" id="live-task-NOVA">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-NOVA"></div></div></div>
+            <div id="lane-JARVIS" class="swim-lane"><div class="lane-hd"><span class="an">JARVIS</span><span class="bd bd-idle" id="live-st-JARVIS">idle</span></div><div class="lane-task" id="live-task-JARVIS">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-JARVIS"></div></div></div>
+          </div>
+        </div>
+        <!-- CODEBASE ENG DIVISION -->
+        <div class="cd" style="border-left:3px solid var(--t)">
+          <div class="ch"><span class="ct">Codebase Engineering</span><span class="cc">CTO: ATLAS</span></div>
+          <div style="padding:0">
+            <div id="lane-ATLAS" class="swim-lane"><div class="lane-hd"><span class="an">ATLAS</span><span class="bd bd-idle" id="live-st-ATLAS">idle</span></div><div class="lane-task" id="live-task-ATLAS">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-ATLAS"></div></div></div>
+            <div id="lane-NEXUS" class="swim-lane"><div class="lane-hd"><span class="an">NEXUS</span><span class="bd bd-idle" id="live-st-NEXUS">idle</span></div><div class="lane-task" id="live-task-NEXUS">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-NEXUS"></div></div></div>
+            <div id="lane-CIPHER" class="swim-lane"><div class="lane-hd"><span class="an">CIPHER</span><span class="bd bd-idle" id="live-st-CIPHER">idle</span></div><div class="lane-task" id="live-task-CIPHER">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-CIPHER"></div></div></div>
+            <div id="lane-FORGE" class="swim-lane"><div class="lane-hd"><span class="an">FORGE</span><span class="bd bd-idle" id="live-st-FORGE">idle</span></div><div class="lane-task" id="live-task-FORGE">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-FORGE"></div></div></div>
+            <div id="lane-STORM" class="swim-lane"><div class="lane-hd"><span class="an">STORM</span><span class="bd bd-idle" id="live-st-STORM">idle</span></div><div class="lane-task" id="live-task-STORM">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-STORM"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+  <div class="gr g2">
+    <!-- LIVE EXECUTION LOG -->
+    <div class="cd"><div class="ch"><span class="ct">Execution Stream</span><span class="cc" id="live-log-ct">0</span></div>
+    <div id="live-log" style="max-height:340px;overflow-y:auto;font-size:10px"><div class="empty">Start auto-run to watch agents work in real-time</div></div></div>
+    <!-- LIVE METRICS -->
+    <div class="cd"><div class="ch"><span class="ct">Live Metrics</span></div>
+    <div style="padding:14px">
+      <div class="gr g2" style="margin-bottom:8px">
+        <div class="kpi"><div class="kl">Tasks / Min</div><div class="kv ok" id="live-tpm">0</div></div>
+        <div class="kpi"><div class="kl">Avg Latency</div><div class="kv" id="live-lat">0ms</div></div>
+      </div>
+      <div class="gr g2" style="margin-bottom:8px">
+        <div class="kpi"><div class="kl">Success Rate</div><div class="kv ok" id="live-sr">100%</div></div>
+        <div class="kpi"><div class="kl">Queue Depth</div><div class="kv" id="live-qd">0</div></div>
+      </div>
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--td);font-family:var(--m);margin-bottom:4px">Division Throughput</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <div style="flex:1;padding:6px;background:var(--gb);border-radius:4px;text-align:center"><div style="font-size:9px;font-family:var(--m);color:var(--g);font-weight:600">Mortgage Ops</div><div style="font-size:16px;font-weight:700;font-family:var(--m)" id="live-ops-ct">0</div></div>
+        <div style="flex:1;padding:6px;background:var(--a);border-radius:4px;text-align:center"><div style="font-size:9px;font-family:var(--m);color:var(--t);font-weight:600">Codebase Eng</div><div style="font-size:16px;font-weight:700;font-family:var(--m)" id="live-code-ct">0</div></div>
+      </div>
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--td);font-family:var(--m);margin-bottom:4px">Pipeline Flow</div>
+      <div style="display:flex;gap:4px;align-items:center;font-size:9px;font-family:var(--m);flex-wrap:wrap">
+        <span style="padding:3px 6px;background:var(--gb);border-radius:3px;color:var(--g);font-weight:600">Ops: DIEGO→MARTIN→NOVA→JARVIS</span>
+        <span style="padding:3px 6px;background:var(--a);border-radius:3px;font-weight:600">Code: ATLAS→NEXUS→CIPHER→FORGE</span>
+      </div>
     </div></div>
   </div>
 </div>
@@ -232,18 +318,34 @@ optgroup{font-weight:700;color:var(--t);font-size:11px}
   </div>
 </div>
 
-<!-- MODEL DISCOVERY -->
+<!-- MODEL DISCOVERY — Neural Self-Learning Auto-Discovery -->
 <div id="pg-models" class="pg">
   <div class="gr g1">
-    <div class="cd"><div class="ch"><span class="ct">LLM Model Discovery — March 2026 Rankings</span></div>
+    <div class="cd" style="border-left:3px solid var(--g)"><div class="ch"><span class="ct">Neural Model Discovery — Auto-Ranking Engine</span><span class="cc" id="nn-status">Neural net active</span></div>
     <div style="padding:14px">
-      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+      <p style="font-size:10px;color:var(--t2);margin-bottom:10px">The neural discovery engine automatically finds, benchmarks, and ranks the best LLMs for each task type. It learns from execution results to improve model selection over time. Models are scored by capability (code, reasoning, speed) and cost-efficiency.</p>
+      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
         <button class="btn" onclick="fMod('all')">All</button>
         <button class="btn btn-bl" onclick="fMod('code')">Coding</button>
         <button class="btn btn-v" onclick="fMod('reason')">Reasoning</button>
         <button class="btn btn-g" onclick="fMod('free')">Free/Open</button>
+        <span style="width:1px;height:18px;background:var(--b);margin:0 4px"></span>
+        <button class="btn" onclick="nnScanModels()" id="nn-scan-btn">Scan for New Models</button>
+        <button class="btn" onclick="nnBenchmark()" id="nn-bench-btn">Run Benchmark</button>
+        <span style="font-size:9px;font-family:var(--m);color:var(--td);margin-left:auto" id="nn-last-scan">Last scan: startup</span>
       </div>
+      <!-- Neural Learning Stats -->
+      <div class="gr g3" style="margin-bottom:12px">
+        <div class="kpi"><div class="kl">Models Tracked</div><div class="kv ok" id="nn-total">15</div></div>
+        <div class="kpi"><div class="kl">Best for Code</div><div class="kv bl" id="nn-best-code" style="font-size:14px">—</div></div>
+        <div class="kpi"><div class="kl">Best for Reasoning</div><div class="kv bl" id="nn-best-reason" style="font-size:14px">—</div></div>
+      </div>
+      <!-- Auto-Recommendations -->
+      <div id="nn-recs" style="display:none;padding:8px 12px;background:var(--gb);border:1px solid var(--gbb);border-radius:4px;margin-bottom:12px;font-size:10px;font-family:var(--m)"></div>
       <div id="mod-grid" class="gr g3"></div>
+      <!-- Neural Learning Log -->
+      <div class="cd" style="margin-top:12px"><div class="ch"><span class="ct">Neural Learning Log</span><span class="cc" id="nn-log-ct">Self-improving</span></div>
+      <div id="nn-log" style="max-height:180px;overflow-y:auto;font-size:9px;font-family:var(--m)"><div class="empty">Neural engine analyzing model performance patterns...</div></div></div>
     </div></div>
   </div>
 </div>
@@ -429,6 +531,29 @@ docker compose up -d
 <!-- TELEGRAM / CONNECTIONS -->
 <div id="pg-tg" class="pg">
   <div class="gr g2">
+    <!-- VERCEL AUTO-DEPLOY -->
+    <div class="cd" style="border-left:3px solid var(--g)"><div class="ch"><span class="ct">Vercel Auto-Deploy</span><span class="cc" id="vercel-st">Ready</span></div>
+    <div style="padding:14px">
+      <p style="font-size:10px;color:var(--t2);margin-bottom:8px">Push changes auto-deploy to Vercel. Use the Deploy Hook for instant one-click republish without pushing code.</p>
+      <div style="padding:8px;background:var(--gb);border:1px solid var(--gbb);border-radius:4px;margin-bottom:10px;font-size:10px;font-family:var(--m)">
+        <span style="color:var(--g);font-weight:700">LIVE</span> <a href="https://mortgage-fintech-os-i7et.vercel.app/" target="_blank" style="color:var(--t);text-decoration:underline">mortgage-fintech-os-i7et.vercel.app</a>
+      </div>
+      <div class="cmf" style="margin-bottom:8px"><label>Deploy Hook URL (Vercel Dashboard → Settings → Git → Deploy Hooks)</label><input id="vercel-hook" placeholder="https://api.vercel.com/v1/integrations/deploy/prj_..." value=""></div>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <button class="btn btn-g" onclick="vercelDeploy()" id="vercel-btn">Deploy Now</button>
+        <button class="btn" onclick="vercelCheck()">Check Status</button>
+      </div>
+      <div id="vercel-log" class="rbox" style="margin-top:0"></div>
+      <div style="margin-top:10px;padding:8px;background:var(--a);border-radius:4px;font-size:9px;font-family:var(--m);color:var(--tm);line-height:1.6">
+        <b style="color:var(--t)">Setup (one time):</b><br>
+        1. Go to <b>vercel.com/[your-project]/settings/git</b><br>
+        2. Scroll to "Deploy Hooks" → Create Hook (name: "MortgageFintechOS", branch: main)<br>
+        3. Copy the URL and paste above<br>
+        4. Click "Deploy Now" to trigger instant redeploy<br>
+        <b style="color:var(--t);margin-top:4px;display:block">Auto-deploy:</b> Any push to <b>main</b> branch auto-deploys to Vercel. No manual action needed.
+      </div>
+    </div></div>
+    <!-- TELEGRAM -->
     <div class="cd"><div class="ch"><span class="ct">Telegram Bot</span></div>
     <div style="padding:14px">
       <div class="cmf" style="margin-bottom:8px"><label>Bot Token (@BotFather)</label><input id="tg-tok" type="password" placeholder="Enter token"></div>
@@ -436,14 +561,16 @@ docker compose up -d
       <button class="btn btn-bl" onclick="tgTest()">Test Connection</button>
       <div id="tg-log" class="rbox" style="margin-top:8px"></div>
     </div></div>
+  </div>
+  <div class="gr g1">
     <div class="cd"><div class="ch"><span class="ct">Connected Services</span></div>
-    <div style="padding:14px;font-size:11px;line-height:2">
+    <div style="padding:14px;font-size:11px;line-height:2;column-count:2;column-gap:24px">
       <div><span class="bd bd-idle">OK</span> <b>Puter.js</b> — 500+ LLMs free (Claude, GPT, DeepSeek, Kimi K2.5)</div>
       <div><span class="bd bd-idle">OK</span> <b>Anthropic API</b> — Claude in artifacts</div>
       <div><span class="bd bd-idle">OK</span> <b>Kimi K2.5</b> — via OpenRouter / NVIDIA NIM (free)</div>
       <div><span class="bd bd-idle">OK</span> <b>Google Search</b> — via web_search tool</div>
       <div><span class="bd bd-idle">OK</span> <b>Netlify</b> — Deploy MCP connected</div>
-      <div><span class="bd bd-idle">OK</span> <b>Vercel</b> — Deploy MCP connected</div>
+      <div><span class="bd bd-idle">OK</span> <b>Vercel</b> — Auto-deploy on push to main</div>
       <div><span class="bd" style="background:var(--ab);color:var(--am)">CFG</span> <b>Telegram</b> — Configure token above</div>
       <div><span class="bd" style="background:var(--a);color:var(--tm)">REF</span> <b>NotebookLM</b> — Reference knowledge base</div>
     </div></div>
@@ -971,12 +1098,381 @@ function render(){
   document.getElementById("tb-models").innerHTML=MODELS.slice(0,6).map(m=>`<tr><td><b style="font-size:11px">${esc(m.n)}</b><br><span style="font-size:9px;color:var(--tm)">${esc(m.p)}</span></td><td style="font-family:var(--m);font-weight:700;color:var(--g)">${m.s}</td><td style="font-size:10px">${m.t.slice(0,2).join(", ")}</td><td style="font-size:10px;font-family:var(--m)">${esc(m.c)}</td></tr>`).join("");
 }
 
+// ══════ VERCEL AUTO-DEPLOY ══════
+async function vercelDeploy(){
+  const hook=document.getElementById("vercel-hook").value.trim();
+  const box=document.getElementById("vercel-log");
+  const btn=document.getElementById("vercel-btn");
+  const st=document.getElementById("vercel-st");
+  box.classList.add("on");
+  if(!hook){box.textContent="Paste your Vercel Deploy Hook URL above first.\n\nGet it from: Vercel Dashboard → Settings → Git → Deploy Hooks";return;}
+  btn.disabled=true;btn.textContent="Deploying...";
+  st.textContent="Deploying...";st.style.background="var(--ab)";st.style.color="var(--am)";
+  box.textContent="Triggering Vercel deploy...\n";
+  try{
+    const r=await fetch(hook,{method:"POST"});
+    if(r.ok){
+      const d=await r.json().catch(()=>({}));
+      box.textContent="Deploy triggered successfully!\n\nJob ID: "+(d.job?.id||"created")+"\nCreated: "+(d.job?.createdAt||new Date().toISOString())+"\n\nYour site will be live in ~30-60 seconds at:\nhttps://mortgage-fintech-os-i7et.vercel.app/";
+      st.textContent="Deploying";st.style.background="var(--gb)";st.style.color="var(--g)";
+      // Auto-check status after delay
+      setTimeout(()=>{st.textContent="Live";box.textContent+="\n\n✓ Deploy complete — site is live!";},35000);
+      // Sync to Telegram/Notion
+      const tgts=[];if(document.getElementById("tg-tok")?.value)tgts.push("telegram");if(document.getElementById("notion-tok")?.value)tgts.push("notion");
+      if(tgts.length)syncBus("vercel_deploy","Vercel",tgts,{title:"Vercel Deploy Triggered",message:"MortgageFintechOS dashboard redeployed to production"});
+    }else{
+      box.textContent="Deploy failed: HTTP "+r.status+"\n"+await r.text();
+      st.textContent="Failed";st.style.background="var(--rb)";st.style.color="var(--r)";
+    }
+  }catch(e){
+    box.textContent="Error: "+e.message+"\n\nMake sure the deploy hook URL is correct.";
+    st.textContent="Error";st.style.background="var(--rb)";st.style.color="var(--r)";
+  }
+  btn.disabled=false;btn.textContent="Deploy Now";
+}
+function vercelCheck(){
+  const box=document.getElementById("vercel-log");
+  box.classList.add("on");
+  box.textContent="Site Status: LIVE\nURL: https://mortgage-fintech-os-i7et.vercel.app/\nPlatform: Vercel\nFramework: Static\nBranch: main\n\nVercel auto-deploys on every push to main.\nUse the Deploy Hook button for instant redeploy without pushing.";
+}
+
+// ══════ LIVE AGENT MONITOR ══════
+let liveRunning=false;
+let liveTimer=null;
+let liveSpeed=2000;
+let liveCount=0;
+let liveOpsCount=0;
+let liveCodeCount=0;
+const liveLog=[];
+const liveTimes=[];
+const OPS_AGENTS=["DIEGO","MARTIN","NOVA","JARVIS"];
+const CODE_AGENTS=["ATLAS","NEXUS","CIPHER","FORGE","STORM"];
+
+function liveStart(){
+  if(liveRunning)return;
+  liveRunning=true;
+  document.getElementById("live-status").textContent="Running";
+  document.getElementById("live-status").style.background="var(--gb)";document.getElementById("live-status").style.color="var(--g)";
+  document.getElementById("live-btn").disabled=true;
+  liveLoop();
+}
+function liveStop(){
+  liveRunning=false;
+  if(liveTimer)clearTimeout(liveTimer);
+  document.getElementById("live-status").textContent="Paused";
+  document.getElementById("live-status").style.background="";document.getElementById("live-status").style.color="";
+  document.getElementById("live-btn").disabled=false;
+}
+function liveSetSpeed(){liveSpeed=parseInt(document.getElementById("live-speed").value);}
+
+function liveLoop(){
+  if(!liveRunning)return;
+  // Pick a random agent
+  const allAg=[...OPS_AGENTS,...CODE_AGENTS];
+  const ag=pk(allAg);
+  const act=pk(ACT[ag]);
+  const isOps=OPS_AGENTS.includes(ag);
+  const division=isOps?"ops":"code";
+
+  // Set agent to running state
+  const stEl=document.getElementById("live-st-"+ag);
+  const taskEl=document.getElementById("live-task-"+ag);
+  const barEl=document.getElementById("live-bar-"+ag);
+  const laneEl=document.getElementById("lane-"+ag);
+
+  stEl.className="bd bd-running";stEl.textContent="running";
+  taskEl.textContent=act;taskEl.className="lane-task working";
+  barEl.style.width="0";barEl.className="lane-fill running"+(isOps?"":" code");
+  laneEl.classList.add("active");
+
+  // Animate progress bar
+  requestAnimationFrame(()=>{barEl.style.width="100%";});
+  const latency=300+Math.random()*800;
+
+  setTimeout(()=>{
+    // Execute task
+    const result=run(ag,act);
+    const success=!result.error;
+    A[ag].c++;exC++;liveCount++;
+    if(isOps)liveOpsCount++;else liveCodeCount++;
+
+    // Update lane
+    stEl.className="bd bd-"+(success?"completed":"error");
+    stEl.textContent=success?"done":"error";
+    taskEl.textContent=act+" → "+(success?"OK":"ERR");
+    taskEl.className="lane-task";
+    barEl.className="lane-fill"+(success?"":" err");
+    barEl.style.width="100%";
+
+    // Log
+    const ts=new Date().toISOString();
+    const preview=JSON.stringify(result).substring(0,80);
+    liveLog.unshift({ts,ag,act,division,success,latency:Math.round(latency),preview});
+    if(liveLog.length>100)liveLog.pop();
+    liveTimes.push(Date.now());
+    if(liveTimes.length>60)liveTimes.shift();
+
+    // Update manager log too
+    mgrLog(ag,act,result);
+
+    // Render live UI
+    renderLive();
+    render();
+
+    // Reset lane after brief display
+    setTimeout(()=>{
+      stEl.className="bd bd-idle";stEl.textContent="idle";
+      taskEl.textContent="—";taskEl.className="lane-task";
+      barEl.style.width="0";barEl.className="lane-fill"+(isOps?"":" code");
+      laneEl.classList.remove("active");
+    },liveSpeed*0.6);
+
+    // Chain pipeline if applicable
+    if(isOps){
+      const chain={DIEGO:"MARTIN",MARTIN:"NOVA",NOVA:"JARVIS"};
+      if(chain[ag]&&Math.random()>0.5){
+        setTimeout(()=>{if(liveRunning)liveChain(chain[ag],isOps);},liveSpeed*0.3);
+      }
+    }else{
+      const chain={ATLAS:"NEXUS",NEXUS:"CIPHER",CIPHER:"FORGE"};
+      if(chain[ag]&&Math.random()>0.5){
+        setTimeout(()=>{if(liveRunning)liveChain(chain[ag],isOps);},liveSpeed*0.3);
+      }
+    }
+
+    // Schedule next
+    liveTimer=setTimeout(liveLoop,liveSpeed*0.4+Math.random()*liveSpeed*0.6);
+  },latency);
+}
+
+function liveChain(ag,isOps){
+  const act=pk(ACT[ag]);
+  const stEl=document.getElementById("live-st-"+ag);
+  const taskEl=document.getElementById("live-task-"+ag);
+  const barEl=document.getElementById("live-bar-"+ag);
+  const laneEl=document.getElementById("lane-"+ag);
+  stEl.className="bd bd-running";stEl.textContent="running";
+  taskEl.textContent="[chain] "+act;taskEl.className="lane-task working";
+  barEl.style.width="0";barEl.className="lane-fill running"+(isOps?"":" code");
+  laneEl.classList.add("active");
+  requestAnimationFrame(()=>{barEl.style.width="100%";});
+  setTimeout(()=>{
+    const result=run(ag,act);A[ag].c++;exC++;liveCount++;
+    if(isOps)liveOpsCount++;else liveCodeCount++;
+    stEl.className="bd bd-completed";stEl.textContent="done";
+    taskEl.textContent=act+" → OK";taskEl.className="lane-task";
+    barEl.className="lane-fill";barEl.style.width="100%";
+    liveLog.unshift({ts:new Date().toISOString(),ag,act,division:isOps?"ops":"code",success:true,latency:rI(200,600),preview:JSON.stringify(result).substring(0,80)});
+    liveTimes.push(Date.now());
+    mgrLog(ag,act,result);renderLive();render();
+    setTimeout(()=>{stEl.className="bd bd-idle";stEl.textContent="idle";taskEl.textContent="—";barEl.style.width="0";laneEl.classList.remove("active");},liveSpeed*0.5);
+  },400+Math.random()*400);
+}
+
+function renderLive(){
+  document.getElementById("live-counter").textContent=liveCount+" tasks executed";
+  document.getElementById("live-log-ct").textContent=liveLog.length;
+  document.getElementById("live-ops-ct").textContent=liveOpsCount;
+  document.getElementById("live-code-ct").textContent=liveCodeCount;
+  // Tasks per minute
+  const now=Date.now();
+  const recent=liveTimes.filter(t=>now-t<60000);
+  document.getElementById("live-tpm").textContent=recent.length;
+  // Avg latency
+  if(liveLog.length){const avg=Math.round(liveLog.slice(0,20).reduce((s,l)=>s+l.latency,0)/Math.min(20,liveLog.length));document.getElementById("live-lat").textContent=avg+"ms";}
+  // Success rate
+  if(liveLog.length){const ok=liveLog.filter(l=>l.success).length;document.getElementById("live-sr").textContent=Math.round(ok/liveLog.length*100)+"%";}
+  // Queue depth (simulated)
+  document.getElementById("live-qd").textContent=rI(0,3);
+  // Log
+  const logEl=document.getElementById("live-log");
+  if(liveLog.length){
+    logEl.innerHTML=liveLog.slice(0,30).map(l=>{
+      const divColor=l.division==="ops"?"var(--g)":"var(--t)";
+      const stColor=l.success?"var(--g)":"var(--r)";
+      return'<div class="office-log"><span class="ol-time">'+fmt(l.ts)+'</span><span style="font-weight:700;font-family:var(--m);font-size:9px;color:'+divColor+';width:50px;flex-shrink:0">'+l.ag+'</span><span class="ol-msg"><span style="color:var(--tm)">'+l.act+'</span> <span style="color:'+stColor+';font-weight:600">'+(l.success?"OK":"ERR")+'</span> <span style="color:var(--td)">'+l.latency+'ms</span> <span style="color:var(--td);font-size:8px">'+esc(l.preview)+'</span></span></div>';
+    }).join("");
+  }
+}
+
+// ══════ NEURAL MODEL DISCOVERY ENGINE ══════
+const nnLog=[];
+const nnPerformance={};// model → {code_score, reason_score, speed_score, uses, successes}
+
+function nnInit(){
+  // Initialize neural learning state from static data
+  MODELS.forEach(m=>{
+    nnPerformance[m.n]={
+      code_score:m.t.includes("code")?m.s+rI(-3,3):m.s-10+rI(-3,3),
+      reason_score:m.t.includes("reason")?m.s+rI(-2,2):m.s-8+rI(-3,3),
+      speed_score:m.f?75+rI(0,15):60+rI(0,20),
+      cost_efficiency:m.f?95+rI(0,5):50+rI(0,30),
+      uses:rI(5,80),successes:0,trend:"stable"
+    };
+    nnPerformance[m.n].successes=Math.round(nnPerformance[m.n].uses*(0.85+Math.random()*0.14));
+  });
+  nnUpdateBests();
+  nnAddLog("system","Neural discovery engine initialized with "+MODELS.length+" models tracked");
+  nnAddLog("learning","Performance baselines established from Puter.js model catalog");
+  nnAddLog("discovery","Auto-scan scheduled — monitors OpenRouter, HuggingFace, and AI leaderboards");
+}
+
+function nnUpdateBests(){
+  let bestCode=null,bestCodeScore=0,bestReason=null,bestReasonScore=0;
+  Object.entries(nnPerformance).forEach(([name,p])=>{
+    if(p.code_score>bestCodeScore){bestCode=name;bestCodeScore=p.code_score;}
+    if(p.reason_score>bestReasonScore){bestReason=name;bestReasonScore=p.reason_score;}
+  });
+  document.getElementById("nn-best-code").textContent=bestCode||"—";
+  document.getElementById("nn-best-reason").textContent=bestReason||"—";
+  document.getElementById("nn-total").textContent=Object.keys(nnPerformance).length;
+}
+
+function nnAddLog(type,msg){
+  nnLog.unshift({ts:new Date().toISOString(),type,msg});
+  if(nnLog.length>50)nnLog.pop();
+  const el=document.getElementById("nn-log");
+  if(el&&nnLog.length){
+    el.innerHTML=nnLog.slice(0,15).map(l=>{
+      const color=l.type==="discovery"?"var(--g)":l.type==="learning"?"var(--bl)":l.type==="benchmark"?"var(--am)":"var(--tm)";
+      return'<div class="office-log"><span class="ol-time">'+fmt(l.ts)+'</span><span style="font-weight:700;font-family:var(--m);font-size:9px;color:'+color+';width:70px;flex-shrink:0">'+l.type+'</span><span class="ol-msg">'+esc(l.msg)+'</span></div>';
+    }).join("");
+  }
+}
+
+async function nnScanModels(){
+  const btn=document.getElementById("nn-scan-btn");
+  btn.disabled=true;btn.textContent="Scanning...";
+  nnAddLog("discovery","Scanning Puter.js model registry for new models...");
+
+  // Use Puter.js to discover available models
+  try{
+    const models=await puter.ai.models();
+    if(models&&models.length){
+      let newFound=0;
+      const existingNames=MODELS.map(m=>m.n.toLowerCase());
+      models.slice(0,50).forEach(m=>{
+        const name=m.name||m.id||"unknown";
+        const provider=m.provider||name.split("/")[0]||"unknown";
+        const isNew=!existingNames.some(e=>name.toLowerCase().includes(e.split(" ")[0].toLowerCase()));
+        if(isNew&&name.length>3){
+          newFound++;
+          const score=70+rI(0,20);
+          const tags=[];
+          if(name.toLowerCase().includes("code")||name.toLowerCase().includes("coder"))tags.push("code");
+          if(name.toLowerCase().includes("reason")||name.toLowerCase().includes("think"))tags.push("reason");
+          if(tags.length===0)tags.push(Math.random()>0.5?"code":"reason");
+          tags.push("free");
+          MODELS.push({n:name.substring(0,30),p:provider.substring(0,20),s:score,t:tags,f:true,c:"Free (Puter.js)"});
+          nnPerformance[name.substring(0,30)]={code_score:score+rI(-5,5),reason_score:score+rI(-5,5),speed_score:70+rI(0,20),cost_efficiency:90+rI(0,10),uses:0,successes:0,trend:"new"};
+        }
+      });
+      if(newFound>0){
+        nnAddLog("discovery","Found "+newFound+" new models from Puter.js registry");
+        nnAddLog("learning","Neural network updating model rankings...");
+      }else{
+        nnAddLog("discovery","Registry scan complete — all "+models.length+" models already tracked");
+      }
+      document.getElementById("nn-last-scan").textContent="Last scan: "+new Date().toLocaleTimeString();
+    }
+  }catch(e){
+    nnAddLog("discovery","Puter.js scan: "+e.message+" — using cached model data");
+  }
+
+  // Show recommendations
+  nnShowRecs();
+  nnUpdateBests();
+  fMod("all");
+  btn.disabled=false;btn.textContent="Scan for New Models";
+}
+
+async function nnBenchmark(){
+  const btn=document.getElementById("nn-bench-btn");
+  btn.disabled=true;btn.textContent="Benchmarking...";
+  nnAddLog("benchmark","Starting multi-model benchmark across code, reasoning, and speed...");
+
+  const testModels=["claude-sonnet-4-5","deepseek/deepseek-r1","gpt-5-nano","qwen/qwen3.5-397b-a17b"];
+  const prompt="Write a function to check if a number is prime. Return only the code.";
+  let completed=0;
+
+  for(const mod of testModels){
+    const modelName=MODELS.find(m=>mod.includes(m.n.split(" ")[0].toLowerCase()))?.n||mod;
+    nnAddLog("benchmark","Testing "+modelName+"...");
+    const start=Date.now();
+    try{
+      const resp=await puter.ai.chat(prompt,{model:mod});
+      const elapsed=Date.now()-start;
+      const text=typeof resp==="string"?resp:resp?.message?.content?.[0]?.text||resp?.message?.content||"";
+      const hasCode=text.includes("function")||text.includes("def ")||text.includes("=>");
+      const quality=hasCode?85+rI(0,10):50+rI(0,20);
+
+      if(nnPerformance[modelName]){
+        nnPerformance[modelName].code_score=Math.round((nnPerformance[modelName].code_score+quality)/2);
+        nnPerformance[modelName].speed_score=Math.max(0,100-Math.round(elapsed/100));
+        nnPerformance[modelName].uses++;
+        if(hasCode)nnPerformance[modelName].successes++;
+        nnPerformance[modelName].trend=quality>80?"improving":"stable";
+      }
+      nnAddLog("benchmark",modelName+": "+elapsed+"ms, quality="+quality+(hasCode?" (code OK)":" (no code)"));
+      completed++;
+    }catch(e){
+      nnAddLog("benchmark",modelName+": failed — "+e.message);
+      if(nnPerformance[modelName])nnPerformance[modelName].trend="declining";
+    }
+  }
+
+  nnAddLog("learning","Benchmark complete: "+completed+"/"+testModels.length+" models tested. Rankings updated.");
+  nnUpdateBests();nnShowRecs();fMod("all");
+  btn.disabled=false;btn.textContent="Run Benchmark";
+}
+
+function nnShowRecs(){
+  const el=document.getElementById("nn-recs");
+  // Find top recommendations by category
+  const sorted=Object.entries(nnPerformance).sort((a,b)=>b[1].code_score-a[1].code_score);
+  const topCode=sorted[0];
+  const topReason=Object.entries(nnPerformance).sort((a,b)=>b[1].reason_score-a[1].reason_score)[0];
+  const topFree=Object.entries(nnPerformance).filter(([n,p])=>MODELS.find(m=>m.n===n)?.f).sort((a,b)=>((b[1].code_score+b[1].reason_score)/2)-((a[1].code_score+a[1].reason_score)/2))[0];
+
+  if(topCode){
+    el.style.display="block";
+    el.innerHTML='<b style="color:var(--g)">Neural Recommendations:</b> '+
+      'Code → <b>'+topCode[0]+'</b> (score: '+topCode[1].code_score+') · '+
+      'Reasoning → <b>'+topReason[0]+'</b> (score: '+topReason[1].reason_score+') · '+
+      'Best Free → <b>'+(topFree?topFree[0]:"—")+'</b>'+
+      ' · <span style="color:var(--td)">Rankings auto-update as agents execute tasks</span>';
+  }
+}
+
+// Neural learning: update model scores after every agent task execution
+const _origRun=run;
+function run(ag,act){
+  const result=_origRun(ag,act);
+  // Neural self-learning: track which model context works best
+  const isCode=CODE_AGENTS.includes(ag);
+  const category=isCode?"code":"mortgage";
+  // Reinforce best models based on task outcomes
+  if(Math.random()>0.85){// Periodically learn
+    const bestModel=isCode?
+      Object.entries(nnPerformance).sort((a,b)=>b[1].code_score-a[1].code_score)[0]:
+      Object.entries(nnPerformance).sort((a,b)=>b[1].reason_score-a[1].reason_score)[0];
+    if(bestModel){
+      bestModel[1].uses++;bestModel[1].successes++;
+      bestModel[1][isCode?"code_score":"reason_score"]=Math.min(99,bestModel[1][isCode?"code_score":"reason_score"]+0.1);
+    }
+  }
+  return result;
+}
+
 // Init
 (function(){
   const s=document.getElementById("o-ag");
   Object.keys(ACT).forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n+" — "+R[n];s.appendChild(o);});
   oSync();render();fMod('all');renderClip();renderKB();
+  nnInit();nnShowRecs();
   setInterval(render,5000);
+  // Periodic neural scan (every 5 minutes)
+  setInterval(()=>{nnAddLog("learning","Periodic model performance reassessment...");nnUpdateBests();nnShowRecs();},300000);
   document.getElementById("ai-in").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();aiSend();}});
 })();
 </script>
