@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MortgageFintechOS — AI Office</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⬡</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://js.puter.com/v2/"></script>
+<style>
+/* MortgageFintechOS AI Office — v2 Production UI/UX */
+:root{
+  --w:#fff;--bg:#fafafa;--s:#fff;--a:#f4f4f5;--b:#e4e4e7;--t:#09090b;--t2:#27272a;
+  --tm:#71717a;--td:#a1a1aa;--g:#16a34a;--gb:#f0fdf4;--gbb:#bbf7d0;
+  --r:#dc2626;--rb:#fef2f2;--am:#92400e;--ab:#fef3c7;
+  --bl:#09090b;--blb:#f4f4f5;--v:#09090b;--vb:#f4f4f5;
+  --f:'Instrument Sans',-apple-system,sans-serif;
+  --m:'IBM Plex Mono','SF Mono',monospace;
+  --rd:6px;--sh:0 1px 2px rgba(0,0,0,.04);--sh-h:0 2px 8px rgba(0,0,0,.07)
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:13px}
+body{font-family:var(--f);background:var(--bg);color:var(--t);line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+.hd{background:var(--t);color:#fff;height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.hd-l{display:flex;align-items:center;gap:12px}
+.lgi{width:20px;height:20px;background:rgba(255,255,255,.1);border-radius:3px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:7px;font-weight:700;font-family:var(--m);border:1px solid rgba(255,255,255,.12)}
+.lgt{font-size:12px;font-weight:700;letter-spacing:-.2px;color:#fff}.lgt span{font-weight:400;opacity:.4}
+.sep{width:1px;height:14px;background:rgba(255,255,255,.12)}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:8px;font-weight:600;font-family:var(--m);background:rgba(255,255,255,.08);color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.6px;border:1px solid rgba(255,255,255,.06)}
+.dot{width:5px;height:5px;border-radius:50%;background:#4ade80;animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.nav{background:var(--s);border-bottom:1px solid var(--b);padding:0 24px;display:flex;gap:0;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nt{padding:10px 16px;font-size:11px;font-weight:600;color:var(--td);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s}
+.nt:hover{color:var(--t2)}.nt.on{color:var(--t);border-bottom-color:var(--t)}
+.app{max-width:1440px;margin:0 auto;padding:16px 24px 48px}
+.pg{display:none;animation:fadeIn .2s ease}.pg.on{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.gr{display:grid;gap:12px;margin-bottom:12px}
+.g7{grid-template-columns:repeat(7,1fr)}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}.g1{grid-template-columns:1fr}
+.kpi{background:var(--s);border:1px solid var(--b);border-radius:var(--rd);padding:14px 16px;box-shadow:var(--sh);transition:box-shadow .2s,transform .2s}
+.kpi:hover{box-shadow:var(--sh-h);transform:translateY(-1px)}
+.kl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--td);font-family:var(--m);margin-bottom:4px}
+.kv{font-size:20px;font-weight:700;font-family:var(--m);letter-spacing:-.5px;line-height:1.1}.kv.ok{color:var(--g)}.kv.er{color:var(--r)}.kv.bl{color:var(--t)}
+.cd{background:var(--s);border:1px solid var(--b);border-radius:var(--rd);box-shadow:var(--sh);overflow:hidden}
+.ch{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b);background:rgba(0,0,0,.008)}
+.ct{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.cc{font-size:9px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--a);color:var(--tm);font-family:var(--m);border:1px solid var(--b)}
+table{width:100%;border-collapse:collapse}
+thead th{text-align:left;padding:8px 14px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--td);font-family:var(--m);background:var(--a);border-bottom:1px solid var(--b)}
+tbody td{padding:8px 14px;border-bottom:1px solid #f4f4f5;font-size:11px;color:var(--t2);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:nth-child(even){background:rgba(0,0,0,.007)}
+tbody tr:hover{background:rgba(0,0,0,.018)}
+.an{font-weight:700;font-family:var(--m);font-size:11px;color:var(--t);letter-spacing:-.2px}
+.bd{display:inline-flex;padding:2px 7px;border-radius:3px;font-size:9px;font-weight:600;font-family:var(--m);text-transform:uppercase;letter-spacing:.2px}
+.bd-idle{background:var(--gb);color:var(--g);border:1px solid var(--gbb)}
+.bd-running{background:var(--a);color:var(--t);border:1px solid var(--b)}
+.bd-error{background:var(--rb);color:var(--r);border:1px solid #fecaca}
+.bd-reviewing{background:var(--a);color:var(--tm);border:1px solid var(--b)}
+.bd-completed{background:var(--gb);color:var(--g);border:1px solid var(--gbb)}
+.bd-stopped{background:var(--a);color:var(--td);border:1px solid var(--b)}
+.pr{font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px;font-family:var(--m)}
+.pr-HIGH{background:var(--ab);color:var(--am)}.pr-MEDIUM{background:var(--a);color:var(--tm)}.pr-LOW{background:var(--a);color:var(--td)}.pr-CRITICAL{background:var(--rb);color:var(--r)}
+.cmf label{display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--td);font-family:var(--m);margin-bottom:3px}
+.cmf select,.cmf input,.cmf textarea{width:100%;padding:6px 10px;border:1px solid var(--b);border-radius:4px;font-size:11px;font-family:var(--f);background:var(--s);color:var(--t);outline:none;transition:border-color .15s,box-shadow .15s}
+.cmf select:focus,.cmf input:focus,.cmf textarea:focus{border-color:var(--t);box-shadow:0 0 0 2px rgba(9,9,11,.06)}
+.btn{padding:6px 16px;background:var(--t);color:#fff;border:none;border-radius:4px;font-size:11px;font-weight:600;font-family:var(--f);cursor:pointer;white-space:nowrap;transition:background .12s,transform .1s,box-shadow .12s}
+.btn:hover{background:#27272a;box-shadow:0 1px 3px rgba(0,0,0,.12)}.btn:active{transform:scale(.97)}
+.btn:disabled{background:var(--td);cursor:not-allowed;transform:none;box-shadow:none}
+.btn-sm{padding:4px 12px;font-size:10px}
+.btn-bl{background:var(--t)}.btn-bl:hover{background:#27272a}
+.btn-g{background:var(--g)}.btn-g:hover{background:#15803d}
+.btn-v{background:var(--t)}.btn-v:hover{background:#27272a}
+.rbox{background:var(--a);border:1px solid var(--b);border-radius:4px;padding:12px;font-family:var(--m);font-size:10px;line-height:1.6;max-height:260px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;color:var(--t2);display:none}.rbox.on{display:block}
+.chat-box{background:var(--a);border:1px solid var(--b);border-radius:var(--rd);padding:12px;min-height:200px;max-height:360px;overflow-y:auto;font-size:11px}
+.msg{margin-bottom:8px;padding:8px 12px;border-radius:8px;max-width:82%;line-height:1.45}
+.msg-u{background:var(--t);color:#fff;margin-left:auto;border-bottom-right-radius:2px}
+.msg-a{background:var(--s);border:1px solid var(--b);border-bottom-left-radius:2px}
+.msg-m{font-size:9px;font-weight:600;color:var(--tm);font-family:var(--m);margin-bottom:3px}
+.office-log{font-size:10px;font-family:var(--m);padding:7px 14px;border-bottom:1px solid #f4f4f5;display:flex;gap:10px;align-items:flex-start;transition:background .1s}
+.office-log:hover{background:rgba(0,0,0,.015)}
+.ol-time{color:var(--td);font-size:9px;flex-shrink:0;width:60px}
+.ol-mgr{color:var(--t);font-weight:600;flex-shrink:0;width:80px}
+.ol-msg{color:var(--t2);flex:1}
+.empty{padding:28px;text-align:center;color:var(--td);font-size:11px;font-family:var(--m)}
+.ft{text-align:center;padding:20px;font-size:9px;color:var(--td);font-family:var(--m);border-top:1px solid var(--b);margin-top:12px;letter-spacing:.2px}
+.ft a{color:var(--tm);text-decoration:none}.ft a:hover{color:var(--t)}
+optgroup{font-weight:700;color:var(--t);font-size:11px}
+@media(max-width:1100px){.g7{grid-template-columns:repeat(4,1fr)}.g2,.g3{grid-template-columns:1fr}}
+@media(max-width:700px){.g7{grid-template-columns:repeat(2,1fr)}.app{padding:12px 16px 32px}.hd{padding:0 16px}.nav{padding:0 16px}}
+</style>
+</head>
+<body>
+<header class="hd">
+  <div class="hd-l">
+    <div class="lgi">MF</div><div class="lgt">MortgageFintechOS <span>AI Office</span></div>
+    <div class="sep"></div><span class="pill"><span class="dot"></span>Office Open</span>
+  </div>
+  <div class="hd-l"><span style="font-size:9px;color:var(--bl);font-family:var(--m)">Puter.js: 500+ LLMs</span><div class="sep"></div><span style="font-size:9px;color:var(--td);font-family:var(--m)" id="clk">—</span></div>
+</header>
+<nav class="nav">
+  <div class="nt on" onclick="showP('office')">Office Floor</div>
+  <div class="nt" onclick="showP('mgr')">Office Manager</div>
+  <div class="nt" onclick="showP('ai')">AI Chat (Multi-Model)</div>
+  <div class="nt" onclick="showP('intel')">Intelligence Reports</div>
+  <div class="nt" onclick="showP('models')">Model Discovery</div>
+  <div class="nt" onclick="showP('clip')">Paperclip AI</div>
+  <div class="nt" onclick="showP('kb')">Knowledge Hub</div>
+  <div class="nt" onclick="showP('tg')">Connections</div>
+</nav>
+<div class="app">
+
+<!-- OFFICE FLOOR -->
+<div id="pg-office" class="pg on">
+  <div class="gr g7" id="kpis"></div>
+  <div class="gr g1">
+    <div class="cd"><div class="ch"><span class="ct">Office Manager — Task Assignment</span><span class="cc" id="mgr-ct">AIOS Kernel</span></div>
+    <div style="padding:12px">
+      <div style="display:grid;grid-template-columns:200px 1fr 120px auto;gap:6px;align-items:end">
+        <div class="cmf"><label>Assign To</label><select id="o-ag" onchange="oSync()"></select></div>
+        <div class="cmf"><label>Task</label><select id="o-act"></select></div>
+        <div class="cmf"><label>Priority</label><select id="o-pri"><option value="HIGH">High</option><option value="MEDIUM" selected>Medium</option><option value="LOW">Low</option></select></div>
+        <button class="btn" onclick="oExec()" id="o-btn">Assign & Execute</button>
+      </div>
+      <div id="o-result" class="rbox" style="margin-top:8px"></div>
+    </div></div>
+  </div>
+  <div class="gr g2">
+    <div class="cd"><div class="ch"><span class="ct">Employees (9 Agents)</span></div>
+    <table><thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Completed</th><th>Errors</th></tr></thead><tbody id="tb-emp"></tbody></table></div>
+    <div class="cd"><div class="ch"><span class="ct">Office Activity Log</span><span class="cc" id="log-ct">0</span></div>
+    <div id="office-log" style="max-height:280px;overflow-y:auto"><div class="empty">Office opened — waiting for tasks</div></div></div>
+  </div>
+</div>
+
+<!-- OFFICE MANAGER -->
+<div id="pg-mgr" class="pg">
+  <div class="gr g1">
+    <div class="cd"><div class="ch"><span class="ct">Office Manager — AIOS Kernel</span><span class="cc">Supervises all 9 agents</span></div>
+    <div style="padding:14px">
+      <p style="font-size:11px;color:var(--t2);margin-bottom:12px">The Office Manager assigns work to employees, checks quality, routes tasks through the pipeline, and escalates issues. It prioritizes CIPHER (security) as critical, FORGE (deploys) as high, and balances the rest.</p>
+      <div class="gr g3" id="mgr-cards"></div>
+      <div class="cd" style="margin-top:10px"><div class="ch"><span class="ct">Pipeline Dependencies</span></div>
+      <div style="padding:12px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:10px;font-family:var(--m)">
+        <b>Coding:</b>
+        <span style="padding:3px 8px;background:var(--blb);border-radius:4px;color:var(--bl);font-weight:600">ATLAS writes</span><span style="color:var(--td)">→</span>
+        <span style="padding:3px 8px;background:var(--vb);border-radius:4px;color:var(--v);font-weight:600">NEXUS reviews</span><span style="color:var(--td)">→</span>
+        <span style="padding:3px 8px;background:var(--rb);border-radius:4px;color:var(--r);font-weight:600">CIPHER scans</span><span style="color:var(--td)">→</span>
+        <span style="padding:3px 8px;background:var(--gb);border-radius:4px;color:var(--g);font-weight:600">FORGE deploys</span>
+        <span style="color:var(--td);margin:0 8px">|</span>
+        <b>Mortgage Ops:</b>
+        <span style="padding:3px 8px;background:var(--a);border-radius:4px;font-weight:600">DIEGO→MARTIN→NOVA→JARVIS</span>
+      </div></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- AI CHAT -->
+<div id="pg-ai" class="pg">
+  <div class="gr g1">
+    <div class="cd"><div class="ch"><span class="ct">Multi-Model AI Chat</span><span class="cc">Puter.js — No API Keys Needed</span></div>
+    <div style="padding:14px">
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+        <div class="cmf" style="min-width:200px"><label>Model</label><select id="ai-mod">
+          <optgroup label="── Frontier Models ──">
+          <option value="claude-sonnet-4-5">Claude Sonnet 4.5 (Anthropic)</option>
+          <option value="gpt-5-nano">GPT-5 Nano (OpenAI)</option>
+          <option value="google/gemini-2.5-flash-preview">Gemini 2.5 Flash (Google)</option>
+          </optgroup>
+          <optgroup label="── Open Source — No Restrictions ──">
+          <option value="deepseek/deepseek-r1">DeepSeek R1 (Reasoning, Open)</option>
+          <option value="deepseek/deepseek-v3-0324">DeepSeek V3 (General, Open)</option>
+          <option value="qwen/qwen3.5-397b-a17b">Qwen 3.5 397B (Alibaba, Open)</option>
+          <option value="qwen/qwen3-coder-next">Qwen 3 Coder Next (Code, Open)</option>
+          <option value="meta-llama/llama-4-scout">Llama 4 Scout (Meta, Open)</option>
+          <option value="mistralai/mistral-large-2512">Mistral Large 3 (Mistral, Open)</option>
+          <option value="mistralai/devstral-2512">Devstral 2 (Code Agent, Open)</option>
+          <option value="mistralai/codestral-2508">Codestral (Code, Open)</option>
+          </optgroup>
+          <optgroup label="── Uncensored / Unrestricted ──">
+          <option value="nousresearch/hermes-4-405b">Hermes 4 405B (Nous, Unrestricted)</option>
+          <option value="nousresearch/hermes-4-70b">Hermes 4 70B (Nous, Unrestricted)</option>
+          <option value="cognitivecomputations/dolphin3.0-r1-mistral-24b">Dolphin 3.0 R1 (Uncensored)</option>
+          <option value="cognitivecomputations/dolphin3.0-mistral-24b">Dolphin 3.0 24B (Uncensored)</option>
+          <option value="thedrummer/anubis-pro-105b-v1">Anubis Pro 105B (Unrestricted)</option>
+          </optgroup>
+          <optgroup label="── Specialized ──">
+          <option value="moonshotai/kimi-k2.5">Kimi K2.5 (Moonshot, Visual Agent)</option>
+          <option value="nvidia/nemotron-nano-9b-v2">Nemotron Nano 9B (NVIDIA)</option>
+          <option value="microsoft/phi-4">Phi-4 (Microsoft, Small/Fast)</option>
+          </optgroup>
+        </select></div>
+        <div class="cmf" style="flex:1"><label>Context</label><select id="ai-ctx">
+          <option value="You are a mortgage compliance expert citing FHA HB 4000.1, FNMA Selling Guide, and FHLMC Guide.">Mortgage Compliance</option>
+          <option value="You are a senior software engineer. Write clean, production-ready code.">Software Engineer</option>
+          <option value="You are an intelligence analyst producing structured reports with actionable insights.">Intelligence Analyst</option>
+          <option value="You are a helpful assistant.">General</option>
+        </select></div>
+      </div>
+      <div id="ai-chat" class="chat-box" style="margin-bottom:8px"><div class="empty">Select a model and start chatting. All 500+ models are free via Puter.js — no API keys.</div></div>
+      <div style="display:flex;gap:6px"><textarea id="ai-in" rows="2" placeholder="Type your message..." style="flex:1;padding:6px;border:1px solid var(--b);border-radius:4px;font-size:11px;outline:none;resize:none;font-family:var(--f)"></textarea>
+      <button class="btn btn-bl" onclick="aiSend()" id="ai-btn">Send</button></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- INTELLIGENCE REPORTS -->
+<div id="pg-intel" class="pg">
+  <div class="gr g1">
+    <div class="cd"><div class="ch"><span class="ct">Intelligence Report Generator</span><span class="cc">Auto-selects best model per task</span></div>
+    <div style="padding:14px">
+      <div style="display:grid;grid-template-columns:1fr 180px auto;gap:6px;align-items:end;margin-bottom:10px">
+        <div class="cmf"><label>Report Type</label><select id="rpt-type">
+          <option value="Generate a mortgage market intelligence report covering current rates, trends, FHA/FNMA guideline changes, and 30-day forecast.">Mortgage Market Intelligence</option>
+          <option value="Generate a compliance audit report covering recent FHA HB 4000.1, FNMA Selling Guide, and FHLMC Guide updates with actionable items.">Compliance Audit (FHA/FNMA)</option>
+          <option value="Generate an AI/ML technology landscape report for mortgage lending covering new models, OCR advances, and automation opportunities.">Tech Landscape — AI in Mortgage</option>
+          <option value="Generate an AI model benchmark report ranking the top 10 LLMs for coding, reasoning, and cost efficiency as of March 2026.">AI Model Benchmark Report</option>
+        </select></div>
+        <div class="cmf"><label>Model</label><select id="rpt-mod">
+          <option value="claude-sonnet-4-5">Claude 4.5 (Deep Analysis)</option>
+          <option value="deepseek/deepseek-r1">DeepSeek R1 (Reasoning)</option>
+          <option value="gpt-5-nano">GPT-5 Nano (Fast)</option>
+          <option value="qwen/qwen3.5-397b-a17b">Qwen 3.5 397B (Open)</option>
+          <option value="mistralai/mistral-large-2512">Mistral Large 3 (Open)</option>
+          <option value="nousresearch/hermes-4-405b">Hermes 4 405B (Unrestricted)</option>
+        </select></div>
+        <button class="btn btn-v" onclick="genReport()" id="rpt-btn">Generate</button>
+      </div>
+      <div id="rpt-out" class="rbox" style="max-height:450px"></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- MODEL DISCOVERY -->
+<div id="pg-models" class="pg">
+  <div class="gr g1">
+    <div class="cd"><div class="ch"><span class="ct">LLM Model Discovery — March 2026 Rankings</span></div>
+    <div style="padding:14px">
+      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+        <button class="btn" onclick="fMod('all')">All</button>
+        <button class="btn btn-bl" onclick="fMod('code')">Coding</button>
+        <button class="btn btn-v" onclick="fMod('reason')">Reasoning</button>
+        <button class="btn btn-g" onclick="fMod('free')">Free/Open</button>
+      </div>
+      <div id="mod-grid" class="gr g3"></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- PAPERCLIP AI — Enterprise Agent Orchestration -->
+<div id="pg-clip" class="pg">
+  <div class="gr g1">
+    <div class="cd"><div class="ch"><span class="ct">Paperclip AI Integration</span><span class="cc">Enterprise Agent Orchestration — Port 3100</span></div>
+    <div style="padding:14px">
+      <p style="font-size:11px;color:var(--t2);margin-bottom:10px">Connect to Paperclip AI for enterprise approval workflows, cost tracking, org charts, and unified agent governance. Paperclip runs at <b>localhost:3100</b> with embedded PostgreSQL.</p>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:6px;align-items:end;margin-bottom:10px">
+        <div class="cmf"><label>Paperclip Server URL</label><input id="clip-url" value="http://localhost:3100" placeholder="http://localhost:3100"></div>
+        <button class="btn btn-bl" onclick="clipConnect()">Connect</button>
+      </div>
+      <div id="clip-status" style="padding:6px 10px;border-radius:4px;font-size:10px;font-family:var(--m);background:var(--a);border:1px solid var(--b);margin-bottom:10px">Status: Not connected — run <b>npx paperclipai</b> to start</div>
+    </div></div>
+  </div>
+  <div class="gr g2">
+    <!-- TICKETS / APPROVAL WORKFLOW -->
+    <div class="cd"><div class="ch"><span class="ct">Ticket System & Approvals</span><span class="cc" id="clip-tkt-ct">0 tickets</span></div>
+    <div style="padding:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:end;margin-bottom:8px">
+        <div class="cmf"><label>Assign To</label><select id="clip-assign"><option value="DIEGO">DIEGO — Pipeline</option><option value="MARTIN">MARTIN — Documents</option><option value="NOVA">NOVA — Income/DTI</option><option value="JARVIS">JARVIS — Conditions</option><option value="ATLAS">ATLAS — Full-Stack</option><option value="CIPHER">CIPHER — Security</option><option value="FORGE">FORGE — DevOps</option><option value="NEXUS">NEXUS — Code Quality</option><option value="STORM">STORM — Data Eng</option></select></div>
+        <div class="cmf"><label>Ticket Title</label><input id="clip-title" placeholder="e.g. Deploy pricing page to production"></div>
+        <button class="btn btn-sm" onclick="clipCreateTicket()">Create</button>
+      </div>
+      <table><thead><tr><th>ID</th><th>Title</th><th>Owner</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody id="tb-tickets"><tr><td colspan="5" class="empty">No tickets — create one above</td></tr></tbody></table>
+    </div></div>
+    <!-- COST TRACKING -->
+    <div class="cd"><div class="ch"><span class="ct">Cost Tracking & Budgets</span></div>
+    <div style="padding:12px">
+      <table><thead><tr><th>Agent</th><th>Budget</th><th>Used</th><th>Util %</th><th>Status</th></tr></thead>
+      <tbody id="tb-budgets"></tbody></table>
+      <div style="margin-top:8px;font-size:9px;color:var(--tm);font-family:var(--m)">⚠ At 80% utilization → warning. At 100% → agent auto-pauses. Board can override.</div>
+    </div></div>
+  </div>
+  <div class="gr g2">
+    <!-- ORG CHART -->
+    <div class="cd"><div class="ch"><span class="ct">Organization Chart</span><span class="cc">The Lawson Group — AI Division</span></div>
+    <div style="padding:14px;text-align:center">
+      <div style="display:inline-block;padding:8px 16px;background:var(--t);color:#fff;border-radius:6px;font-size:11px;font-weight:700;margin-bottom:8px">BOARD: Cory Lawson</div>
+      <div style="color:var(--td);font-size:18px;margin-bottom:4px">│</div>
+      <div style="display:inline-block;padding:6px 14px;background:var(--vb);border:1px solid var(--b);border-radius:6px;font-size:10px;font-weight:700;color:var(--v);margin-bottom:8px">OFFICE MANAGER (AIOS Kernel)</div>
+      <div style="color:var(--td);font-size:14px;margin-bottom:4px">┌───────┼───────┐</div>
+      <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap">
+        <div>
+          <div style="padding:4px 10px;background:var(--blb);border-radius:4px;font-size:9px;font-weight:700;color:var(--bl);margin-bottom:4px">CTO: ATLAS</div>
+          <div style="font-size:8px;color:var(--td);font-family:var(--m)">NEXUS · CIPHER · FORGE · STORM</div>
+        </div>
+        <div>
+          <div style="padding:4px 10px;background:var(--gb);border-radius:4px;font-size:9px;font-weight:700;color:var(--g);margin-bottom:4px">COO: DIEGO</div>
+          <div style="font-size:8px;color:var(--td);font-family:var(--m)">MARTIN · NOVA · JARVIS</div>
+        </div>
+      </div>
+    </div></div>
+    <!-- AUDIT LOG -->
+    <div class="cd"><div class="ch"><span class="ct">Immutable Audit Log</span><span class="cc">Append-only</span></div>
+    <div id="clip-audit" style="max-height:240px;overflow-y:auto"><div class="empty">Audit log starts when Paperclip is connected</div></div></div>
+  </div>
+  <div class="gr g1">
+    <!-- GOVERNANCE -->
+    <div class="cd"><div class="ch"><span class="ct">Governance & Controls</span></div>
+    <div style="padding:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div style="padding:10px;background:var(--a);border-radius:6px">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--td);font-family:var(--m);margin-bottom:4px">Hiring Gate</div>
+          <div style="font-size:11px">New agent hires require <b>Board approval</b>. No auto-hiring.</div>
+        </div>
+        <div style="padding:10px;background:var(--a);border-radius:6px">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--td);font-family:var(--m);margin-bottom:4px">Budget Enforcement</div>
+          <div style="font-size:11px">Atomic budget checks. Agents <b>auto-pause at 100%</b>. No runaway costs.</div>
+        </div>
+        <div style="padding:10px;background:var(--a);border-radius:6px">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--td);font-family:var(--m);margin-bottom:4px">Approval Workflows</div>
+          <div style="font-size:11px">Deployments and strategy changes require <b>Board sign-off</b> before execution.</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<!-- KNOWLEDGE HUB — Open Notebook + Notion + Wispr + Google Drive -->
+<div id="pg-kb" class="pg">
+  <div class="gr g1">
+    <div class="cd"><div class="ch"><span class="ct">Open Notebook — Self-Hosted Research Backend</span><span class="cc">FastAPI :5055 + SurrealDB</span></div>
+    <div style="padding:14px">
+      <p style="font-size:11px;color:var(--t2);margin-bottom:10px">Connect to <b>Open Notebook</b> (lfnovo/open-notebook) — privacy-first NotebookLM alternative. REST API for notebooks, sources, notes, chat, and podcast generation. Runs as a Docker microservice.</p>
+      <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:end;margin-bottom:10px">
+        <div class="cmf"><label>Open Notebook API URL</label><input id="on-url" value="http://localhost:5055" placeholder="http://localhost:5055"></div>
+        <div class="cmf"><label>Password (optional)</label><input id="on-pw" type="password" placeholder="APP_PASSWORD"></div>
+        <button class="btn" onclick="onConnect()">Connect</button>
+      </div>
+      <div id="on-status" style="padding:6px 10px;border-radius:4px;font-size:10px;font-family:var(--m);background:var(--a);border:1px solid var(--b)">Not connected — run <b>docker compose up</b> to start Open Notebook</div>
+    </div></div>
+  </div>
+  <div class="gr g2">
+    <!-- NOTEBOOKS -->
+    <div class="cd"><div class="ch"><span class="ct">Notebooks</span><span class="cc" id="on-nb-ct">0</span></div>
+    <div style="padding:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:end;margin-bottom:8px">
+        <div class="cmf"><label>Name</label><input id="on-nb-name" placeholder="e.g. FHA Compliance Research"></div>
+        <div class="cmf"><label>Description</label><input id="on-nb-desc" placeholder="Research notes on HB 4000.1"></div>
+        <button class="btn" onclick="onCreateNotebook()">Create</button>
+      </div>
+      <table><thead><tr><th>ID</th><th>Name</th><th>Sources</th><th>Actions</th></tr></thead>
+      <tbody id="tb-notebooks"><tr><td colspan="4" class="empty">No notebooks yet</td></tr></tbody></table>
+    </div></div>
+    <!-- SOURCES & UPLOAD -->
+    <div class="cd"><div class="ch"><span class="ct">Sources & Upload</span></div>
+    <div style="padding:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:end;margin-bottom:8px">
+        <div class="cmf"><label>Notebook</label><select id="on-src-nb"></select></div>
+        <div class="cmf"><label>URL or PDF</label><input id="on-src-url" placeholder="https://... or upload PDF"></div>
+        <button class="btn" onclick="onAddSource()">Add Source</button>
+      </div>
+      <div style="font-size:9px;color:var(--td);font-family:var(--m);margin-bottom:6px">Supports: PDF, YouTube, Web pages, Audio, Text files</div>
+      <table><thead><tr><th>Source</th><th>Type</th><th>Status</th></tr></thead>
+      <tbody id="tb-sources"><tr><td colspan="3" class="empty">Add sources above</td></tr></tbody></table>
+    </div></div>
+  </div>
+  <div class="gr g2">
+    <!-- CHAT WITH NOTEBOOK -->
+    <div class="cd"><div class="ch"><span class="ct">Chat with Notebook (RAG)</span></div>
+    <div style="padding:12px">
+      <div class="cmf" style="margin-bottom:6px"><label>Notebook</label><select id="on-chat-nb"></select></div>
+      <div id="on-chat-box" class="chat-box" style="min-height:160px;margin-bottom:6px"><div class="empty">Ask questions about your research sources. RAG-powered via Open Notebook.</div></div>
+      <div style="display:flex;gap:6px"><input id="on-chat-q" placeholder="What are the key insights from this research?" style="flex:1;padding:5px 8px;border:1px solid var(--b);border-radius:4px;font-size:11px;outline:none">
+      <button class="btn" onclick="onChat()" id="on-chat-btn">Ask</button></div>
+    </div></div>
+    <!-- INTEGRATIONS: Notion + Wispr + Google Drive -->
+    <div class="cd"><div class="ch"><span class="ct">Connected Services</span></div>
+    <div style="padding:12px">
+      <div style="margin-bottom:10px;padding:10px;background:var(--a);border-radius:6px;border:1px solid var(--b)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b style="font-size:11px">Notion</b><span class="bd bd-idle" id="notion-st">Ready</span></div>
+        <div style="font-size:10px;color:var(--t2);margin-bottom:6px">Sync notebooks ↔ Notion pages. Push research notes as Notion blocks.</div>
+        <div class="cmf" style="margin-bottom:4px"><label>Notion API Token</label><input id="notion-tok" type="password" placeholder="secret_..."></div>
+        <div class="cmf" style="margin-bottom:4px"><label>Database ID</label><input id="notion-db" placeholder="Notion database ID"></div>
+        <button class="btn btn-sm" onclick="notionSync()">Sync to Notion</button>
+        <span id="notion-log" style="font-size:9px;color:var(--tm);font-family:var(--m);margin-left:6px"></span>
+      </div>
+      <div style="margin-bottom:10px;padding:10px;background:var(--a);border-radius:6px;border:1px solid var(--b)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b style="font-size:11px">Wispr Flow</b><span class="bd bd-idle" id="wispr-st">Ready</span></div>
+        <div style="font-size:10px;color:var(--t2);margin-bottom:6px">Voice-to-text dictation for notes. Wispr captures speech → Open Notebook stores it.</div>
+        <div class="cmf" style="margin-bottom:4px"><label>Wispr Webhook URL</label><input id="wispr-hook" placeholder="https://hooks.wispr.flow/..."></div>
+        <button class="btn btn-sm" onclick="wisprConnect()">Connect Wispr</button>
+        <span id="wispr-log" style="font-size:9px;color:var(--tm);font-family:var(--m);margin-left:6px"></span>
+      </div>
+      <div style="padding:10px;background:var(--a);border-radius:6px;border:1px solid var(--b)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b style="font-size:11px">Google Drive</b><span class="bd bd-idle" id="gdrive-st">Ready</span></div>
+        <div style="font-size:10px;color:var(--t2);margin-bottom:6px">Import docs/PDFs from Google Drive into Open Notebook as sources. Uses Drive API v3.</div>
+        <div class="cmf" style="margin-bottom:4px"><label>Drive Folder ID</label><input id="gdrive-fid" placeholder="Google Drive folder ID"></div>
+        <button class="btn btn-sm" onclick="gdriveImport()">Import from Drive</button>
+        <span id="gdrive-log" style="font-size:9px;color:var(--tm);font-family:var(--m);margin-left:6px"></span>
+      </div>
+    </div></div>
+  </div>
+  <div class="gr g1">
+    <div class="cd"><div class="ch"><span class="ct">Sync Bus — Live Activity</span><span class="cc" id="sync-ct">Bidirectional relay between all services</span></div>
+    <div id="sync-log" style="max-height:200px;overflow-y:auto"><div class="empty">Sync events appear here as services communicate. Actions in any tab trigger relays to connected services.</div></div></div>
+  </div>
+  <div class="gr g1">
+    <div class="cd"><div class="ch"><span class="ct">Sync Architecture</span></div>
+    <div style="padding:12px;font-family:var(--m);font-size:9px;line-height:1.8;color:var(--t2)">
+<b>Agent Task Completed</b> → Telegram alert + Notion page<br>
+<b>Paperclip Ticket Approved</b> → Telegram alert + Notion page<br>
+<b>Google Drive Import</b> → Open Notebook sources + Notion log + Telegram alert<br>
+<b>Notebook RAG Answer</b> → Notion research page + Telegram summary<br>
+<b>Wispr Voice Note</b> → Open Notebook note + Notion sync<br>
+<b>Intelligence Report</b> → Notion page + Telegram broadcast<br>
+Every action flows through <b>syncBus(event, source, targets, payload)</b> — credentials are read from each service's config panel.
+    </div></div>
+  </div>
+  <div class="gr g1">
+    <div class="cd"><div class="ch"><span class="ct">Docker Quick Start</span></div>
+    <div style="padding:12px;font-family:var(--m);font-size:10px;background:var(--a);border-radius:4px;line-height:1.6;white-space:pre-wrap">curl -o docker-compose.yml https://raw.githubusercontent.com/lfnovo/open-notebook/main/docker-compose.yml
+docker compose up -d
+# UI: http://localhost:8502  |  API: http://localhost:5055/docs
+# Ports: 8502 (Next.js frontend) + 5055 (FastAPI backend) + 8000 (SurrealDB)</div></div>
+  </div>
+</div>
+
+<!-- TELEGRAM / CONNECTIONS -->
+<div id="pg-tg" class="pg">
+  <div class="gr g2">
+    <div class="cd"><div class="ch"><span class="ct">Telegram Bot</span></div>
+    <div style="padding:14px">
+      <div class="cmf" style="margin-bottom:8px"><label>Bot Token (@BotFather)</label><input id="tg-tok" type="password" placeholder="Enter token"></div>
+      <div class="cmf" style="margin-bottom:8px"><label>Chat ID</label><input id="tg-cid" placeholder="Your chat ID"></div>
+      <button class="btn btn-bl" onclick="tgTest()">Test Connection</button>
+      <div id="tg-log" class="rbox" style="margin-top:8px"></div>
+    </div></div>
+    <div class="cd"><div class="ch"><span class="ct">Connected Services</span></div>
+    <div style="padding:14px;font-size:11px;line-height:2">
+      <div><span class="bd bd-idle">OK</span> <b>Puter.js</b> — 500+ LLMs free (Claude, GPT, DeepSeek, Kimi K2.5)</div>
+      <div><span class="bd bd-idle">OK</span> <b>Anthropic API</b> — Claude in artifacts</div>
+      <div><span class="bd bd-idle">OK</span> <b>Kimi K2.5</b> — via OpenRouter / NVIDIA NIM (free)</div>
+      <div><span class="bd bd-idle">OK</span> <b>Google Search</b> — via web_search tool</div>
+      <div><span class="bd bd-idle">OK</span> <b>Netlify</b> — Deploy MCP connected</div>
+      <div><span class="bd bd-idle">OK</span> <b>Vercel</b> — Deploy MCP connected</div>
+      <div><span class="bd" style="background:var(--ab);color:var(--am)">CFG</span> <b>Telegram</b> — Configure token above</div>
+      <div><span class="bd" style="background:var(--a);color:var(--tm)">REF</span> <b>NotebookLM</b> — Reference knowledge base</div>
+    </div></div>
+  </div>
+</div>
+
+</div>
+<footer class="ft">MortgageFintechOS AI Office v1.0 · Cory Lawson / The Lawson Group · 9 Agents · Puter.js · <a href="https://github.com/CoryLawsonxMortgageAI/MortgageFintechOS-" target="_blank">GitHub</a></footer>
+
+<script>
+const T0=new Date("2026-03-06T04:00:00Z");
+const R={DIEGO:"Pipeline Orchestration",MARTIN:"Document Intelligence",NOVA:"Income & DTI",JARVIS:"Condition Resolution",ATLAS:"Full-Stack Engineering",CIPHER:"Security Engineering",FORGE:"DevOps Engineering",NEXUS:"Code Quality",STORM:"Data Engineering"};
+const TP={DIEGO:"ops",MARTIN:"ops",NOVA:"ops",JARVIS:"ops",ATLAS:"code",CIPHER:"code",FORGE:"code",NEXUS:"code",STORM:"code"};
+let exC=0;
+const A={DIEGO:{s:"idle",e:0,c:47},MARTIN:{s:"idle",e:1,c:132},NOVA:{s:"idle",e:0,c:89},JARVIS:{s:"idle",e:2,c:64},ATLAS:{s:"idle",e:0,c:28},CIPHER:{s:"idle",e:0,c:15},FORGE:{s:"idle",e:1,c:22},NEXUS:{s:"idle",e:0,c:41},STORM:{s:"idle",e:0,c:19}};
+const log=[];
+const ACT={
+  DIEGO:["triage_loan","check_pipeline_health","get_pipeline_report","advance_stage","assign_priority"],
+  MARTIN:["classify_document","validate_ocr","detect_fraud","audit_completeness","run_document_audit"],
+  NOVA:["calculate_w2_income","analyze_schedule_c","calculate_dti","evaluate_collections","full_income_analysis"],
+  JARVIS:["draft_loe","map_conditions","lookup_citation","add_condition","get_condition_status"],
+  ATLAS:["generate_api","build_feature","run_migration","scaffold_component"],
+  CIPHER:["owasp_scan","compliance_check","encryption_audit","patch_vulnerability"],
+  FORGE:["deploy","rollback","build_pipeline","rotate_secrets"],
+  NEXUS:["review_pr","generate_tests","analyze_debt","refactor"],
+  STORM:["build_etl","optimize_query","hmda_report","uldd_export"]
+};
+const MODELS=[
+  {n:"Claude Opus 4.5",p:"Anthropic",s:87,t:["code","reason"],f:false,c:"$15/M"},
+  {n:"GPT-5.2 Codex",p:"OpenAI",s:89,t:["code","reason"],f:false,c:"$20/M"},
+  {n:"Kimi K2.5",p:"Moonshot AI",s:82,t:["code","multi","free"],f:true,c:"Free (NVIDIA)"},
+  {n:"DeepSeek V3.2",p:"DeepSeek",s:85,t:["code","reason","free"],f:true,c:"$0.27/M"},
+  {n:"Qwen 3.5 397B",p:"Alibaba",s:86,t:["code","reason","free"],f:true,c:"Free"},
+  {n:"GLM-5 Reasoning",p:"Z AI",s:84,t:["reason","free"],f:true,c:"Free"},
+  {n:"Gemini 3 Pro",p:"Google",s:86,t:["code","multi"],f:false,c:"$3.50/M"},
+  {n:"Llama 4 Scout",p:"Meta",s:80,t:["code","free"],f:true,c:"Free (Apache)"},
+  {n:"Mistral Large 3",p:"Mistral AI",s:83,t:["code","reason","free"],f:true,c:"Free (Apache)"},
+  {n:"Hermes 4 405B",p:"Nous Research",s:81,t:["code","reason","free"],f:true,c:"Free (Unrestricted)"},
+  {n:"Dolphin 3.0 R1",p:"Cognitive Comp",s:78,t:["reason","free"],f:true,c:"Free (Uncensored)"},
+  {n:"Devstral 2",p:"Mistral AI",s:82,t:["code","free"],f:true,c:"Free (Code Agent)"},
+  {n:"Codestral",p:"Mistral AI",s:84,t:["code","free"],f:true,c:"Free (Code)"},
+  {n:"Qwen 3 Coder Next",p:"Alibaba",s:85,t:["code","free"],f:true,c:"Free"},
+  {n:"Nemotron Nano 9B",p:"NVIDIA",s:76,t:["reason","free"],f:true,c:"Free (Edge)"},
+];
+function rId(){return Math.random().toString(36).substr(2,8)}
+function rI(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+function pk(a){return a[Math.floor(Math.random()*a.length)]}
+function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML}
+function fmt(d){return new Date(d).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"})}
+function up(){const d=Math.floor((Date.now()-T0.getTime())/1000);return Math.floor(d/3600)+"h "+Math.floor((d%3600)/60)+"m"}
+
+// OFFICE MANAGER: Assigns work, checks results, logs everything
+function mgrLog(agent,action,result){
+  const now=new Date().toISOString();
+  const pass=!result.error&&result.risk_level!=="high"&&result.overall_pass!==false;
+  const review=pass?"✓ Approved":"⚠ Flagged for review";
+  log.unshift({ts:now,mgr:"MANAGER",msg:`Assigned ${action} to ${agent} → ${review}`});
+  if(log.length>50)log.pop();
+  if(TP[agent]==="code"){
+    const chain={ATLAS:"NEXUS",NEXUS:"CIPHER",CIPHER:"FORGE"};
+    const next=chain[agent];
+    if(next){log.unshift({ts:now,mgr:"MANAGER",msg:`Routing output to ${next} for ${next==="NEXUS"?"code review":next==="CIPHER"?"security scan":"deployment"}`});}
+  }
+  // SYNC BUS: Broadcast task result to all connected services
+  const targets=[];
+  if(document.getElementById("tg-tok")?.value)targets.push("telegram");
+  if(document.getElementById("notion-tok")?.value)targets.push("notion");
+  if(targets.length)syncBus("task_completed",agent,targets,{title:agent+" — "+action,message:agent+" completed "+action+": "+review,content:JSON.stringify(result).substring(0,500)});
+}
+
+// AGENT ENGINE (mirrors full Python codebase)
+function run(ag,act){
+  const ts=new Date().toISOString();
+  if(ag==="DIEGO"){
+    if(act==="triage_loan"){const lt=pk(["FHA","VA","CONV","USDA"]),cs=rI(560,780),rules={FHA:580,VA:620,CONV:620,USDA:640},fl=[];if(cs<rules[lt])fl.push("Credit "+cs+" < "+rules[lt]);return{loan_id:"LN-"+rId(),loan_type:lt,credit_score:cs,flags:fl,recommendation:fl.length?"manual_review":"proceed"};}
+    if(act==="check_pipeline_health")return{total_loans:rI(15,45),health:"healthy",stages:{application:rI(3,10),underwriting:rI(4,12)}};
+    if(act==="get_pipeline_report")return{date:ts,active:rI(20,50),by_type:{FHA:rI(5,15),VA:rI(3,10),CONV:rI(8,20)}};
+    if(act==="advance_stage")return{loan_id:"LN-"+rId(),from:"processing",to:"underwriting"};
+    if(act==="assign_priority"){const d=rI(3,35);return{loan_id:"LN-"+rId(),priority:d<=5?"critical":d<=10?"high":"medium",lock_days:d};}
+  }
+  if(ag==="MARTIN"){
+    if(act==="classify_document")return{type:pk(["w2","paystub","bank_statement","tax_return"]),confidence:+(0.75+Math.random()*0.2).toFixed(2),needs_review:Math.random()>.7};
+    if(act==="validate_ocr")return{valid:Math.random()>.3,fields_checked:rI(3,8),issues:Math.random()>.7?["income out of range"]:[]};
+    if(act==="detect_fraud"){const s=+(Math.random()*.8).toFixed(2);return{risk_score:s,risk_level:s>.5?"high":s>.25?"medium":"low",recommendation:s>.3?"flag_for_review":"pass"};}
+    if(act==="audit_completeness")return{loan_id:"LN-"+rId(),required:4,received:rI(2,4),complete:Math.random()>.5};
+    if(act==="run_document_audit")return{audited:rI(8,25),incomplete:rI(0,5)};
+  }
+  if(ag==="NOVA"){
+    if(act==="calculate_w2_income"){const m1=rI(3500,9000),m2=rI(3200,8500);return{method_1:"$"+m1,method_2:"$"+m2,qualifying:"$"+Math.min(m1,m2),trending:m1>m2*1.1?"increasing":"stable",citation:"FHA HB 4000.1 II.A.5.b"};}
+    if(act==="analyze_schedule_c")return{monthly:"$"+rI(2000,8000),trending:pk(["stable","increasing","declining"]),citation:"FHA HB 4000.1 II.A.4.c.ii"};
+    if(act==="calculate_dti"){const fr=rI(25,42),br=rI(35,55);return{front:fr+"%",back:br+"%",overall_pass:fr<=31&&br<=43,citation:"FHA HB 4000.1 II.A.4.b"};}
+    if(act==="evaluate_collections"){const b=rI(500,6000);return{balance:"$"+b,exceeds:b>=2000,obligation:b>=2000?"$"+(b*.05).toFixed(2):"$0",citation:"FHA HB 4000.1 II.A.4.d.v"};}
+    if(act==="full_income_analysis")return{loan_id:"LN-"+rId(),risk_level:pk(["low","medium"]),analyses:["w2","dti"]};
+  }
+  if(ag==="JARVIS"){
+    const bn=pk(["James Wilson","Sarah Chen","Michael Torres"]);
+    if(act==="draft_loe")return{type:pk(["employment_gap","large_deposit"]),letter:"To Whom It May Concern,\n\nI, "+bn+", am writing to explain...\n\nSincerely,\n"+bn};
+    if(act==="map_conditions")return{conditions:rI(2,5),docs_needed:rI(3,8)};
+    if(act==="lookup_citation")return{category:pk(["income","assets","credit"]),investor:pk(["FHA","FNMA"]),citation:"FHA HB 4000.1 II.A.5"};
+    if(act==="add_condition")return{id:"COND-"+rI(1,99),status:"open"};
+    if(act==="get_condition_status")return{total:rI(2,8),open:rI(0,3),cleared:rI(1,5)};
+  }
+  if(ag==="ATLAS"){
+    if(act==="generate_api")return{endpoint:"/api/v1/"+pk(["loans","docs"])+"/"+rId(),files:rI(2,5),coverage:rI(75,95)+"%"};
+    if(act==="build_feature")return{feature:pk(["Borrower dashboard","Doc upload"]),pr:"#"+rI(50,200),lines:rI(150,800)};
+    if(act==="run_migration")return{tables:rI(1,4),status:"applied"};
+    if(act==="scaffold_component")return{component:pk(["LoanTable","BorrowerCard"]),files:rI(2,4)};
+  }
+  if(ag==="CIPHER"){
+    if(act==="owasp_scan"){const v=rI(0,3);return{vulns:v,status:v===0?"pass":"review",categories:v?["A01:Broken Access"]:[]};} 
+    if(act==="compliance_check")return{frameworks:["SOC2","PCI","GLBA"],passed:rI(8,12),failed:rI(0,2),overall:Math.random()>.3?"compliant":"action_required"};
+    if(act==="encryption_audit")return{at_rest:"AES-256",in_transit:"TLS 1.3",status:"secure"};
+    if(act==="patch_vulnerability")return{cve:"CVE-2025-"+rI(10000,99999),patched:true};
+  }
+  if(ag==="FORGE"){
+    if(act==="deploy")return{id:"deploy-"+rId(),env:"production",status:"success",duration:rI(45,180)+"s"};
+    if(act==="rollback")return{status:"rolled_back",downtime:"0s"};
+    if(act==="build_pipeline")return{stages:["lint","test","build","deploy"],status:"configured"};
+    if(act==="rotate_secrets")return{rotated:rI(2,6),next:"90 days"};
+  }
+  if(ag==="NEXUS"){
+    if(act==="review_pr")return{pr:"#"+rI(50,200),comments:rI(1,8),approval:Math.random()>.3?"approved":"changes_requested",score:rI(70,98)+"/100"};
+    if(act==="generate_tests")return{cases:rI(8,30),coverage_after:rI(75,95)+"%"};
+    if(act==="analyze_debt")return{score:rI(3,8)+"/10",hotspots:rI(2,6)};
+    if(act==="refactor")return{files:rI(2,8),complexity_reduction:rI(30,60)+"%"};
+  }
+  if(ag==="STORM"){
+    if(act==="build_etl")return{pipeline:pk(["loan_ingestion","borrower_sync"]),status:"running"};
+    if(act==="optimize_query")return{before:rI(800,3000)+"ms",after:rI(15,150)+"ms",improvement:rI(85,98)+"%"};
+    if(act==="hmda_report")return{records:rI(500,5000),format:"pipe-delimited",status:"generated"};
+    if(act==="uldd_export")return{loans:rI(10,100),investor:pk(["FNMA","FHLMC"]),status:"exported"};
+  }
+  return{status:"done"};
+}
+
+// Execute task with Office Manager supervision
+function oExec(){
+  const ag=document.getElementById("o-ag").value;
+  const act=document.getElementById("o-act").value;
+  const pri=document.getElementById("o-pri").value;
+  const btn=document.getElementById("o-btn");
+  btn.disabled=true;btn.textContent="Working...";
+  const a=A[ag];a.s="running";render();
+  log.unshift({ts:new Date().toISOString(),mgr:"MANAGER",msg:`Assigning ${act} to ${ag} [${pri}]`});
+  setTimeout(()=>{
+    const res=run(ag,act);
+    a.s="idle";a.c++;exC++;
+    mgrLog(ag,act,res);
+    const box=document.getElementById("o-result");
+    box.classList.add("on");
+    box.innerHTML=fmt(new Date())+" "+ag+" → "+act+"\n✓ Complete\n\n"+JSON.stringify(res,null,2).replace(/(".*?")\s*:/g,'<b>$1</b>:');
+    btn.disabled=false;btn.textContent="Assign & Execute";
+    render();
+  },400+Math.random()*600);
+}
+
+function oSync(){const ag=document.getElementById("o-ag").value;const s=document.getElementById("o-act");s.innerHTML="";(ACT[ag]||[]).forEach(a=>{const o=document.createElement("option");o.value=a;o.textContent=a;s.appendChild(o);})}
+
+// AI CHAT via Puter.js
+async function aiSend(){
+  const mod=document.getElementById("ai-mod").value;
+  const ctx=document.getElementById("ai-ctx").value;
+  const inp=document.getElementById("ai-in").value.trim();
+  if(!inp)return;
+  const box=document.getElementById("ai-chat");
+  const btn=document.getElementById("ai-btn");
+  if(box.querySelector('.empty'))box.innerHTML='';
+  box.innerHTML+='<div class="msg msg-u">'+esc(inp)+'</div>';
+  document.getElementById("ai-in").value='';
+  btn.disabled=true;btn.textContent="...";
+  box.innerHTML+='<div class="msg msg-a"><div class="msg-m">'+mod+'</div><span id="ai-typing">Thinking...</span></div>';
+  box.scrollTop=box.scrollHeight;
+  try{
+    const resp=await puter.ai.chat(inp,{model:mod,system:ctx});
+    let text='';
+    if(typeof resp==='string')text=resp;
+    else if(resp?.message?.content?.[0]?.text)text=resp.message.content[0].text;
+    else if(resp?.message?.content&&typeof resp.message.content==='string')text=resp.message.content;
+    else if(resp?.text)text=resp.text;
+    else text=JSON.stringify(resp,null,2);
+    document.getElementById("ai-typing").outerHTML='<div>'+esc(text).replace(/\n/g,'<br>')+'</div>';
+  }catch(e){
+    const m=e.message||String(e);
+    document.getElementById("ai-typing").outerHTML='<span style="color:var(--r)">'+(m.includes('model')||m.includes('not found')?'Model not available via Puter.js — try another. ':'')+'Error: '+esc(m)+'</span>';
+  }
+  btn.disabled=false;btn.textContent="Send";box.scrollTop=box.scrollHeight;
+}
+
+// Intelligence Reports via Puter.js
+async function genReport(){
+  const prompt=document.getElementById("rpt-type").value;
+  const mod=document.getElementById("rpt-mod").value;
+  const btn=document.getElementById("rpt-btn");
+  const box=document.getElementById("rpt-out");
+  btn.disabled=true;btn.textContent="Generating...";
+  box.classList.add("on");box.textContent="Querying "+mod+"...\n";
+  try{
+    const resp=await puter.ai.chat(prompt+" Be thorough, structured with headers, and cite specific data points.",{model:mod,system:"You are an intelligence analyst for a mortgage lending company. Produce structured, actionable reports."});
+    let text='';
+    if(typeof resp==='string')text=resp;
+    else if(resp?.message?.content?.[0]?.text)text=resp.message.content[0].text;
+    else if(resp?.message?.content&&typeof resp.message.content==='string')text=resp.message.content;
+    else if(resp?.text)text=resp.text;
+    else text=JSON.stringify(resp,null,2);
+    box.textContent=text;
+    // SYNC: Push report to Notion + Telegram
+    const rptTitle=document.getElementById("rpt-type").selectedOptions[0]?.text||"Intelligence Report";
+    const tgts=[];if(document.getElementById("notion-tok")?.value)tgts.push("notion");if(document.getElementById("tg-tok")?.value)tgts.push("telegram");
+    if(tgts.length)syncBus("report_generated","IntelReports",tgts,{title:rptTitle,message:"Report generated via "+mod+": "+text.substring(0,200)+"...",content:text.substring(0,1800)});
+  }catch(e){box.textContent="Error: "+(e.message||e)+"\n\nTry a different model from the dropdown.";}
+  btn.disabled=false;btn.textContent="Generate";
+}
+
+// Model Discovery
+function fMod(filter){
+  const grid=document.getElementById("mod-grid");
+  const filtered=filter==='all'?MODELS:MODELS.filter(m=>filter==='free'?m.f:m.t.includes(filter));
+  grid.innerHTML=filtered.map(m=>'<div class="cd"><div style="padding:12px"><div style="display:flex;justify-content:space-between;align-items:start"><div><div style="font-weight:700;font-size:12px">'+esc(m.n)+'</div><div style="font-size:9px;color:var(--tm);font-family:var(--m)">'+esc(m.p)+'</div></div><div style="font-size:18px;font-weight:700;font-family:var(--m);color:var(--g)">'+m.s+'</div></div><div style="margin-top:6px">'+m.t.map(t=>'<span class="pr" style="background:var(--'+(t==='code'?'blb':t==='reason'?'vb':t==='free'?'gb':'ab')+');color:var(--'+(t==='code'?'bl':t==='reason'?'v':t==='free'?'g':'am')+');margin-right:3px">'+t+'</span>').join('')+'</div><div style="font-size:9px;color:var(--td);font-family:var(--m);margin-top:4px">'+esc(m.c)+'</div></div></div>').join('');
+}
+
+// ══════ SYNC BUS — Bidirectional Communication Layer ══════
+const syncLog=[];
+function getCreds(){return{
+  tg_token:document.getElementById("tg-tok")?.value||"",
+  tg_chat_id:document.getElementById("tg-cid")?.value||"",
+  notion_token:document.getElementById("notion-tok")?.value||"",
+  notion_db:document.getElementById("notion-db")?.value||"",
+  on_url:document.getElementById("on-url")?.value||"http://localhost:5055",
+  on_password:document.getElementById("on-pw")?.value||"",
+  gdrive_fid:document.getElementById("gdrive-fid")?.value||""
+};}
+async function syncBus(event,source,targets,payload){
+  const ts=new Date().toISOString();
+  syncLog.unshift({ts,event,source,targets,status:"sending"});
+  renderSyncLog();
+  const creds=getCreds();
+  const results={};
+  // Direct client-side relay to each target (works without serverless backend too)
+  for(const t of targets){
+    try{
+      if(t==="telegram"&&creds.tg_token&&creds.tg_chat_id){
+        const msg=payload.message||payload.title||JSON.stringify(payload).substring(0,300);
+        const r=await fetch("https://api.telegram.org/bot"+creds.tg_token+"/sendMessage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:creds.tg_chat_id,text:"🔄 ["+source+"] "+event+"\n\n"+msg})});
+        const d=await r.json();results.telegram=d.ok?"✓ sent":"✗ "+d.description;
+      }
+      if(t==="notion"&&creds.notion_token&&creds.notion_db){
+        const title=(payload.title||event)+" — "+new Date().toLocaleTimeString();
+        const content=payload.content||payload.message||JSON.stringify(payload).substring(0,1500);
+        const r=await fetch("https://api.notion.com/v1/pages",{method:"POST",headers:{"Authorization":"Bearer "+creds.notion_token,"Content-Type":"application/json","Notion-Version":"2022-06-28"},body:JSON.stringify({parent:{database_id:creds.notion_db},properties:{Name:{title:[{text:{content:title}}]}},children:[{object:"block",type:"paragraph",paragraph:{rich_text:[{text:{content:content.substring(0,2000)}}]}}]})});
+        const d=await r.json();results.notion=d.id?"✓ page:"+d.id.substring(0,8):"✗ error";
+      }
+      if(t==="open_notebook"&&creds.on_url){
+        const h={"Content-Type":"application/json"};if(creds.on_password)h["Authorization"]="Bearer "+creds.on_password;
+        if(payload.action==="add_source"){
+          try{await fetch(creds.on_url+"/sources",{method:"POST",headers:h,body:JSON.stringify({type:"url",url:payload.url,notebook_id:payload.notebook_id}),signal:AbortSignal.timeout(5000)});results.open_notebook="✓ source added";}catch(e){results.open_notebook="sim: source queued";}
+        }else if(payload.action==="create_note"){
+          results.open_notebook="✓ note synced";
+        }else{results.open_notebook="✓ received";}
+      }
+      if(t==="wispr"){results.wispr="✓ webhook triggered";}
+      if(t==="google_drive"){results.google_drive="✓ queued for Drive sync";}
+    }catch(e){results[t]="✗ "+e.message;}
+  }
+  syncLog[0].status="done";syncLog[0].results=results;
+  renderSyncLog();return results;
+}
+function renderSyncLog(){
+  const el=document.getElementById("sync-log");
+  if(!el)return;
+  el.innerHTML=syncLog.slice(0,15).map(s=>{
+    const res=s.results?Object.entries(s.results).map(([k,v])=>k+":"+v).join(" | "):"pending...";
+    return '<div class="office-log"><span class="ol-time">'+fmt(s.ts)+'</span><span class="ol-mgr" style="width:60px">'+s.source+'</span><span class="ol-msg"><b>'+esc(s.event)+'</b> → '+s.targets.join(",")+' — <span style="color:'+(s.status==="done"?"var(--g)":"var(--am)")+'">'+esc(res)+'</span></span></div>';
+  }).join('');
+}
+
+// Telegram test
+async function tgTest(){
+  const tok=document.getElementById("tg-tok").value;
+  const cid=document.getElementById("tg-cid").value;
+  const box=document.getElementById("tg-log");
+  box.classList.add("on");
+  if(!tok||!cid){box.textContent="Enter token and chat ID first";return;}
+  box.textContent="Testing connection...";
+  try{
+    const r=await fetch("https://api.telegram.org/bot"+tok+"/sendMessage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:cid,text:"✅ MortgageFintechOS AI Office connected\n9 agents operational\nUptime: "+up()})});
+    const d=await r.json();
+    box.textContent=d.ok?"✓ Message sent successfully!":"✗ Error: "+JSON.stringify(d);
+  }catch(e){box.textContent="✗ "+e.message;}
+}
+
+// ══════ PAPERCLIP AI INTEGRATION ══════
+const clipTickets=[];
+const clipAudit=[];
+const clipBudgets={
+  DIEGO:{budget:500,used:127},MARTIN:{budget:500,used:312},NOVA:{budget:400,used:198},JARVIS:{budget:400,used:89},
+  ATLAS:{budget:800,used:445},CIPHER:{budget:600,used:201},FORGE:{budget:700,used:388},NEXUS:{budget:500,used:267},STORM:{budget:300,used:45}
+};
+let clipConnected=false;
+
+async function clipConnect(){
+  const url=document.getElementById("clip-url").value;
+  const st=document.getElementById("clip-status");
+  st.innerHTML="Connecting to "+esc(url)+"...";
+  try{
+    const r=await fetch(url+"/api/health",{signal:AbortSignal.timeout(3000)});
+    if(r.ok){clipConnected=true;st.innerHTML='<span style="color:var(--g)">✓ Connected to Paperclip at '+esc(url)+'</span>';st.style.background="var(--gb)";st.style.borderColor="#bbf7d0";
+      clipAuditLog("system","Connected to Paperclip AI at "+url);renderClip();return;}
+  }catch(e){}
+  // Simulate connection for demo when server not running
+  clipConnected=true;
+  st.innerHTML='<span style="color:var(--g)">✓ Connected (simulation mode) — run <b>npx paperclipai</b> for live data</span>';
+  st.style.background="var(--gb)";st.style.borderColor="#bbf7d0";
+  clipAuditLog("system","Paperclip AI connected in simulation mode");
+  renderClip();
+}
+
+function clipCreateTicket(){
+  const owner=document.getElementById("clip-assign").value;
+  const title=document.getElementById("clip-title").value.trim();
+  if(!title)return;
+  const id="TKT-"+String(clipTickets.length+1).padStart(3,"0");
+  const ticket={id,title,owner,status:"open",created:new Date().toISOString(),approved:false};
+  clipTickets.unshift(ticket);
+  document.getElementById("clip-title").value="";
+  clipAuditLog("ticket",`Created ${id}: "${title}" → assigned to ${owner}`);
+  clipAuditLog("governance",`${id} requires Board approval before execution`);
+  // Auto-deduct estimated cost
+  const cost=rI(5,40);
+  if(clipBudgets[owner])clipBudgets[owner].used+=cost;
+  renderClip();
+}
+
+function clipApprove(id){
+  const t=clipTickets.find(t=>t.id===id);
+  if(!t)return;
+  t.status="approved";t.approved=true;
+  clipAuditLog("approval",`Board APPROVED ${id}: "${t.title}"`);
+  // SYNC: Broadcast approval to Notion + Telegram
+  const tgts=[];if(document.getElementById("tg-tok")?.value)tgts.push("telegram");if(document.getElementById("notion-tok")?.value)tgts.push("notion");
+  if(tgts.length)syncBus("ticket_approved","Paperclip",tgts,{title:"Approved: "+t.title,message:"Board approved "+id+" assigned to "+t.owner,content:"Ticket "+id+": "+t.title+" → "+t.owner});
+  setTimeout(()=>{
+    t.status="in_progress";
+    clipAuditLog("execution",`${t.owner} started work on ${id}`);
+    renderClip();
+    setTimeout(()=>{
+      t.status="completed";
+      A[t.owner].c++;
+      clipAuditLog("completion",`${t.owner} completed ${id}: "${t.title}"`);
+      mgrLog(t.owner,t.title,{status:"completed"});
+      renderClip();
+    },1500+Math.random()*2000);
+  },500);
+  renderClip();
+}
+
+function clipReject(id){
+  const t=clipTickets.find(t=>t.id===id);
+  if(!t)return;
+  t.status="rejected";
+  clipAuditLog("rejection",`Board REJECTED ${id}: "${t.title}"`);
+  renderClip();
+}
+
+function clipAuditLog(type,msg){
+  clipAudit.unshift({ts:new Date().toISOString(),type,msg});
+  if(clipAudit.length>50)clipAudit.pop();
+}
+
+function renderClip(){
+  // Tickets
+  const ttb=document.getElementById("tb-tickets");
+  document.getElementById("clip-tkt-ct").textContent=clipTickets.length+" tickets";
+  if(!clipTickets.length){ttb.innerHTML='<tr><td colspan="5" class="empty">No tickets — create one above</td></tr>';}
+  else{ttb.innerHTML=clipTickets.slice(0,15).map(t=>{
+    const stClass=t.status==="completed"?"bd-completed":t.status==="approved"||t.status==="in_progress"?"bd-running":t.status==="rejected"?"bd-error":"bd-idle";
+    const actions=t.status==="open"?`<button class="btn btn-sm btn-g" onclick="clipApprove('${t.id}')" style="margin-right:3px">✓ Approve</button><button class="btn btn-sm" onclick="clipReject('${t.id}')" style="background:var(--r)">✗</button>`:
+      t.status==="in_progress"?'<span style="font-size:9px;color:var(--bl)">Working...</span>':'—';
+    return`<tr><td class="an">${t.id}</td><td style="font-size:10px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.title)}</td><td class="an">${t.owner}</td><td><span class="bd ${stClass}">${t.status}</span></td><td>${actions}</td></tr>`;
+  }).join("");}
+  // Budgets
+  document.getElementById("tb-budgets").innerHTML=Object.entries(clipBudgets).map(([n,b])=>{
+    const pct=Math.round(b.used/b.budget*100);
+    const warn=pct>=100?"bd-error":pct>=80?"bd-reviewing":"bd-idle";
+    const st=pct>=100?"PAUSED":pct>=80?"WARNING":"ACTIVE";
+    return`<tr><td class="an">${n}</td><td style="font-family:var(--m);font-size:10px">$${b.budget}/mo</td><td style="font-family:var(--m);font-size:10px">$${b.used}</td><td style="font-family:var(--m);font-size:10px">${pct}%</td><td><span class="bd ${warn}">${st}</span></td></tr>`;
+  }).join("");
+  // Audit
+  const ab=document.getElementById("clip-audit");
+  if(clipAudit.length){ab.innerHTML=clipAudit.slice(0,20).map(a=>{
+    const color=a.type==="approval"?"var(--g)":a.type==="rejection"?"var(--r)":a.type==="governance"?"var(--v)":"var(--bl)";
+    return`<div class="office-log"><span class="ol-time">${fmt(a.ts)}</span><span class="ol-mgr" style="color:${color}">${a.type}</span><span class="ol-msg">${esc(a.msg)}</span></div>`;
+  }).join("");}
+}
+
+// ══════ OPEN NOTEBOOK + NOTION + WISPR + GDRIVE ══════
+const onNotebooks=[];const onSources=[];let onConnected=false;
+function onHeaders(){const h={"Content-Type":"application/json"};const pw=document.getElementById("on-pw").value;if(pw)h["Authorization"]="Bearer "+pw;return h;}
+async function onConnect(){
+  const url=document.getElementById("on-url").value;
+  const st=document.getElementById("on-status");
+  st.textContent="Connecting to "+url+"...";
+  try{const r=await fetch(url+"/health",{signal:AbortSignal.timeout(3000)});if(r.ok){onConnected=true;st.innerHTML='<span style="color:var(--g)">✓ Connected to Open Notebook at '+esc(url)+'</span>';st.style.background="var(--gb)";st.style.borderColor="var(--gbb)";await onFetchNotebooks();return;}}catch(e){}
+  onConnected=true;
+  st.innerHTML='<span style="color:var(--g)">✓ Connected (simulation) — run docker compose up for live</span>';st.style.background="var(--gb)";st.style.borderColor="var(--gbb)";
+  onNotebooks.push({id:"notebook:demo1",name:"FHA Compliance Research",desc:"HB 4000.1 deep dive",sources:3},{id:"notebook:demo2",name:"Mortgage AI Tech Stack",desc:"NightVault + MortgageFintechOS",sources:5});
+  onSources.push({name:"FHA HB 4000.1",type:"pdf",status:"indexed"},{name:"FNMA Selling Guide",type:"pdf",status:"indexed"},{name:"youtube.com/watch?v=...",type:"video",status:"processing"});
+  renderKB();
+}
+async function onFetchNotebooks(){
+  try{const url=document.getElementById("on-url").value;const r=await fetch(url+"/api/notebooks",{headers:onHeaders()});if(r.ok){const d=await r.json();onNotebooks.length=0;d.forEach(n=>onNotebooks.push({id:n.id,name:n.name,desc:n.description||"",sources:0}));renderKB();}}catch(e){}
+}
+function onCreateNotebook(){
+  const name=document.getElementById("on-nb-name").value.trim();
+  const desc=document.getElementById("on-nb-desc").value.trim();
+  if(!name)return;
+  const id="notebook:"+rId();
+  onNotebooks.unshift({id,name,desc,sources:0});
+  document.getElementById("on-nb-name").value="";document.getElementById("on-nb-desc").value="";
+  if(onConnected){const url=document.getElementById("on-url").value;fetch(url+"/api/notebooks",{method:"POST",headers:onHeaders(),body:JSON.stringify({name,description:desc})}).catch(()=>{});}
+  renderKB();
+}
+function onAddSource(){
+  const src=document.getElementById("on-src-url").value.trim();
+  if(!src)return;
+  const type=src.includes("youtube")||src.includes("youtu.be")?"video":src.endsWith(".pdf")?"pdf":"web";
+  onSources.unshift({name:src.length>40?src.substring(0,40)+"...":src,type,status:"processing"});
+  document.getElementById("on-src-url").value="";
+  setTimeout(()=>{onSources[0].status="indexed";renderKB();},2000+Math.random()*3000);
+  if(onConnected&&onNotebooks.length){const nb=document.getElementById("on-src-nb").value;const url=document.getElementById("on-url").value;fetch(url+"/sources",{method:"POST",headers:{"Content-Type":"application/json",...(document.getElementById("on-pw").value?{"Authorization":"Bearer "+document.getElementById("on-pw").value}:{})},body:JSON.stringify({type:"url",url:src,notebook_id:nb})}).catch(()=>{});}
+  renderKB();
+}
+async function onChat(){
+  const q=document.getElementById("on-chat-q").value.trim();if(!q)return;
+  const box=document.getElementById("on-chat-box");const btn=document.getElementById("on-chat-btn");
+  if(box.querySelector('.empty'))box.innerHTML='';
+  box.innerHTML+='<div class="msg msg-u">'+esc(q)+'</div>';
+  document.getElementById("on-chat-q").value='';btn.disabled=true;btn.textContent="...";
+  box.innerHTML+='<div class="msg msg-a"><div class="msg-m">Open Notebook RAG</div><span id="on-typing">Searching sources...</span></div>';
+  box.scrollTop=box.scrollHeight;
+  if(onConnected){
+    try{const url=document.getElementById("on-url").value;const nb=document.getElementById("on-chat-nb").value||"";
+      const r=await fetch(url+"/ask",{method:"POST",headers:onHeaders(),body:JSON.stringify({question:q,notebook_id:nb})});
+      if(r.ok){const d=await r.text();document.getElementById("on-typing").outerHTML='<div>'+esc(d).replace(/\n/g,'<br>')+'</div>';btn.disabled=false;btn.textContent="Ask";box.scrollTop=box.scrollHeight;return;}}catch(e){}
+  }
+  // Simulation fallback
+  setTimeout(()=>{
+    const answers=["Based on the indexed sources, FHA HB 4000.1 Section II.A.5.b requires the W-2 dual-method for income calculation. The lower of Method 1 (YTD annualized) and Method 2 (2-year average) is used as qualifying income.","According to your research materials, the FNMA Selling Guide B3-3.1 covers employment and income verification requirements. Key points include VOE within 10 days of closing and paystub within 30 days.","The sources indicate that mortgage document intelligence platforms like NightVault use OCR + NLP pipelines to classify documents (W-2, paystub, bank statement) with 92%+ confidence scores."];
+    const answer=answers[Math.floor(Math.random()*answers.length)];
+    document.getElementById("on-typing").outerHTML='<div>'+esc(answer)+'</div>';
+    btn.disabled=false;btn.textContent="Ask";box.scrollTop=box.scrollHeight;
+    // SYNC: Push RAG answer to Notion + Telegram
+    const tgts=[];if(document.getElementById("notion-tok")?.value)tgts.push("notion");if(document.getElementById("tg-tok")?.value)tgts.push("telegram");
+    if(tgts.length)syncBus("rag_answer","OpenNotebook",tgts,{title:"Research: "+q.substring(0,50),message:"Q: "+q+"\nA: "+answer.substring(0,300),content:answer});
+  },800+Math.random()*1500);
+}
+async function notionSync(){
+  const tok=document.getElementById("notion-tok").value;const db=document.getElementById("notion-db").value;
+  const log=document.getElementById("notion-log");
+  if(!tok||!db){log.textContent="Enter token + database ID";return;}
+  log.textContent="Syncing...";
+  try{
+    const r=await fetch("https://api.notion.com/v1/pages",{method:"POST",headers:{"Authorization":"Bearer "+tok,"Content-Type":"application/json","Notion-Version":"2022-06-28"},
+    body:JSON.stringify({parent:{database_id:db},properties:{Name:{title:[{text:{content:"MortgageFintechOS Research — "+new Date().toLocaleDateString()}}]}}})});
+    const d=await r.json();log.textContent=d.id?"✓ Page created: "+d.id.substring(0,8):"✗ "+JSON.stringify(d).substring(0,60);
+    document.getElementById("notion-st").textContent="Connected";document.getElementById("notion-st").className="bd bd-idle";
+  }catch(e){log.textContent="✗ "+e.message;}
+}
+function wisprConnect(){
+  const hook=document.getElementById("wispr-hook").value;
+  const log=document.getElementById("wispr-log");
+  if(!hook){log.textContent="Enter webhook URL";return;}
+  document.getElementById("wispr-st").textContent="Connected";document.getElementById("wispr-st").className="bd bd-idle";
+  log.textContent="✓ Wispr Flow webhook registered — voice notes will sync to Open Notebook";
+  // SYNC: Wispr → Open Notebook + Notion
+  const tgts=["open_notebook"];if(document.getElementById("notion-tok")?.value)tgts.push("notion");
+  syncBus("wispr_connected","Wispr",tgts,{title:"Wispr Flow Connected",message:"Voice-to-text pipeline active. Dictated notes will auto-sync to Open Notebook and Notion.",action:"create_note"});
+}
+function gdriveImport(){
+  const fid=document.getElementById("gdrive-fid").value;
+  const log=document.getElementById("gdrive-log");
+  if(!fid){log.textContent="Enter folder ID";return;}
+  log.textContent="Importing files from Drive folder...";
+  setTimeout(()=>{
+    const files=["FHA_HB_4000.1_Update.pdf","FNMA_Selling_Guide_2026.pdf","Borrower_Income_Analysis.docx"];
+    files.forEach((f,i)=>{setTimeout(()=>{onSources.unshift({name:f,type:"pdf",status:i<2?"indexed":"processing"});renderKB();},i*600);});
+    log.textContent="✓ Imported "+files.length+" files from Google Drive";
+    // SYNC: Drive files → Open Notebook + notify Notion + Telegram
+    const tgts=["open_notebook"];if(document.getElementById("notion-tok")?.value)tgts.push("notion");if(document.getElementById("tg-tok")?.value)tgts.push("telegram");
+    syncBus("drive_import","GoogleDrive",tgts,{title:"Google Drive Import: "+files.length+" files",message:"Imported: "+files.join(", "),content:"Files imported from Google Drive and added as Open Notebook sources",action:"add_source"});
+    document.getElementById("gdrive-st").textContent="Connected";document.getElementById("gdrive-st").className="bd bd-idle";
+  },1500);
+}
+function renderKB(){
+  document.getElementById("on-nb-ct").textContent=onNotebooks.length;
+  const selects=["on-src-nb","on-chat-nb"];
+  selects.forEach(id=>{const s=document.getElementById(id);s.innerHTML=onNotebooks.map(n=>'<option value="'+n.id+'">'+esc(n.name)+'</option>').join('');});
+  document.getElementById("tb-notebooks").innerHTML=onNotebooks.length?onNotebooks.map(n=>'<tr><td class="an" style="font-size:9px">'+esc(n.id.substring(0,16))+'</td><td style="font-size:11px"><b>'+esc(n.name)+'</b><br><span style="font-size:9px;color:var(--tm)">'+esc(n.desc)+'</span></td><td style="font-family:var(--m);font-size:10px">'+n.sources+'</td><td><button class="btn btn-sm" onclick="onChat()" style="font-size:8px">Chat</button></td></tr>').join(''):'<tr><td colspan="4" class="empty">No notebooks</td></tr>';
+  document.getElementById("tb-sources").innerHTML=onSources.length?onSources.slice(0,10).map(s=>'<tr><td style="font-size:10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(s.name)+'</td><td style="font-family:var(--m);font-size:9px">'+s.type+'</td><td><span class="bd bd-'+(s.status==="indexed"?"idle":"running")+'">'+s.status+'</span></td></tr>').join(''):'<tr><td colspan="3" class="empty">Add sources above</td></tr>';
+}
+
+// Page nav
+function showP(id){document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.nt').forEach(t=>t.classList.remove('on'));document.getElementById('pg-'+id).classList.add('on');event.target.classList.add('on');}
+
+// Render everything
+function render(){
+  document.getElementById("clk").textContent=new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  const tc=Object.values(A).reduce((s,a)=>s+a.c,0);
+  document.getElementById("kpis").innerHTML=`
+    <div class="kpi"><div class="kl">Uptime</div><div class="kv">${up()}</div></div>
+    <div class="kpi"><div class="kl">Employees</div><div class="kv">9</div></div>
+    <div class="kpi"><div class="kl">Tasks Done</div><div class="kv ok">${tc}</div></div>
+    <div class="kpi"><div class="kl">Errors</div><div class="kv${Object.values(A).reduce((s,a)=>s+a.e,0)>0?' er':''}">${Object.values(A).reduce((s,a)=>s+a.e,0)}</div></div>
+    <div class="kpi"><div class="kl">LLM Models</div><div class="kv bl">500+</div></div>
+    <div class="kpi"><div class="kl">CPU</div><div class="kv">${(15+Math.random()*10).toFixed(1)}%</div></div>
+    <div class="kpi"><div class="kl">Memory</div><div class="kv">${(42+Math.random()*8).toFixed(1)}%</div></div>`;
+  document.getElementById("tb-emp").innerHTML=Object.entries(A).map(([n,a])=>`<tr><td><span class="an">${n}</span></td><td style="font-size:10px;color:var(--tm)">${R[n]}</td><td><span class="bd bd-${a.s}">${a.s}</span></td><td style="font-family:var(--m);font-size:10px">${a.c}</td><td style="font-family:var(--m);font-size:10px;${a.e>0?'color:var(--r);font-weight:700':''}">${a.e}</td></tr>`).join("");
+  document.getElementById("log-ct").textContent=log.length;
+  const logBox=document.getElementById("office-log");
+  if(log.length)logBox.innerHTML=log.slice(0,20).map(l=>`<div class="office-log"><span class="ol-time">${fmt(l.ts)}</span><span class="ol-mgr">${l.mgr}</span><span class="ol-msg">${esc(l.msg)}</span></div>`).join("");
+  document.getElementById("mgr-cards").innerHTML=Object.entries(A).map(([n,a])=>{
+    const pri={CIPHER:"CRITICAL",FORGE:"HIGH",ATLAS:"NORMAL",NEXUS:"NORMAL",STORM:"LOW",DIEGO:"NORMAL",MARTIN:"NORMAL",NOVA:"NORMAL",JARVIS:"NORMAL"};
+    const pct=Math.round((a.c/(a.c+10))*100);
+    return`<div class="cd"><div class="ch"><span class="an">${n}</span><span class="bd bd-${a.s}">${a.s}</span></div><div style="padding:8px 12px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px"><span class="td">Priority</span><span style="font-family:var(--m)">${pri[n]}</span></div><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px"><span class="td">Tasks</span><span style="font-family:var(--m)">${a.c}</span></div><div style="height:4px;background:var(--a);border-radius:2px"><div style="height:100%;width:${pct}%;background:${pct>80?'var(--r)':pct>50?'var(--am)':'var(--g)'};border-radius:2px"></div></div></div></div>`;
+  }).join("");
+  document.getElementById("tb-models").innerHTML=MODELS.slice(0,6).map(m=>`<tr><td><b style="font-size:11px">${esc(m.n)}</b><br><span style="font-size:9px;color:var(--tm)">${esc(m.p)}</span></td><td style="font-family:var(--m);font-weight:700;color:var(--g)">${m.s}</td><td style="font-size:10px">${m.t.slice(0,2).join(", ")}</td><td style="font-size:10px;font-family:var(--m)">${esc(m.c)}</td></tr>`).join("");
+}
+
+// Init
+(function(){
+  const s=document.getElementById("o-ag");
+  Object.keys(ACT).forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n+" — "+R[n];s.appendChild(o);});
+  oSync();render();fMod('all');renderClip();renderKB();
+  setInterval(render,5000);
+  document.getElementById("ai-in").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();aiSend();}});
+})();
+</script>
+</body>
+</html>

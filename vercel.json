@@ -1,7 +1,3 @@
 {
-  "buildCommand": "echo 'Static site'",
-  "installCommand": "echo 'No install needed'",
-  "outputDirectory": "public",
-  "framework": null,
   "cleanUrls": true
 }

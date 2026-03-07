@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MortgageFintechOS — Domain Ontology</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0a;--s:#111;--s2:#161616;--b:#222;--b2:#2a2a2a;--t:#e4e4e7;--t2:#a1a1aa;--t3:#71717a;--t4:#52525b;--ok:#22c55e;--f:'Instrument Sans',sans-serif;--m:'IBM Plex Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--f);background:var(--bg);color:var(--t);overflow-x:hidden}
+.hdr{background:var(--s);border-bottom:1px solid var(--b);padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.hdr h1{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.hdr h1 em{font-style:normal;font-weight:400;color:var(--t3)}
+.links{display:flex;gap:8px}
+.links a{font-size:10px;color:var(--t3);text-decoration:none;font-family:var(--m);padding:4px 10px;border:1px solid var(--b);border-radius:4px;transition:.15s}
+.links a:hover{color:var(--t);border-color:var(--t4)}
+.canvas{padding:20px 24px;max-width:1500px;margin:0 auto}
+
+/* Ontology graph container */
+#graph{width:100%;height:720px;background:var(--s);border:1px solid var(--b);border-radius:8px;position:relative;overflow:hidden;cursor:grab}
+#graph:active{cursor:grabbing}
+#graph svg{width:100%;height:100%}
+
+/* Class cards on graph */
+.onode{position:absolute;border-radius:6px;cursor:pointer;transition:box-shadow .2s,border-color .2s;padding:0;overflow:hidden;min-width:120px;font-size:10px}
+.onode:hover{box-shadow:0 0 24px rgba(255,255,255,.06);z-index:10}
+.onode-h{padding:6px 10px;font-weight:700;font-size:10px;font-family:var(--m);display:flex;align-items:center;gap:5px;letter-spacing:-.1px}
+.onode-b{padding:5px 10px;font-size:9px;color:var(--t2);line-height:1.4}
+.onode-prop{font-family:var(--m);font-size:8px;color:var(--t3);padding:2px 10px 4px}
+
+/* Category colors */
+.cat-core .onode-h{background:#16a34a;color:#fff}
+.cat-core{border:1px solid #16a34a;background:var(--s2)}
+.cat-agent .onode-h{background:var(--t);color:var(--bg)}
+.cat-agent{border:1px solid var(--t4);background:var(--s2)}
+.cat-domain .onode-h{background:#92400e;color:#fff}
+.cat-domain{border:1px solid #92400e;background:var(--s2)}
+.cat-integration .onode-h{background:#7c3aed;color:#fff}
+.cat-integration{border:1px solid #7c3aed;background:var(--s2)}
+.cat-data .onode-h{background:var(--t4);color:var(--t)}
+.cat-data{border:1px solid var(--b2);background:var(--s2)}
+.cat-llm .onode-h{background:#0891b2;color:#fff}
+.cat-llm{border:1px solid #0891b2;background:var(--s2)}
+.cat-compliance .onode-h{background:#dc2626;color:#fff}
+.cat-compliance{border:1px solid #dc2626;background:var(--s2)}
+
+/* Legend */
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px;padding:10px 14px;background:var(--s);border:1px solid var(--b);border-radius:6px}
+.lg{display:flex;align-items:center;gap:5px;font-size:9px;font-family:var(--m);color:var(--t2)}
+.lg-dot{width:10px;height:10px;border-radius:2px}
+
+/* Relationship types */
+.rel-label{position:absolute;font-size:7px;font-family:var(--m);color:var(--t4);background:var(--s);padding:1px 4px;border-radius:2px;pointer-events:none;white-space:nowrap;letter-spacing:.3px;text-transform:uppercase}
+
+/* Panels */
+.sidebar{position:fixed;right:0;top:48px;width:340px;height:calc(100vh - 48px);background:var(--s);border-left:1px solid var(--b);overflow-y:auto;transform:translateX(100%);transition:transform .25s ease;z-index:99;padding:16px}
+.sidebar.open{transform:translateX(0)}
+.sb-close{position:absolute;top:10px;right:10px;background:none;border:1px solid var(--b);color:var(--t3);width:22px;height:22px;border-radius:3px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center}
+.sb-close:hover{color:var(--t);border-color:var(--t4)}
+.sb-title{font-size:14px;font-weight:700;margin-bottom:2px}
+.sb-type{font-size:9px;font-family:var(--m);color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.sb-sec{font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--t4);font-family:var(--m);margin-top:14px;margin-bottom:6px;padding-top:10px;border-top:1px solid var(--b)}
+.sb-row{font-size:10px;color:var(--t2);margin-bottom:4px;padding:3px 0}
+.sb-row b{color:var(--t);font-weight:600}
+.sb-tag{display:inline-flex;padding:1px 5px;border-radius:2px;font-size:8px;font-family:var(--m);font-weight:600;margin:1px}
+
+/* Relationship table */
+.rel-tbl{margin-top:16px;background:var(--s);border:1px solid var(--b);border-radius:8px;overflow:hidden}
+.rel-tbl-h{padding:10px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--b)}
+table{width:100%;border-collapse:collapse}
+table th{text-align:left;padding:7px 12px;font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);font-family:var(--m);background:var(--s2);border-bottom:1px solid var(--b)}
+table td{padding:6px 12px;font-size:10px;color:var(--t2);border-bottom:1px solid rgba(255,255,255,.03)}
+table tr:hover td{background:rgba(255,255,255,.015)}
+
+.footer{text-align:center;padding:20px;font-size:9px;color:var(--t4);font-family:var(--m);margin-top:16px}
+.footer a{color:var(--t3);text-decoration:none}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <h1>⬡ MortgageFintechOS <em>Domain Ontology</em></h1>
+  <div class="links">
+    <a href="/">Dashboard</a>
+    <a href="/orchestration.html">Orchestration</a>
+  </div>
+</header>
+<div class="canvas">
+  <div class="legend">
+    <div class="lg"><div class="lg-dot" style="background:#16a34a"></div>Core System</div>
+    <div class="lg"><div class="lg-dot" style="background:var(--t)"></div>Agent (Employee)</div>
+    <div class="lg"><div class="lg-dot" style="background:#92400e"></div>Mortgage Domain</div>
+    <div class="lg"><div class="lg-dot" style="background:#dc2626"></div>Compliance</div>
+    <div class="lg"><div class="lg-dot" style="background:#7c3aed"></div>Integration</div>
+    <div class="lg"><div class="lg-dot" style="background:#0891b2"></div>AI / LLM</div>
+    <div class="lg"><div class="lg-dot" style="background:var(--t4)"></div>Data Entity</div>
+    <div class="lg" style="margin-left:auto"><span style="color:var(--t4)">Click any class for properties & relationships</span></div>
+  </div>
+  <div id="graph">
+    <svg id="edges"></svg>
+  </div>
+
+  <!-- Relationship Table -->
+  <div class="rel-tbl">
+    <div class="rel-tbl-h">Ontology Relationships</div>
+    <table>
+      <thead><tr><th>Subject</th><th>Predicate</th><th>Object</th><th>Cardinality</th><th>Domain</th></tr></thead>
+      <tbody id="rel-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Class Hierarchy Table -->
+  <div class="rel-tbl" style="margin-top:12px">
+    <div class="rel-tbl-h">Class Hierarchy (Taxonomy)</div>
+    <table>
+      <thead><tr><th>Class</th><th>Parent</th><th>Properties</th><th>Instances</th></tr></thead>
+      <tbody id="tax-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="sidebar" class="sidebar">
+  <button class="sb-close" onclick="closeSB()">×</button>
+  <div id="sb-content"></div>
+</div>
+
+<footer class="footer">MortgageFintechOS Ontology v1.0 · Cory Lawson / The Lawson Group · <a href="https://github.com/CoryLawsonxMortgageAI/MortgageFintechOS-">GitHub</a></footer>
+
+<script>
+// ═══════════════════════════════════════════
+// ONTOLOGY MODEL — Classes, Properties, Relationships
+// ═══════════════════════════════════════════
+
+const CLASSES = [
+  // CORE SYSTEM
+  {id:"AIOSKernel",label:"AIOS Kernel",cat:"core",x:42,y:3,
+   desc:"Central orchestrator daemon. Singleton. Manages lifecycle of all agents, task dispatch, scheduling, health monitoring, and state persistence.",
+   props:["running: bool","start_time: datetime","degraded: bool","watchdog_interval: int","max_crashes: int"],
+   isa:"System",instances:["kernel_001"]},
+  {id:"TaskQueue",label:"Task Queue",cat:"core",x:30,y:3,
+   desc:"Priority-based async queue. Dispatches Task objects to agents by priority (CRITICAL > HIGH > MEDIUM > LOW).",
+   props:["pending: int","completed: int","failed: int","maxsize: int"],
+   isa:"System",instances:["queue_001"]},
+  {id:"Scheduler",label:"Scheduler",cat:"core",x:54,y:3,
+   desc:"Cron-like daily/hourly/weekly task scheduler with missed-job recovery.",
+   props:["jobs: ScheduledJob[]","running: bool","flush_interval: int"],
+   isa:"System",instances:["scheduler_001"]},
+  {id:"HealthMonitor",label:"Health Monitor",cat:"core",x:66,y:3,
+   desc:"Tracks heartbeats, error rates, queue backlogs, CPU/memory.",
+   props:["heartbeat_timeout: int","error_rate_threshold: float","alerts: Alert[]"],
+   isa:"System",instances:["monitor_001"]},
+
+  // AGENTS
+  {id:"BaseAgent",label:"BaseAgent",cat:"agent",x:2,y:18,
+   desc:"Abstract base class for all 9 agents. Defines execute(), health_check(), run_task() with retry logic, and state persistence hooks.",
+   props:["name: str","status: AgentStatus","last_heartbeat: datetime","error_count: int","tasks_completed: int","max_retries: int"],
+   isa:"owl:Thing",instances:[]},
+  {id:"DIEGO",label:"DIEGO",cat:"agent",x:2,y:30,
+   desc:"Pipeline Orchestration. Triages loans (FHA/VA/CONV/USDA), tracks stages, assigns priority.",
+   props:["pipeline: dict[str, LoanFile]"],
+   isa:"BaseAgent",instances:["diego_001"]},
+  {id:"MARTIN",label:"MARTIN",cat:"agent",x:2,y:40,
+   desc:"Document Intelligence. OCR classification, fraud detection, completeness auditing.",
+   props:["document_store: dict[str, Document[]]"],
+   isa:"BaseAgent",instances:["martin_001"]},
+  {id:"NOVA",label:"NOVA",cat:"agent",x:2,y:50,
+   desc:"Income & DTI. W-2 dual-method (HB 4000.1 II.A.5.b), Schedule C, collections 5% rule.",
+   props:["dti_grid: DTITier[]","compensating_factors: str[]"],
+   isa:"BaseAgent",instances:["nova_001"]},
+  {id:"JARVIS",label:"JARVIS",cat:"agent",x:2,y:60,
+   desc:"Condition Resolution. LOE drafting, condition-to-document mapping, compliance citations.",
+   props:["conditions: dict[str, Condition[]]","loe_templates: dict"],
+   isa:"BaseAgent",instances:["jarvis_001"]},
+  {id:"ATLAS",label:"ATLAS",cat:"agent",x:16,y:30,
+   desc:"Full-Stack Engineering. API generation, feature building, migrations, scaffolding.",
+   props:["workspace: str","active_pr: str"],
+   isa:"BaseAgent",instances:["atlas_001"]},
+  {id:"NEXUS",label:"NEXUS",cat:"agent",x:16,y:40,
+   desc:"Code Quality. PR review, test generation, tech debt analysis, refactoring.",
+   props:["review_queue: PR[]","coverage: float"],
+   isa:"BaseAgent",instances:["nexus_001"]},
+  {id:"CIPHER",label:"CIPHER",cat:"agent",x:16,y:50,
+   desc:"Security Engineering. OWASP scanning, SOC2/PCI/GLBA compliance, encryption audit.",
+   props:["scan_results: VulnReport[]","frameworks: str[]"],
+   isa:"BaseAgent",instances:["cipher_001"]},
+  {id:"FORGE",label:"FORGE",cat:"agent",x:16,y:60,
+   desc:"DevOps Engineering. Deploy, rollback, CI/CD pipelines, secret rotation.",
+   props:["deploy_history: Deploy[]","active_env: str"],
+   isa:"BaseAgent",instances:["forge_001"]},
+  {id:"STORM",label:"STORM",cat:"agent",x:16,y:70,
+   desc:"Data Engineering. ETL pipelines, HMDA reporting, ULDD export, query optimization.",
+   props:["pipelines: ETLPipeline[]","schedules: CronExpr[]"],
+   isa:"BaseAgent",instances:["storm_001"]},
+
+  // MORTGAGE DOMAIN
+  {id:"LoanFile",label:"Loan File",cat:"domain",x:32,y:22,
+   desc:"Core business entity. Represents a mortgage application moving through the pipeline.",
+   props:["loan_id: str","loan_type: LoanType","stage: PipelineStage","priority: str","credit_score: int","dti: float","borrower: Borrower"],
+   isa:"owl:Thing",instances:["LN-a1b2c3","LN-d4e5f6"]},
+  {id:"Borrower",label:"Borrower",cat:"domain",x:44,y:22,
+   desc:"Person applying for a mortgage loan.",
+   props:["name: str","ssn: encrypted","income: Decimal","employer: str","credit_score: int"],
+   isa:"owl:Thing",instances:[]},
+  {id:"Document",label:"Document",cat:"domain",x:32,y:34,
+   desc:"Source document uploaded to the system. Classified by MARTIN.",
+   props:["type: DocumentType","filename: str","confidence: float","classified_at: datetime","loan_id: str"],
+   isa:"owl:Thing",instances:[]},
+  {id:"Condition",label:"Condition",cat:"domain",x:44,y:34,
+   desc:"Underwriting condition requiring resolution before closing.",
+   props:["id: str","type: ConditionType","status: ConditionStatus","category: str","required_docs: str[]","cleared_at: datetime"],
+   isa:"owl:Thing",instances:["COND-001","COND-002"]},
+  {id:"Task",label:"Task",cat:"data",x:32,y:46,
+   desc:"Unit of work dispatched by the kernel to an agent.",
+   props:["id: str","priority: TaskPriority","agent_name: str","action: str","payload: dict","status: TaskStatus","retries: int"],
+   isa:"owl:Thing",instances:[]},
+  {id:"IncomeCalc",label:"Income Calculation",cat:"domain",x:44,y:46,
+   desc:"Result of NOVA's W-2 dual-method or Schedule C analysis.",
+   props:["method_1: Decimal","method_2: Decimal","qualifying: Decimal","trending: str","citation: str"],
+   isa:"owl:Thing",instances:[]},
+
+  // COMPLIANCE
+  {id:"FHARule",label:"FHA HB 4000.1",cat:"compliance",x:56,y:22,
+   desc:"Federal Housing Administration handbook governing FHA loan requirements.",
+   props:["section: str","title: str","effective_date: date"],
+   isa:"RegulatoryFramework",instances:["II.A.5.b","II.A.4.c.ii","II.A.4.b","II.A.4.d.v"]},
+  {id:"FNMAGuide",label:"FNMA Selling Guide",cat:"compliance",x:68,y:22,
+   desc:"Fannie Mae guidelines for conventional loan origination and selling.",
+   props:["section: str","chapter: str"],
+   isa:"RegulatoryFramework",instances:["B3-3.1","B3-4.1","B3-5"]},
+  {id:"FHLMCGuide",label:"FHLMC Guide",cat:"compliance",x:56,y:34,
+   desc:"Freddie Mac guidelines for loan purchase eligibility.",
+   props:["section: str"],
+   isa:"RegulatoryFramework",instances:["5301.1","5401.1"]},
+  {id:"DTITier",label:"DTI Tier",cat:"compliance",x:68,y:34,
+   desc:"DTI ratio limits with compensating factors per FHA HB 4000.1 II.A.4.b.",
+   props:["tier: str","front_limit: Decimal","back_limit: Decimal","required_factors: int"],
+   isa:"ComplianceRule",instances:["standard","compensating_1","compensating_max"]},
+
+  // INTEGRATIONS
+  {id:"PuterJS",label:"Puter.js LLM Gateway",cat:"llm",x:80,y:4,
+   desc:"Client-side LLM gateway. 500+ models, no API keys, free via user-pays model.",
+   props:["models: 500+","protocol: HTTPS CDN","auth: none"],
+   isa:"ExternalService",instances:["puter_cdn"]},
+  {id:"OpenNotebook",label:"Open Notebook",cat:"integration",x:80,y:16,
+   desc:"Self-hosted NotebookLM alternative. FastAPI REST API for RAG, sources, chat.",
+   props:["port: 5055","db: SurrealDB","protocol: HTTP REST","auth: Bearer token"],
+   isa:"ExternalService",instances:["on_local"]},
+  {id:"PaperclipAI",label:"Paperclip AI",cat:"integration",x:80,y:28,
+   desc:"Agent orchestration platform. Tickets, approvals, budgets, org charts.",
+   props:["port: 3100","protocol: HTTP REST","db: embedded PostgreSQL"],
+   isa:"ExternalService",instances:["clip_local"]},
+  {id:"Telegram",label:"Telegram Bot",cat:"integration",x:80,y:40,
+   desc:"Notification and remote control via Telegram Bot API.",
+   props:["protocol: HTTPS","endpoint: api.telegram.org","auth: Bot token"],
+   isa:"ExternalService",instances:["tg_bot"]},
+  {id:"Notion",label:"Notion",cat:"integration",x:80,y:52,
+   desc:"Knowledge sync. Creates pages from research notes via API v1.",
+   props:["protocol: HTTPS","version: 2022-06-28","auth: Bearer token"],
+   isa:"ExternalService",instances:[]},
+  {id:"GitHub",label:"GitHub",cat:"data",x:80,y:64,
+   desc:"Code repository and issue tracking for daily reports and agent task results.",
+   props:["repo: CoryLawsonxMortgageAI/MortgageFintechOS-","protocol: HTTPS REST","auth: PAT"],
+   isa:"ExternalService",instances:["gh_repo"]},
+  {id:"LLMModel",label:"LLM Model",cat:"llm",x:56,y:56,
+   desc:"Abstract class for all language models accessible via Puter.js.",
+   props:["name: str","provider: str","score: int","context_window: int","cost: str","open_source: bool","unrestricted: bool"],
+   isa:"owl:Thing",instances:["Claude 4.5","GPT-5","DeepSeek R1","Qwen 3.5","Mistral Large 3","Kimi K2.5","Hermes 4 405B","Dolphin 3.0"]},
+];
+
+// ONTOLOGY RELATIONSHIPS (Subject → Predicate → Object)
+const RELS = [
+  // Core system
+  {s:"AIOSKernel",p:"dispatches",o:"Task",card:"1:N",dom:"Core"},
+  {s:"AIOSKernel",p:"manages",o:"BaseAgent",card:"1:9",dom:"Core"},
+  {s:"AIOSKernel",p:"owns",o:"TaskQueue",card:"1:1",dom:"Core"},
+  {s:"AIOSKernel",p:"owns",o:"Scheduler",card:"1:1",dom:"Core"},
+  {s:"AIOSKernel",p:"owns",o:"HealthMonitor",card:"1:1",dom:"Core"},
+  {s:"TaskQueue",p:"contains",o:"Task",card:"1:N",dom:"Core"},
+  {s:"Scheduler",p:"triggers",o:"Task",card:"1:N",dom:"Core"},
+  {s:"HealthMonitor",p:"monitors",o:"BaseAgent",card:"1:N",dom:"Core"},
+  // Agent inheritance
+  {s:"DIEGO",p:"rdfs:subClassOf",o:"BaseAgent",card:"—",dom:"Agent"},
+  {s:"MARTIN",p:"rdfs:subClassOf",o:"BaseAgent",card:"—",dom:"Agent"},
+  {s:"NOVA",p:"rdfs:subClassOf",o:"BaseAgent",card:"—",dom:"Agent"},
+  {s:"JARVIS",p:"rdfs:subClassOf",o:"BaseAgent",card:"—",dom:"Agent"},
+  {s:"ATLAS",p:"rdfs:subClassOf",o:"BaseAgent",card:"—",dom:"Agent"},
+  {s:"NEXUS",p:"rdfs:subClassOf",o:"BaseAgent",card:"—",dom:"Agent"},
+  {s:"CIPHER",p:"rdfs:subClassOf",o:"BaseAgent",card:"—",dom:"Agent"},
+  {s:"FORGE",p:"rdfs:subClassOf",o:"BaseAgent",card:"—",dom:"Agent"},
+  {s:"STORM",p:"rdfs:subClassOf",o:"BaseAgent",card:"—",dom:"Agent"},
+  // Agent → Domain
+  {s:"DIEGO",p:"triages",o:"LoanFile",card:"1:N",dom:"Mortgage"},
+  {s:"DIEGO",p:"tracks",o:"LoanFile",card:"1:N",dom:"Mortgage"},
+  {s:"MARTIN",p:"classifies",o:"Document",card:"1:N",dom:"Mortgage"},
+  {s:"MARTIN",p:"audits",o:"LoanFile",card:"1:N",dom:"Mortgage"},
+  {s:"NOVA",p:"calculates",o:"IncomeCalc",card:"1:N",dom:"Mortgage"},
+  {s:"NOVA",p:"cites",o:"FHARule",card:"N:N",dom:"Compliance"},
+  {s:"NOVA",p:"evaluates",o:"DTITier",card:"1:N",dom:"Compliance"},
+  {s:"JARVIS",p:"resolves",o:"Condition",card:"1:N",dom:"Mortgage"},
+  {s:"JARVIS",p:"cites",o:"FNMAGuide",card:"N:N",dom:"Compliance"},
+  {s:"JARVIS",p:"cites",o:"FHLMCGuide",card:"N:N",dom:"Compliance"},
+  // Coding chain
+  {s:"ATLAS",p:"produces_code_for",o:"NEXUS",card:"1:1",dom:"Coding"},
+  {s:"NEXUS",p:"reviews_code_for",o:"CIPHER",card:"1:1",dom:"Coding"},
+  {s:"CIPHER",p:"clears_for_deploy",o:"FORGE",card:"1:1",dom:"Coding"},
+  {s:"FORGE",p:"deploys_to",o:"GitHub",card:"1:N",dom:"Coding"},
+  // Domain relationships
+  {s:"LoanFile",p:"has",o:"Borrower",card:"1:1",dom:"Mortgage"},
+  {s:"LoanFile",p:"requires",o:"Document",card:"1:N",dom:"Mortgage"},
+  {s:"LoanFile",p:"has",o:"Condition",card:"1:N",dom:"Mortgage"},
+  {s:"LoanFile",p:"governed_by",o:"FHARule",card:"N:N",dom:"Compliance"},
+  {s:"LoanFile",p:"governed_by",o:"FNMAGuide",card:"N:N",dom:"Compliance"},
+  {s:"Document",p:"belongs_to",o:"LoanFile",card:"N:1",dom:"Mortgage"},
+  {s:"Condition",p:"maps_to",o:"Document",card:"1:N",dom:"Mortgage"},
+  {s:"IncomeCalc",p:"determines",o:"DTITier",card:"1:1",dom:"Compliance"},
+  // Integration relationships
+  {s:"AIOSKernel",p:"calls",o:"PuterJS",card:"1:1",dom:"Integration"},
+  {s:"AIOSKernel",p:"syncs_with",o:"PaperclipAI",card:"1:1",dom:"Integration"},
+  {s:"MARTIN",p:"queries",o:"OpenNotebook",card:"1:N",dom:"Integration"},
+  {s:"AIOSKernel",p:"notifies",o:"Telegram",card:"1:N",dom:"Integration"},
+  {s:"OpenNotebook",p:"syncs_to",o:"Notion",card:"1:N",dom:"Integration"},
+  {s:"PuterJS",p:"provides",o:"LLMModel",card:"1:N",dom:"AI"},
+  {s:"LLMModel",p:"powers",o:"IncomeCalc",card:"N:1",dom:"AI"},
+];
+
+// TAXONOMY (class hierarchy)
+const TAX = [
+  {cls:"System",parent:"owl:Thing",props:"running, start_time",inst:"Kernel, Queue, Scheduler, Monitor"},
+  {cls:"BaseAgent",parent:"owl:Thing",props:"name, status, heartbeat, errors, tasks",inst:"—"},
+  {cls:"DIEGO",parent:"BaseAgent",props:"+pipeline: dict",inst:"diego_001"},
+  {cls:"MARTIN",parent:"BaseAgent",props:"+document_store: dict",inst:"martin_001"},
+  {cls:"NOVA",parent:"BaseAgent",props:"+dti_grid, +comp_factors",inst:"nova_001"},
+  {cls:"JARVIS",parent:"BaseAgent",props:"+conditions, +loe_templates",inst:"jarvis_001"},
+  {cls:"ATLAS",parent:"BaseAgent",props:"+workspace, +active_pr",inst:"atlas_001"},
+  {cls:"NEXUS",parent:"BaseAgent",props:"+review_queue, +coverage",inst:"nexus_001"},
+  {cls:"CIPHER",parent:"BaseAgent",props:"+scan_results, +frameworks",inst:"cipher_001"},
+  {cls:"FORGE",parent:"BaseAgent",props:"+deploy_history, +active_env",inst:"forge_001"},
+  {cls:"STORM",parent:"BaseAgent",props:"+pipelines, +schedules",inst:"storm_001"},
+  {cls:"LoanFile",parent:"owl:Thing",props:"loan_id, type, stage, priority, borrower",inst:"LN-*"},
+  {cls:"Borrower",parent:"owl:Thing",props:"name, ssn, income, employer",inst:"—"},
+  {cls:"Document",parent:"owl:Thing",props:"type, filename, confidence",inst:"—"},
+  {cls:"Condition",parent:"owl:Thing",props:"id, type, status, required_docs",inst:"COND-*"},
+  {cls:"Task",parent:"owl:Thing",props:"id, priority, agent, action, status",inst:"—"},
+  {cls:"IncomeCalc",parent:"owl:Thing",props:"method_1, method_2, qualifying, trending",inst:"—"},
+  {cls:"RegulatoryFramework",parent:"owl:Thing",props:"section, title",inst:"—"},
+  {cls:"FHA HB 4000.1",parent:"RegulatoryFramework",props:"+effective_date",inst:"II.A.5.b, II.A.4.b"},
+  {cls:"FNMA Guide",parent:"RegulatoryFramework",props:"+chapter",inst:"B3-3.1, B3-4.1"},
+  {cls:"FHLMC Guide",parent:"RegulatoryFramework",props:"+section",inst:"5301.1, 5401.1"},
+  {cls:"DTI Tier",parent:"ComplianceRule",props:"front_limit, back_limit",inst:"standard, comp_max"},
+  {cls:"ExternalService",parent:"owl:Thing",props:"port, protocol, auth",inst:"—"},
+  {cls:"LLM Model",parent:"owl:Thing",props:"provider, score, context_window, cost",inst:"Claude, GPT, DeepSeek..."},
+];
+
+function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML}
+
+// Render nodes
+function renderGraph(){
+  const g=document.getElementById("graph");
+  CLASSES.forEach(c=>{
+    const el=document.createElement("div");
+    el.className=`onode cat-${c.cat}`;
+    el.style.cssText=`left:${c.x}%;top:${c.y}%;`;
+    el.innerHTML=`<div class="onode-h">${c.label}</div><div class="onode-b">${c.desc.substring(0,60)}${c.desc.length>60?"…":""}</div>${c.props?`<div class="onode-prop">${c.props.slice(0,2).join(" · ")}</div>`:""}`;
+    el.onclick=()=>showDetail(c);
+    g.appendChild(el);
+    c._el=el;
+  });
+}
+
+// Render SVG edges
+function renderEdges(){
+  const svg=document.getElementById("edges");
+  const g=document.getElementById("graph");
+  const rect=g.getBoundingClientRect();
+  svg.setAttribute("viewBox",`0 0 ${rect.width} ${rect.height}`);
+  const colors={Core:"#16a34a",Agent:"#71717a",Mortgage:"#92400e",Compliance:"#dc2626",Coding:"#a1a1aa",Integration:"#7c3aed",AI:"#0891b2"};
+  RELS.forEach(r=>{
+    const from=CLASSES.find(c=>c.id===r.s);
+    const to=CLASSES.find(c=>c.id===r.o);
+    if(!from||!to)return;
+    const fx=(from.x+6)/100*rect.width;
+    const fy=(from.y+5)/100*rect.height;
+    const tx=(to.x+6)/100*rect.width;
+    const ty=(to.y+5)/100*rect.height;
+    const mx=(fx+tx)/2;
+    const path=document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d",`M${fx},${fy} C${mx},${fy} ${mx},${ty} ${tx},${ty}`);
+    path.setAttribute("stroke",colors[r.dom]||"#333");
+    path.setAttribute("stroke-width","0.8");
+    path.setAttribute("fill","none");
+    path.setAttribute("opacity","0.3");
+    svg.appendChild(path);
+  });
+}
+
+// Detail sidebar
+function showDetail(c){
+  const sb=document.getElementById("sidebar");
+  const ct=document.getElementById("sb-content");
+  const catNames={core:"Core System",agent:"Agent (Employee)",domain:"Mortgage Domain",compliance:"Compliance",integration:"Integration",llm:"AI / LLM",data:"Data Entity"};
+  const catColors={core:"#16a34a",agent:"var(--t)",domain:"#92400e",compliance:"#dc2626",integration:"#7c3aed",llm:"#0891b2",data:"var(--t4)"};
+  let h=`<div class="sb-title">${c.label}</div>`;
+  h+=`<div class="sb-type" style="color:${catColors[c.cat]}">${catNames[c.cat]||c.cat}</div>`;
+  h+=`<div style="font-size:11px;color:var(--t2);line-height:1.5;margin-bottom:8px">${c.desc}</div>`;
+  if(c.isa)h+=`<div class="sb-row"><b>rdfs:subClassOf</b> → ${c.isa}</div>`;
+  if(c.props&&c.props.length){
+    h+=`<div class="sb-sec">Properties (owl:DatatypeProperty)</div>`;
+    c.props.forEach(p=>h+=`<div class="sb-row" style="font-family:var(--m);font-size:9px">${p}</div>`);
+  }
+  const outRels=RELS.filter(r=>r.s===c.id);
+  const inRels=RELS.filter(r=>r.o===c.id);
+  if(outRels.length){
+    h+=`<div class="sb-sec">Outgoing Relations (${outRels.length})</div>`;
+    outRels.forEach(r=>h+=`<div class="sb-row">→ <b>${r.p}</b> → ${r.o} <span style="font-size:8px;color:var(--t4)">[${r.card}]</span></div>`);
+  }
+  if(inRels.length){
+    h+=`<div class="sb-sec">Incoming Relations (${inRels.length})</div>`;
+    inRels.forEach(r=>h+=`<div class="sb-row">← ${r.s} <b>${r.p}</b> ← <span style="font-size:8px;color:var(--t4)">[${r.card}]</span></div>`);
+  }
+  if(c.instances&&c.instances.length){
+    h+=`<div class="sb-sec">Instances</div>`;
+    c.instances.forEach(i=>h+=`<div class="sb-row" style="font-family:var(--m);font-size:9px">${i}</div>`);
+  }
+  ct.innerHTML=h;
+  sb.classList.add("open");
+}
+function closeSB(){document.getElementById("sidebar").classList.remove("open")}
+
+// Render tables
+function renderRelTable(){
+  document.getElementById("rel-body").innerHTML=RELS.map(r=>`<tr><td style="font-family:var(--m);font-weight:600;color:var(--t)">${r.s}</td><td style="font-family:var(--m);color:#7c3aed">${r.p}</td><td style="font-family:var(--m);font-weight:600;color:var(--t)">${r.o}</td><td style="font-family:var(--m);color:var(--t4)">${r.card}</td><td>${r.dom}</td></tr>`).join("");
+}
+function renderTaxTable(){
+  document.getElementById("tax-body").innerHTML=TAX.map(t=>`<tr><td style="font-family:var(--m);font-weight:600;color:var(--t)">${t.cls}</td><td style="font-family:var(--m);color:var(--t3)">${t.parent}</td><td style="font-size:9px;color:var(--t3)">${t.props}</td><td style="font-family:var(--m);font-size:9px;color:var(--t4)">${t.inst}</td></tr>`).join("");
+}
+
+renderGraph();renderRelTable();renderTaxTable();
+setTimeout(renderEdges,150);
+window.addEventListener("resize",()=>{document.getElementById("edges").innerHTML="";renderEdges()});
+document.addEventListener("click",e=>{if(!e.target.closest(".onode")&&!e.target.closest(".sidebar"))closeSB()});
+</script>
+</body>
+</html>
