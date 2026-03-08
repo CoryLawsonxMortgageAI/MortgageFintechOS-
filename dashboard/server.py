@@ -814,7 +814,7 @@ class DashboardServer:
 _FEATURES_GUIDE = {
     "system": "MortgageFintechOS",
     "version": "3.0.0",
-    "tagline": "Fully Connected Autonomous AI Operating System",
+    "tagline": "Fully Connected Automatous AI Operating System",
     "sections": [
         {
             "title": "Autonomous Agent System",

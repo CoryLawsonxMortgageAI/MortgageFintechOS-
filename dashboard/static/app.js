@@ -1,6 +1,6 @@
 /**
  * MortgageFintechOS Dashboard v4
- * Fully Connected Autonomous AI Operating System
+ * Fully Connected Automatous AI Operating System
  * Sidebar navigation, ontology graph, prompt generator, all modules
  */
 
