@@ -713,6 +713,48 @@ docker compose up -d
       <div id="tg-log" class="rbox" style="margin-top:8px"></div>
     </div></div>
   </div>
+  <div class="gr g2">
+    <!-- GHOST OSINT CONFIG -->
+    <div class="cd" style="border-left:3px solid var(--r)"><div class="ch" style="background:var(--rb)"><span class="ct" style="color:var(--r)">GHOST OSINT CRM</span><span class="cc" id="ghost-st">Not configured</span></div>
+    <div style="padding:14px">
+      <p style="font-size:10px;color:var(--t2);margin-bottom:8px">Entity investigation, borrower verification, relationship mapping, and OSINT lookups for fraud detection and compliance due diligence.</p>
+      <div class="cmf" style="margin-bottom:6px"><label>GHOST Base URL</label><input id="ghost-url" placeholder="http://localhost:5000" value=""></div>
+      <div class="cmf" style="margin-bottom:8px"><label>API Key</label><input id="ghost-key" type="password" placeholder="Enter GHOST API key"></div>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <button class="btn btn-sm" onclick="ghostTest()" style="background:var(--r)">Test Connection</button>
+        <button class="btn btn-sm" onclick="ghostVerify()">Verify Borrower</button>
+      </div>
+      <div id="ghost-log" class="rbox" style="margin-top:0"></div>
+    </div></div>
+    <!-- PENTAGI CONFIG -->
+    <div class="cd" style="border-left:3px solid var(--t)"><div class="ch"><span class="ct">PentAGI — Autonomous Pentesting</span><span class="cc" id="pentagi-st">Not configured</span></div>
+    <div style="padding:14px">
+      <p style="font-size:10px;color:var(--t2);margin-bottom:8px">Autonomous penetration testing agent with 111+ security tools. Vulnerability scanning, attack surface analysis, and automated remediation tracking.</p>
+      <div class="cmf" style="margin-bottom:6px"><label>PentAGI Base URL</label><input id="pentagi-url" placeholder="http://localhost:8443" value=""></div>
+      <div class="cmf" style="margin-bottom:8px"><label>API Key</label><input id="pentagi-key" type="password" placeholder="Enter PentAGI API key"></div>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <button class="btn btn-sm btn-bl" onclick="pentagiTest()">Test Connection</button>
+        <button class="btn btn-sm" onclick="pentagiScan()">Run Security Assessment</button>
+      </div>
+      <div id="pentagi-log" class="rbox" style="margin-top:0"></div>
+    </div></div>
+  </div>
+  <!-- SECURITY DASHBOARD -->
+  <div class="gr g1">
+    <div class="cd" style="border-left:3px solid var(--r)"><div class="ch" style="background:var(--rb)"><span class="ct" style="color:var(--r)">Security Operations Center</span><span class="cc" id="soc-st">CIPHER + SENTINEL + PentAGI</span></div>
+    <div style="padding:12px">
+      <div class="gr g3" style="margin-bottom:8px">
+        <div class="kpi"><div class="kl">GitHub Alerts</div><div class="kv" id="soc-gh-alerts">—</div></div>
+        <div class="kpi"><div class="kl">PentAGI Vulns</div><div class="kv" id="soc-pt-vulns">—</div></div>
+        <div class="kpi"><div class="kl">Risk Level</div><div class="kv" id="soc-risk">—</div></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <button class="btn btn-sm" onclick="socRefresh()" style="background:var(--r)">Refresh Security Status</button>
+        <button class="btn btn-sm btn-bl" onclick="socFullScan()">Full Security Scan (CIPHER + PentAGI)</button>
+      </div>
+      <div id="soc-feed" style="max-height:200px;overflow-y:auto;font-size:10px;font-family:var(--m)"><div class="empty">Click Refresh to load security status</div></div>
+    </div></div>
+  </div>
   <div class="gr g1">
     <div class="cd"><div class="ch"><span class="ct">Connected Services</span></div>
     <div style="padding:14px;font-size:11px;line-height:2;column-count:2;column-gap:24px">
@@ -1178,6 +1220,93 @@ function renderClip(){
     const color=a.type==="approval"?"var(--g)":a.type==="rejection"?"var(--r)":a.type==="governance"?"var(--v)":"var(--bl)";
     return`<div class="office-log"><span class="ol-time">${fmt(a.ts)}</span><span class="ol-mgr" style="color:${color}">${a.type}</span><span class="ol-msg">${esc(a.msg)}</span></div>`;
   }).join("");}
+}
+
+// ══════ GHOST OSINT + PENTAGI + SOC DASHBOARD ══════
+async function ghostTest(){
+  const url=document.getElementById("ghost-url").value.trim()||"http://localhost:5000";
+  const box=document.getElementById("ghost-log");
+  const st=document.getElementById("ghost-st");
+  box.classList.add("on");box.textContent="Testing GHOST OSINT connection...";
+  try{
+    const r=await fetch(location.origin+"/api/ghost/status",{signal:AbortSignal.timeout(3000)});
+    const d=await r.json();
+    if(d.configured){st.textContent="Connected";st.style.background="var(--gb)";st.style.color="var(--g)";box.textContent="✓ Connected to GHOST OSINT CRM at "+d.base_url;}
+    else{box.textContent="Backend GHOST client: "+JSON.stringify(d)+"\n\nTo configure: set GHOST_BASE_URL and GHOST_API_KEY in .env";}
+  }catch(e){box.textContent="Backend not running. To test directly:\n\ncurl "+url+"/api/health";}
+}
+async function ghostVerify(){
+  const box=document.getElementById("ghost-log");
+  box.classList.add("on");box.textContent="Running borrower verification...";
+  try{
+    const r=await fetch(location.origin+"/api/ghost/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:"Test Borrower",email:"test@example.com"})});
+    const d=await r.json();
+    box.textContent=JSON.stringify(d,null,2);
+  }catch(e){box.textContent="Backend not running: "+e.message;}
+}
+async function pentagiTest(){
+  const box=document.getElementById("pentagi-log");
+  const st=document.getElementById("pentagi-st");
+  box.classList.add("on");box.textContent="Testing PentAGI connection...";
+  try{
+    const r=await fetch(location.origin+"/api/pentagi/status",{signal:AbortSignal.timeout(3000)});
+    const d=await r.json();
+    if(d.configured){st.textContent="Connected";st.style.background="var(--gb)";st.style.color="var(--g)";box.textContent="✓ Connected to PentAGI at "+d.base_url;}
+    else{box.textContent="Backend PentAGI client: "+JSON.stringify(d)+"\n\nTo configure: set PENTAGI_BASE_URL and PENTAGI_API_KEY in .env";}
+  }catch(e){box.textContent="Backend not running: "+e.message;}
+}
+async function pentagiScan(){
+  const box=document.getElementById("pentagi-log");
+  box.classList.add("on");box.textContent="Launching PentAGI security assessment...";
+  try{
+    const r=await fetch(location.origin+"/api/pentagi/assess",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({target:"self"})});
+    const d=await r.json();
+    box.textContent=JSON.stringify(d,null,2);
+  }catch(e){box.textContent="Backend not running: "+e.message;}
+}
+async function socRefresh(){
+  const feed=document.getElementById("soc-feed");
+  feed.innerHTML='<div class="office-log"><span class="ol-msg">Loading security status...</span></div>';
+  const entries=[];
+  try{
+    // GitHub security
+    const gh=await fetch(location.origin+"/api/github/security",{signal:AbortSignal.timeout(3000)}).then(r=>r.json()).catch(()=>null);
+    if(gh&&!gh.error){
+      const total=(gh.code_scanning?.count||0)+(gh.dependabot?.count||0)+(gh.secret_scanning?.count||0);
+      document.getElementById("soc-gh-alerts").textContent=total;
+      document.getElementById("soc-gh-alerts").className="kv "+(total>0?"er":"ok");
+      entries.push({ts:new Date().toISOString(),src:"GitHub",msg:"Code: "+(gh.code_scanning?.count||0)+" | Deps: "+(gh.dependabot?.count||0)+" | Secrets: "+(gh.secret_scanning?.count||0)});
+    }else{document.getElementById("soc-gh-alerts").textContent="—";}
+    // PentAGI vulns
+    const pt=await fetch(location.origin+"/api/pentagi/vulnerabilities",{signal:AbortSignal.timeout(3000)}).then(r=>r.json()).catch(()=>null);
+    if(pt&&!pt.error){
+      const count=pt.vulnerabilities?.length||pt.count||0;
+      document.getElementById("soc-pt-vulns").textContent=count;
+      entries.push({ts:new Date().toISOString(),src:"PentAGI",msg:count+" vulnerabilities tracked"});
+    }else{document.getElementById("soc-pt-vulns").textContent="N/C";}
+    // Risk level from CIPHER scan history
+    const q=await fetch(location.origin+"/api/tasks/results/feed?agent=CIPHER&limit=1",{signal:AbortSignal.timeout(3000)}).then(r=>r.json()).catch(()=>null);
+    if(q&&q.results?.length){
+      const last=q.results[0];
+      const risk=last.result?.risk_level||last.result?.owasp_analysis?"assessed":"unknown";
+      document.getElementById("soc-risk").textContent=risk.toUpperCase();
+      document.getElementById("soc-risk").className="kv "+(risk==="low"||risk==="clean"?"ok":"er");
+      entries.push({ts:last.created_at,src:"CIPHER",msg:last.action+": "+JSON.stringify(last.result).substring(0,100)});
+    }else{document.getElementById("soc-risk").textContent="—";}
+    // Render feed
+    if(entries.length){
+      feed.innerHTML=entries.map(e=>'<div class="office-log"><span class="ol-time">'+fmt(e.ts)+'</span><span class="ol-mgr" style="color:var(--r)">'+e.src+'</span><span class="ol-msg">'+esc(e.msg)+'</span></div>').join("");
+    }else{feed.innerHTML='<div class="empty">No security data — configure GitHub, PentAGI, or run a CIPHER scan</div>';}
+  }catch(e){feed.innerHTML='<div class="empty">Error loading security status: '+esc(e.message)+'</div>';}
+}
+async function socFullScan(){
+  const feed=document.getElementById("soc-feed");
+  feed.innerHTML='<div class="office-log"><span class="ol-msg">Launching full security scan (CIPHER owasp_scan)...</span></div>';
+  try{
+    const r=await fetch(location.origin+"/api/tasks/submit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({agent:"CIPHER",action:"owasp_scan",priority:"HIGH"})});
+    const d=await r.json();
+    feed.innerHTML='<div class="office-log"><span class="ol-time">'+fmt(new Date())+'</span><span class="ol-mgr" style="color:var(--r)">SOC</span><span class="ol-msg">CIPHER scan queued: task '+d.task_id+' — check Results Feed for output</span></div>';
+  }catch(e){feed.innerHTML='<div class="empty">Backend not running: '+esc(e.message)+'</div>';}
 }
 
 // ══════ TASK RESULTS FEED — Live Agent Output ══════
