@@ -112,6 +112,35 @@ class DashboardServer:
         # Safety Audit
         self._app.router.add_get("/api/safety/blocked", self._handle_safety_blocked)
 
+        # Agent Action Log
+        self._app.router.add_get("/api/action-log", self._handle_action_log)
+        self._app.router.add_get("/api/action-log/stats", self._handle_action_log_stats)
+        self._app.router.add_get("/api/action-log/timeline", self._handle_action_log_timeline)
+
+        # Schedule Management
+        self._app.router.add_post("/api/schedule/{job_name}/update", self._handle_schedule_update)
+        self._app.router.add_post("/api/schedule/{job_name}/toggle", self._handle_schedule_toggle)
+
+        # Hydrospeed Ontology
+        self._app.router.add_get("/api/hydrospeed/ontology", self._handle_ontology)
+        self._app.router.add_get("/api/hydrospeed/agent/{agent_name}", self._handle_ontology_agent)
+        self._app.router.add_get("/api/hydrospeed/tips", self._handle_tips)
+        self._app.router.add_get("/api/hydrospeed/divisions", self._handle_divisions)
+        self._app.router.add_get("/api/hydrospeed/data-flows", self._handle_data_flows)
+        self._app.router.add_get("/api/hydrospeed/schedule-recommendations", self._handle_schedule_recommendations)
+        self._app.router.add_post("/api/hydrospeed/proposals", self._handle_create_proposal)
+        self._app.router.add_get("/api/hydrospeed/proposals", self._handle_list_proposals)
+
+        # Predictive Telemetry
+        self._app.router.add_get("/api/telemetry/risks", self._handle_telemetry_risks)
+        self._app.router.add_get("/api/telemetry/risks/{agent_name}", self._handle_telemetry_agent_risk)
+        self._app.router.add_get("/api/telemetry/predictions", self._handle_telemetry_predictions)
+        self._app.router.add_get("/api/telemetry/cascade/{agent_name}", self._handle_telemetry_cascade)
+        self._app.router.add_get("/api/telemetry/context", self._handle_telemetry_context)
+
+        # Features Guide
+        self._app.router.add_get("/api/features", self._handle_features_guide)
+
         # Static files
         self._app.router.add_static("/static", STATIC_DIR, show_index=False)
 
@@ -522,6 +551,193 @@ class DashboardServer:
         task = Task(priority=TaskPriority.LOW, agent_name="AMBASSADOR", action="get_engagement_stats", payload={})
         result = await agent.execute(task)
         return web.json_response(result, dumps=_json_dumps)
+
+
+    # --- Agent Action Log handlers ---
+
+    async def _handle_action_log(self, request: web.Request) -> web.Response:
+        agent = request.query.get("agent", "")
+        action_type = request.query.get("type", "")
+        limit = int(request.query.get("limit", "50"))
+        offset = int(request.query.get("offset", "0"))
+        failures = request.query.get("failures", "") == "1"
+        entries = self.orchestrator._action_log.query(
+            agent=agent, action_type=action_type, limit=limit, offset=offset,
+            failures_only=failures,
+        )
+        return web.json_response({"entries": entries, "count": len(entries)}, dumps=_json_dumps)
+
+    async def _handle_action_log_stats(self, request: web.Request) -> web.Response:
+        return web.json_response(self.orchestrator._action_log.get_stats(), dumps=_json_dumps)
+
+    async def _handle_action_log_timeline(self, request: web.Request) -> web.Response:
+        hours = int(request.query.get("hours", "24"))
+        return web.json_response({"timeline": self.orchestrator._action_log.get_timeline(hours)}, dumps=_json_dumps)
+
+    # --- Schedule Management handlers ---
+
+    async def _handle_schedule_update(self, request: web.Request) -> web.Response:
+        job_name = request.match_info["job_name"]
+        body = await request.json()
+        hour = int(body.get("hour", 0))
+        minute = int(body.get("minute", 0))
+        if not (0 <= hour <= 23 and 0 <= minute <= 59):
+            return web.json_response({"error": "Invalid time"}, status=400)
+        result = self.orchestrator.update_schedule(job_name, hour, minute)
+        return web.json_response(result, dumps=_json_dumps)
+
+    async def _handle_schedule_toggle(self, request: web.Request) -> web.Response:
+        job_name = request.match_info["job_name"]
+        body = await request.json()
+        enabled = body.get("enabled", True)
+        result = self.orchestrator.toggle_schedule(job_name, enabled)
+        return web.json_response(result, dumps=_json_dumps)
+
+    # --- Hydrospeed Ontology handlers ---
+
+    async def _handle_ontology(self, request: web.Request) -> web.Response:
+        return web.json_response(self.orchestrator._hydrospeed.get_ontology(), dumps=_json_dumps)
+
+    async def _handle_ontology_agent(self, request: web.Request) -> web.Response:
+        agent_name = request.match_info["agent_name"]
+        return web.json_response(self.orchestrator._hydrospeed.get_agent_profile(agent_name), dumps=_json_dumps)
+
+    async def _handle_tips(self, request: web.Request) -> web.Response:
+        category = request.query.get("category", "")
+        agent = request.query.get("agent", "")
+        tips = self.orchestrator._hydrospeed.get_expert_tips(category=category, agent=agent)
+        return web.json_response({"tips": tips, "count": len(tips)}, dumps=_json_dumps)
+
+    async def _handle_divisions(self, request: web.Request) -> web.Response:
+        return web.json_response(self.orchestrator._hydrospeed.get_divisions(), dumps=_json_dumps)
+
+    async def _handle_data_flows(self, request: web.Request) -> web.Response:
+        return web.json_response({"flows": self.orchestrator._hydrospeed.get_data_flows()}, dumps=_json_dumps)
+
+    async def _handle_schedule_recommendations(self, request: web.Request) -> web.Response:
+        current = self.orchestrator._scheduler.list_jobs()
+        recs = self.orchestrator._hydrospeed.get_schedule_recommendations(current)
+        return web.json_response({"recommendations": recs}, dumps=_json_dumps)
+
+    async def _handle_create_proposal(self, request: web.Request) -> web.Response:
+        body = await request.json()
+        result = self.orchestrator._hydrospeed.create_proposal(
+            title=body.get("title", ""),
+            description=body.get("description", ""),
+            agents=body.get("agents", []),
+            workflow_steps=body.get("workflow_steps", []),
+            priority=body.get("priority", "medium"),
+        )
+        return web.json_response(result, dumps=_json_dumps)
+
+    async def _handle_list_proposals(self, request: web.Request) -> web.Response:
+        return web.json_response({"proposals": self.orchestrator._hydrospeed.list_proposals()}, dumps=_json_dumps)
+
+    # --- Predictive Telemetry handlers ---
+
+    async def _handle_telemetry_risks(self, request: web.Request) -> web.Response:
+        return web.json_response(self.orchestrator._telemetry.get_all_risks(), dumps=_json_dumps)
+
+    async def _handle_telemetry_agent_risk(self, request: web.Request) -> web.Response:
+        agent_name = request.match_info["agent_name"]
+        return web.json_response(self.orchestrator._telemetry.calculate_risk(agent_name), dumps=_json_dumps)
+
+    async def _handle_telemetry_predictions(self, request: web.Request) -> web.Response:
+        return web.json_response({"predictions": self.orchestrator._telemetry.predict_failures()}, dumps=_json_dumps)
+
+    async def _handle_telemetry_cascade(self, request: web.Request) -> web.Response:
+        agent_name = request.match_info["agent_name"]
+        return web.json_response(self.orchestrator._telemetry.get_dependency_cascade(agent_name), dumps=_json_dumps)
+
+    async def _handle_telemetry_context(self, request: web.Request) -> web.Response:
+        return web.json_response(self.orchestrator._telemetry.get_workflow_context(), dumps=_json_dumps)
+
+    # --- Features Guide handler ---
+
+    async def _handle_features_guide(self, request: web.Request) -> web.Response:
+        return web.json_response(_FEATURES_GUIDE, dumps=_json_dumps)
+
+
+# --- Features Guide Data ---
+
+_FEATURES_GUIDE = {
+    "system": "MortgageFintechOS",
+    "version": "3.0.0",
+    "tagline": "Fully Connected Autonomous AI Operating System",
+    "sections": [
+        {
+            "title": "Autonomous Agent System",
+            "icon": "cpu",
+            "description": "13 AI agents organized into 4 divisions operate 24/7 with zero human intervention. Each agent has specialized capabilities, state persistence, and integration access.",
+            "tech": "Python asyncio, BaseAgent abstract class, task queue with priority routing, exponential backoff retry",
+            "how_to_use": "Submit tasks via POST /api/tasks/submit with {agent, action, payload, priority}. Monitor via the Agents table. Tasks auto-dispatch through the queue.",
+            "agents": [
+                {"name": "DIEGO", "division": "Mortgage Ops", "actions": ["pipeline_triage", "check_pipeline_health", "get_pipeline_report"]},
+                {"name": "MARTIN", "division": "Mortgage Ops", "actions": ["classify_document", "run_document_audit"]},
+                {"name": "NOVA", "division": "Mortgage Ops", "actions": ["calculate_income", "recalculate_income"]},
+                {"name": "JARVIS", "division": "Mortgage Ops", "actions": ["track_conditions", "draft_loe", "check_compliance"]},
+                {"name": "ATLAS", "division": "Engineering", "actions": ["generate_api", "build_feature", "run_migration", "scaffold_component"]},
+                {"name": "CIPHER", "division": "Engineering", "actions": ["owasp_scan", "compliance_check", "encryption_audit", "patch_vulnerability"]},
+                {"name": "FORGE", "division": "Engineering", "actions": ["deploy", "rollback", "build_pipeline", "rotate_secrets"]},
+                {"name": "NEXUS", "division": "Engineering", "actions": ["review_pr", "generate_tests", "analyze_debt", "refactor"]},
+                {"name": "STORM", "division": "Engineering", "actions": ["build_etl", "hmda_report", "uldd_export", "optimize_query"]},
+                {"name": "SENTINEL", "division": "Intelligence", "actions": ["anomaly_scan", "threat_assessment"]},
+                {"name": "HUNTER", "division": "Growth Ops", "actions": ["full_sweep", "scan_github", "scan_hn", "score_leads"]},
+                {"name": "HERALD", "division": "Growth Ops", "actions": ["daily_content", "generate_blog", "generate_social"]},
+                {"name": "AMBASSADOR", "division": "Growth Ops", "actions": ["daily_engagement", "community_scan"]},
+            ],
+        },
+        {
+            "title": "Hydrospeed Ontology",
+            "icon": "share-2",
+            "description": "Live ontology engine that maps all agent relationships, data flows, and integration dependencies as an interactive graph. Provides agent proposals and workflow recommendations.",
+            "tech": "Graph-based ontology with nodes (agents, integrations, data sources) and typed edges (data_flow, dependency, orchestration, powers, governs). Real-time schedule analysis.",
+            "how_to_use": "View the Ontology tab to see agent relationships. Click any agent for its full profile. Create proposals for new workflows. Check schedule recommendations for optimization tips.",
+        },
+        {
+            "title": "Predictive Telemetry",
+            "icon": "activity",
+            "description": "Full telemetry capture with downstream risk prediction. Studies workflows in real-time, calculates contextual risk scores using a 5-factor weighted formula, predicts failures before they happen.",
+            "tech": "R(agent) = 0.30*ErrorRate + 0.15*Latency + 0.25*DependencyHealth + 0.15*CapacityPressure + 0.15*QualityDelta. EWMA for error smoothing, z-score for latency deviation, cascade graph for dependency risk.",
+            "how_to_use": "View the Telemetry tab for system-wide risk. Click any agent for detailed risk breakdown. Check Predictions for upcoming failures. Each prediction includes actionable solutions.",
+        },
+        {
+            "title": "Agent Action Log",
+            "icon": "list",
+            "description": "Centralized, append-only log capturing every agent action with timing, status, and integration calls. Provides timeline visualization and per-agent breakdowns.",
+            "tech": "Bounded deque (2000 entries), per-agent counters, hourly bucketing for timeline charts. Persisted across restarts via StateStore.",
+            "how_to_use": "View the Action Log tab. Filter by agent or action type. Toggle to show failures only. Timeline shows activity patterns over 24 hours.",
+        },
+        {
+            "title": "Schedule Control",
+            "icon": "clock",
+            "description": "Configurable job scheduling with runtime updates. Change job times, enable/disable jobs, and get expert recommendations on schedule optimization.",
+            "tech": "DailyScheduler with time-based, interval-based, and weekly job support. State persistence for last-run times. Runtime modification via API.",
+            "how_to_use": "Click any scheduled job to edit its time. Toggle jobs on/off. Check the Recommendations panel for dependency ordering and conflict warnings.",
+        },
+        {
+            "title": "Safety Guardrails",
+            "icon": "shield",
+            "description": "Two-layer immutable deletion blocking. AI agents can read, create, and update code but can NEVER delete files, branches, or repository content. All blocked attempts are audit-logged.",
+            "tech": "Layer 1: GitHubClient blocked method stubs (frozenset). Layer 2: BaseAgent.safe_github() wrapper blocks any method containing 'delete'. No override mechanism exists.",
+            "how_to_use": "Safety is always active. Check GET /api/safety/blocked for audit log. The guardrail is architectural — it cannot be disabled.",
+        },
+        {
+            "title": "Integration Hub",
+            "icon": "link",
+            "description": "9 integration systems providing external connectivity: GitHub (code ops), Notion (knowledge base), Google Drive (documents), Wispr Flow (voice), LLM Router (AI), Paperclip (governance), GHOST OSINT (verification), PentAGI (security), Browser (web).",
+            "tech": "All async via aiohttp. Service account auth for Drive. JWT tokens for Notion. Webhook validation for Wispr. Multi-provider LLM routing.",
+            "how_to_use": "Set credentials in .env file. Integrations auto-initialize on startup. Agents gracefully degrade when integrations are missing.",
+        },
+        {
+            "title": "Expert Tips",
+            "icon": "zap",
+            "description": "18 expert-curated tips covering scheduling, cost optimization, safety, monitoring, workflows, scaling, resilience, deployment, and compliance. Contextual to each agent.",
+            "tech": "Static knowledge base with category/severity/agent filtering. Schedule recommendations generated dynamically by analyzing current job configuration.",
+            "how_to_use": "View the Tips tab. Filter by category or agent. Tips marked 'critical' should be addressed immediately.",
+        },
+    ],
+}
 
 
 def _json_dumps(obj: Any) -> str:
