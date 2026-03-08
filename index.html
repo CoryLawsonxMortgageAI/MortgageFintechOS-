@@ -167,6 +167,22 @@ optgroup{font-weight:700;color:var(--t);font-size:11px}
       </div></div>
     </div>
   </div>
+  <!-- TASK RESULTS FEED — Live Agent Output Data -->
+  <div class="gr g1">
+    <div class="cd" style="border-left:3px solid var(--g)"><div class="ch" style="background:var(--gb)"><span class="ct" style="color:var(--g)">Task Results Feed — Live Agent Output</span><span class="cc" id="rf-ct">0 results</span></div>
+    <div style="padding:8px 12px;display:flex;gap:6px;align-items:center;border-bottom:1px solid var(--b)">
+      <button class="btn btn-sm btn-g" onclick="rfRefresh()">Refresh</button>
+      <select id="rf-agent" onchange="rfRefresh()" style="padding:3px 8px;border:1px solid var(--b);border-radius:4px;font-size:10px;font-family:var(--m)">
+        <option value="">All Agents</option>
+        <option value="DIEGO">DIEGO</option><option value="MARTIN">MARTIN</option><option value="NOVA">NOVA</option><option value="JARVIS">JARVIS</option>
+        <option value="ATLAS">ATLAS</option><option value="NEXUS">NEXUS</option><option value="CIPHER">CIPHER</option><option value="FORGE">FORGE</option>
+        <option value="STORM">STORM</option><option value="SENTINEL">SENTINEL</option>
+      </select>
+      <span style="font-size:9px;font-family:var(--m);color:var(--td);margin-left:auto" id="rf-src">Source: Backend API</span>
+    </div>
+    <div id="rf-feed" style="max-height:400px;overflow-y:auto"><div class="empty">No completed tasks yet — assign a task above or start the Live Monitor</div></div>
+    </div>
+  </div>
 </div>
 
 <!-- OFFICE MANAGER -->
@@ -713,12 +729,17 @@ docker compose up -d
       <div><span class="bd bd-idle">OK</span> <b>Wispr Flow</b> — Webhook receiver + note classification</div>
       <div><span class="bd bd-idle">OK</span> <b>GitHub Code Ops</b> — PRs, Actions, Security Scanning</div>
       <div><span class="bd bd-idle">OK</span> <b>LLM Router</b> — OpenAI + Anthropic + OpenRouter multi-model</div>
+      <div><span class="bd" style="background:var(--ab);color:var(--am)">CFG</span> <b>GHOST OSINT</b> — Entity investigation + borrower verification</div>
+      <div><span class="bd" style="background:var(--ab);color:var(--am)">CFG</span> <b>PentAGI</b> — Autonomous penetration testing</div>
+      <div><span class="bd bd-idle">OK</span> <b>Paperclip AI</b> — Enterprise agent orchestration</div>
+      <div><span class="bd bd-idle">OK</span> <b>AutoResearch</b> — Karpathy-style ML experiments</div>
+      <div><span class="bd bd-idle">OK</span> <b>CyberStrikeAI</b> — Deep security audit (OWASP+SAST+SCA)</div>
     </div></div>
   </div>
 </div>
 
 </div>
-<footer class="ft">MortgageFintechOS AI Office v2.0 · Cory Lawson / The Lawson Group · 10 Agents · Notion + Drive + Wispr + GitHub Ops · <a href="https://github.com/CoryLawsonxMortgageAI/MortgageFintechOS-" target="_blank">GitHub</a></footer>
+<footer class="ft">MortgageFintechOS AI Office v3.0 · Cory Lawson / The Lawson Group · 10 Agents · Live Task Results + GHOST OSINT + PentAGI + AutoResearch + CyberStrike · <a href="https://github.com/CoryLawsonxMortgageAI/MortgageFintechOS-" target="_blank">GitHub</a></footer>
 
 <script>
 const T0=new Date("2026-03-06T04:00:00Z");
@@ -855,25 +876,65 @@ function run(ag,act){
   return{status:"done"};
 }
 
-// Execute task with Office Manager supervision
-function oExec(){
+// Execute task — submits to real backend API, polls for result
+async function oExec(){
   const ag=document.getElementById("o-ag").value;
   const act=document.getElementById("o-act").value;
   const pri=document.getElementById("o-pri").value;
   const btn=document.getElementById("o-btn");
-  btn.disabled=true;btn.textContent="Working...";
+  const box=document.getElementById("o-result");
+  btn.disabled=true;btn.textContent="Submitting...";
   const a=A[ag];a.s="running";render();
   log.unshift({ts:new Date().toISOString(),mgr:"MANAGER",msg:`Assigning ${act} to ${ag} [${pri}]`});
-  setTimeout(()=>{
+  box.classList.add("on");
+  box.innerHTML="Submitting task to backend...\n";
+
+  try{
+    // Submit task to backend
+    const submitR=await fetch(location.origin+"/api/tasks/submit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({agent:ag,action:act,priority:pri,payload:{}})});
+    if(!submitR.ok){
+      // Backend not running — fall back to local simulation
+      const res=run(ag,act);
+      a.s="idle";a.c++;exC++;
+      mgrLog(ag,act,res);
+      box.innerHTML=fmt(new Date())+" "+ag+" → "+act+" [local simulation]\n✓ Complete\n\n"+JSON.stringify(res,null,2).replace(/(".*?")\s*:/g,'<b>$1</b>:');
+      btn.disabled=false;btn.textContent="Assign & Execute";render();return;
+    }
+    const submitData=await submitR.json();
+    const taskId=submitData.task_id;
+    box.innerHTML="Task "+taskId+" queued → "+ag+" "+act+"\nPolling for result...\n";
+    btn.textContent="Waiting...";
+
+    // Poll for result (max 30s)
+    let result=null;
+    for(let i=0;i<30;i++){
+      await new Promise(r=>setTimeout(r,1000));
+      const pollR=await fetch(location.origin+"/api/tasks/"+taskId);
+      const pollData=await pollR.json();
+      if(pollData.status==="completed"||pollData.status==="failed"){
+        result=pollData;break;
+      }
+      box.innerHTML="Task "+taskId+" → "+ag+" "+act+"\nStatus: "+pollData.status+" ("+(i+1)+"s)\n";
+    }
+    if(result){
+      a.s="idle";a.c++;exC++;
+      const success=result.status==="completed";
+      mgrLog(ag,act,result.result||{});
+      box.innerHTML=fmt(new Date())+" "+ag+" → "+act+" [LIVE]\n"+(success?"✓ Complete":"✗ Failed: "+(result.error||"unknown"))+"\n\n"+JSON.stringify(result.result||result.error,null,2).replace(/(".*?")\s*:/g,'<b>$1</b>:');
+      // Update results feed if visible
+      if(typeof rfRefresh==="function")rfRefresh();
+    }else{
+      a.s="idle";
+      box.innerHTML="Task "+taskId+" → "+ag+" "+act+"\n⏳ Still processing (check Results Feed for output)\n";
+    }
+  }catch(e){
+    // Backend unavailable — fall back to local simulation
     const res=run(ag,act);
     a.s="idle";a.c++;exC++;
     mgrLog(ag,act,res);
-    const box=document.getElementById("o-result");
-    box.classList.add("on");
-    box.innerHTML=fmt(new Date())+" "+ag+" → "+act+"\n✓ Complete\n\n"+JSON.stringify(res,null,2).replace(/(".*?")\s*:/g,'<b>$1</b>:');
-    btn.disabled=false;btn.textContent="Assign & Execute";
-    render();
-  },400+Math.random()*600);
+    box.innerHTML=fmt(new Date())+" "+ag+" → "+act+" [local fallback]\n✓ Complete\n\n"+JSON.stringify(res,null,2).replace(/(".*?")\s*:/g,'<b>$1</b>:');
+  }
+  btn.disabled=false;btn.textContent="Assign & Execute";render();
 }
 
 function oSync(){const ag=document.getElementById("o-ag").value;const s=document.getElementById("o-act");s.innerHTML="";(ACT[ag]||[]).forEach(a=>{const o=document.createElement("option");o.value=a;o.textContent=a;s.appendChild(o);})}
@@ -1117,6 +1178,45 @@ function renderClip(){
     const color=a.type==="approval"?"var(--g)":a.type==="rejection"?"var(--r)":a.type==="governance"?"var(--v)":"var(--bl)";
     return`<div class="office-log"><span class="ol-time">${fmt(a.ts)}</span><span class="ol-mgr" style="color:${color}">${a.type}</span><span class="ol-msg">${esc(a.msg)}</span></div>`;
   }).join("");}
+}
+
+// ══════ TASK RESULTS FEED — Live Agent Output ══════
+async function rfRefresh(){
+  const agFilter=document.getElementById("rf-agent")?.value||"";
+  const feed=document.getElementById("rf-feed");
+  const ct=document.getElementById("rf-ct");
+  const src=document.getElementById("rf-src");
+  try{
+    const url=location.origin+"/api/tasks/results/feed?limit=25"+(agFilter?"&agent="+agFilter:"");
+    const r=await fetch(url,{signal:AbortSignal.timeout(3000)});
+    if(r.ok){
+      const data=await r.json();
+      const results=data.results||[];
+      ct.textContent=results.length+" results";
+      src.textContent="Source: Live Backend";src.style.color="var(--g)";
+      if(!results.length){feed.innerHTML='<div class="empty">No completed tasks — assign work from Office Manager</div>';return;}
+      feed.innerHTML=results.map(t=>{
+        const isOk=t.status==="completed";
+        const stClass=isOk?"bd-completed":"bd-error";
+        const resStr=t.result?JSON.stringify(t.result,null,2):(t.error||"No data");
+        const preview=resStr.length>300?resStr.substring(0,300)+"...":resStr;
+        const agColor=["DIEGO","MARTIN","NOVA","JARVIS"].includes(t.agent)?"var(--g)":"var(--t)";
+        return'<div style="padding:10px 14px;border-bottom:1px solid #f4f4f5">'+
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'+
+          '<div><span style="font-weight:700;font-family:var(--m);font-size:11px;color:'+agColor+'">'+esc(t.agent)+'</span>'+
+          ' <span style="font-size:10px;color:var(--tm);font-family:var(--m)">'+esc(t.action)+'</span>'+
+          ' <span class="bd '+stClass+'">'+t.status+'</span>'+
+          ' <span class="pr pr-'+t.priority+'">'+t.priority+'</span></div>'+
+          '<span style="font-size:8px;color:var(--td);font-family:var(--m)">'+fmt(t.created_at)+'</span></div>'+
+          '<pre style="font-size:9px;font-family:var(--m);background:var(--a);padding:6px 8px;border-radius:4px;overflow-x:auto;white-space:pre-wrap;color:var(--t2);margin:0;border:1px solid var(--b)">'+esc(preview)+'</pre></div>';
+      }).join("");
+      return;
+    }
+  }catch(e){}
+  // Backend unavailable — show local history
+  src.textContent="Source: Local (backend offline)";src.style.color="var(--am)";
+  ct.textContent="—";
+  feed.innerHTML='<div class="empty">Backend not running — start MortgageFintechOS server to see live results</div>';
 }
 
 // ══════ CODE WORKSPACE — LIVE GITHUB + AUTORESEARCH + EDGE AGENTS ══════
@@ -1579,6 +1679,12 @@ function liveStop(){
 }
 function liveSetSpeed(){liveSpeed=parseInt(document.getElementById("live-speed").value);}
 
+let liveBackend=false; // true if backend is connected for real task submission
+async function liveCheckBackend(){
+  try{const r=await fetch(location.origin+"/api/healthz",{signal:AbortSignal.timeout(2000)});liveBackend=r.ok;}catch(e){liveBackend=false;}
+}
+liveCheckBackend(); // Check on load
+
 function liveLoop(){
   if(!liveRunning)return;
   // Pick a random agent
@@ -1587,6 +1693,11 @@ function liveLoop(){
   const act=pk(ACT[ag]);
   const isOps=OPS_AGENTS.includes(ag);
   const division=isOps?"ops":"code";
+
+  // Submit to real backend if available
+  if(liveBackend){
+    fetch(location.origin+"/api/tasks/submit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({agent:ag,action:act,priority:"MEDIUM",payload:{}})}).catch(()=>{});
+  }
 
   // Set agent to running state
   const stEl=document.getElementById("live-st-"+ag);
@@ -1884,7 +1995,9 @@ function run(ag,act){
   Object.keys(ACT).forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n+" — "+R[n];s.appendChild(o);});
   oSync();render();fMod('all');renderClip();renderKB();
   nnInit();nnShowRecs();
+  rfRefresh(); // Load initial results feed
   setInterval(render,5000);
+  setInterval(rfRefresh,10000); // Auto-refresh results feed every 10s
   // Periodic neural scan (every 5 minutes)
   setInterval(()=>{nnAddLog("learning","Periodic model performance reassessment...");nnUpdateBests();nnShowRecs();},300000);
   document.getElementById("ai-in").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();aiSend();}});

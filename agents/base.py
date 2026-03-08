@@ -15,6 +15,8 @@ if TYPE_CHECKING:
     from integrations.notion_client import NotionClient
     from integrations.gdrive_client import GDriveClient
     from integrations.llm_router import LLMRouter
+    from integrations.ghost_client import GhostClient
+    from integrations.pentagi_client import PentAGIClient
     from persistence.state_store import StateStore
 
 logger = structlog.get_logger()
@@ -49,6 +51,8 @@ class BaseAgent(ABC):
         self._notion: "NotionClient | None" = None
         self._gdrive: "GDriveClient | None" = None
         self._llm: "LLMRouter | None" = None
+        self._ghost: "GhostClient | None" = None
+        self._pentagi: "PentAGIClient | None" = None
         self._log = logger.bind(agent=name)
 
     @abstractmethod
@@ -100,13 +104,17 @@ class BaseAgent(ABC):
         notion: "NotionClient | None" = None,
         gdrive: "GDriveClient | None" = None,
         llm: "LLMRouter | None" = None,
+        ghost: "GhostClient | None" = None,
+        pentagi: "PentAGIClient | None" = None,
     ) -> None:
         """Inject integration clients for this agent to use."""
         self._github = github
         self._notion = notion
         self._gdrive = gdrive
         self._llm = llm
-        self._log.info("integrations_set", github=bool(github), notion=bool(notion), gdrive=bool(gdrive), llm=bool(llm))
+        self._ghost = ghost
+        self._pentagi = pentagi
+        self._log.info("integrations_set", github=bool(github), notion=bool(notion), gdrive=bool(gdrive), llm=bool(llm), ghost=bool(ghost), pentagi=bool(pentagi))
 
     async def llm_complete(
         self,

@@ -75,6 +75,22 @@ class Settings:
         default_factory=lambda: os.getenv("DEFAULT_LLM_MODEL", "anthropic/claude-sonnet-4-6")
     )
 
+    # GHOST OSINT CRM
+    ghost_base_url: str = field(
+        default_factory=lambda: os.getenv("GHOST_BASE_URL", "http://localhost:5000")
+    )
+    ghost_api_key: str = field(
+        default_factory=lambda: os.getenv("GHOST_API_KEY", "")
+    )
+
+    # PentAGI
+    pentagi_base_url: str = field(
+        default_factory=lambda: os.getenv("PENTAGI_BASE_URL", "http://localhost:8443")
+    )
+    pentagi_api_key: str = field(
+        default_factory=lambda: os.getenv("PENTAGI_API_KEY", "")
+    )
+
     # Scheduler defaults
     document_audit_hour: int = 6
     document_audit_minute: int = 0

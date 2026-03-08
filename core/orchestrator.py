@@ -33,6 +33,8 @@ from integrations.gdrive_client import GDriveClient
 from integrations.wispr_client import WisprClient
 from integrations.llm_router import LLMRouter
 from integrations.paperclip_service import PaperclipService
+from integrations.ghost_client import GhostClient
+from integrations.pentagi_client import PentAGIClient
 from monitoring.health_monitor import HealthMonitor
 from persistence.state_store import StateStore
 from schedulers.daily_scheduler import DailyScheduler, ScheduledJob
@@ -61,6 +63,8 @@ class Orchestrator:
         self._wispr: WisprClient | None = None
         self._llm: LLMRouter | None = None
         self._paperclip: PaperclipService | None = None
+        self._ghost: GhostClient | None = None
+        self._pentagi: PentAGIClient | None = None
         self._dashboard: DashboardServer | None = None
         self._running = False
         self._start_time: datetime | None = None
@@ -145,6 +149,22 @@ class Orchestrator:
         await self._paperclip.start(self._state_store)
         self._log.info("paperclip_integration_enabled")
 
+    def _setup_ghost(self) -> None:
+        if self.settings.ghost_api_key or self.settings.ghost_base_url != "http://localhost:5000":
+            self._ghost = GhostClient(
+                base_url=self.settings.ghost_base_url,
+                api_key=self.settings.ghost_api_key,
+            )
+            self._log.info("ghost_osint_integration_enabled")
+
+    def _setup_pentagi(self) -> None:
+        if self.settings.pentagi_api_key or self.settings.pentagi_base_url != "http://localhost:8443":
+            self._pentagi = PentAGIClient(
+                base_url=self.settings.pentagi_base_url,
+                api_key=self.settings.pentagi_api_key,
+            )
+            self._log.info("pentagi_integration_enabled")
+
     def _inject_integrations(self) -> None:
         """Inject integration clients into all agents."""
         for agent in self._agents.values():
@@ -153,6 +173,8 @@ class Orchestrator:
                 notion=self._notion,
                 gdrive=self._gdrive,
                 llm=self._llm,
+                ghost=self._ghost,
+                pentagi=self._pentagi,
             )
         self._log.info("integrations_injected", agents=len(self._agents))
 
@@ -238,6 +260,8 @@ class Orchestrator:
         self._setup_wispr()
         self._setup_llm()
         await self._setup_paperclip()
+        self._setup_ghost()
+        self._setup_pentagi()
         self._inject_integrations()
         self._setup_schedule()
         self._scheduler.set_state_store(self._state_store)
@@ -499,6 +523,35 @@ class Orchestrator:
                 self._log.error("paperclip_dispatch_failed", ticket_id=ticket_id, error=str(e))
         await self._paperclip.complete_ticket(ticket_id)
 
+    # --- Coordination: GHOST OSINT ---
+
+    async def ghost_verify_borrower(self, name: str, email: str = "", phone: str = "", employer: str = "") -> dict[str, Any]:
+        if not self._ghost:
+            return {"error": "GHOST OSINT not configured"}
+        return await self._ghost.verify_borrower(name, email, phone, employer)
+
+    async def ghost_search_entities(self, query: str, entity_type: str = "") -> dict[str, Any]:
+        if not self._ghost:
+            return {"error": "GHOST OSINT not configured"}
+        return await self._ghost.search_entities(query, entity_type)
+
+    async def ghost_create_investigation(self, title: str, description: str = "") -> dict[str, Any]:
+        if not self._ghost:
+            return {"error": "GHOST OSINT not configured"}
+        return await self._ghost.create_investigation(title, description)
+
+    # --- Coordination: PentAGI ---
+
+    async def pentagi_run_assessment(self, target: str = "self") -> dict[str, Any]:
+        if not self._pentagi:
+            return {"error": "PentAGI not configured"}
+        return await self._pentagi.run_security_assessment(target)
+
+    async def pentagi_list_vulnerabilities(self, severity: str = "") -> dict[str, Any]:
+        if not self._pentagi:
+            return {"error": "PentAGI not configured"}
+        return await self._pentagi.list_vulnerabilities(severity)
+
     # --- Status ---
 
     def get_status(self) -> dict[str, Any]:
@@ -524,6 +577,8 @@ class Orchestrator:
                 "wispr": bool(self._wispr),
                 "llm": self._llm.get_status() if self._llm else None,
                 "paperclip": self._paperclip.get_status() if self._paperclip else None,
+                "ghost_osint": self._ghost.get_status() if self._ghost else None,
+                "pentagi": self._pentagi.get_status() if self._pentagi else None,
             },
         }
 

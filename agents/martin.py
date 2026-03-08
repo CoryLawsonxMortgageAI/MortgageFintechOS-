@@ -176,12 +176,31 @@ class MartinAgent(BaseAgent):
 
         risk_score = min(risk_score, 1.0)
 
+        # GHOST OSINT borrower verification if available
+        ghost_result = None
+        borrower_name = payload.get("borrower_name", "")
+        if self._ghost and borrower_name:
+            try:
+                ghost_result = await self._ghost.verify_borrower(
+                    name=borrower_name,
+                    email=payload.get("email", ""),
+                    phone=payload.get("phone", ""),
+                    employer=payload.get("employer", ""),
+                )
+                existing = ghost_result.get("existing_records", [])
+                if existing:
+                    signals.append({"type": "osint_records_found", "severity": "medium", "detail": f"{len(existing)} existing records found in GHOST OSINT"})
+                    risk_score = min(risk_score + 0.1, 1.0)
+            except Exception as e:
+                logger.warning("ghost_verification_failed", error=str(e))
+
         logger.info("fraud_check_complete", signals=len(signals), risk_score=risk_score)
         return {
             "risk_score": round(risk_score, 2),
             "risk_level": "high" if risk_score > 0.5 else "medium" if risk_score > 0.25 else "low",
             "signals": signals,
             "recommendation": "flag_for_review" if risk_score > 0.3 else "pass",
+            **({"ghost_osint": ghost_result} if ghost_result else {}),
         }
 
     async def _audit_completeness(self, payload: dict[str, Any]) -> dict[str, Any]:
