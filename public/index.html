@@ -2,13 +2,12 @@
 <html lang="en">
 <head>
 <script>
-// Static hosting detection — if not on localhost:8080, use simulation mode
+// Static hosting detection -- if not on localhost:8080, use simulation mode
 const IS_STATIC = !location.origin.includes('localhost:8080');
 if (IS_STATIC) {
     const origFetch = window.fetch;
     window.fetch = function(url, opts) {
         if (typeof url === 'string' && url.startsWith('/api/')) {
-            // Return simulated data for static hosting
             return Promise.resolve(new Response(JSON.stringify(getSimulatedData(url)), {
                 headers: {'Content-Type': 'application/json'}
             }));
@@ -16,168 +15,223 @@ if (IS_STATIC) {
         return origFetch.apply(this, arguments);
     };
     function getSimulatedData(url) {
+        const now = new Date().toISOString();
         const agents = [
-            {name:'DIEGO',status:'idle',tasks_completed:147,error_count:0,last_heartbeat:new Date().toISOString()},
-            {name:'MARTIN',status:'idle',tasks_completed:89,error_count:1,last_heartbeat:new Date().toISOString()},
-            {name:'NOVA',status:'idle',tasks_completed:203,error_count:0,last_heartbeat:new Date().toISOString()},
-            {name:'JARVIS',status:'idle',tasks_completed:156,error_count:2,last_heartbeat:new Date().toISOString()},
-            {name:'ATLAS',status:'running',tasks_completed:312,error_count:0,last_heartbeat:new Date().toISOString()},
-            {name:'NEXUS',status:'idle',tasks_completed:78,error_count:0,last_heartbeat:new Date().toISOString()},
-            {name:'CIPHER',status:'idle',tasks_completed:45,error_count:0,last_heartbeat:new Date().toISOString()},
-            {name:'FORGE',status:'idle',tasks_completed:67,error_count:1,last_heartbeat:new Date().toISOString()},
-            {name:'STORM',status:'idle',tasks_completed:94,error_count:0,last_heartbeat:new Date().toISOString()},
-            {name:'SENTINEL',status:'idle',tasks_completed:23,error_count:0,last_heartbeat:new Date().toISOString()},
-            {name:'HUNTER',status:'idle',tasks_completed:34,error_count:0,last_heartbeat:new Date().toISOString()},
-            {name:'HERALD',status:'idle',tasks_completed:12,error_count:0,last_heartbeat:new Date().toISOString()},
-            {name:'AMBASSADOR',status:'idle',tasks_completed:8,error_count:0,last_heartbeat:new Date().toISOString()}
+            {name:'DIEGO',status:'idle',tasks_completed:147,error_count:0,last_heartbeat:now,role:'Pipeline Orchestration'},
+            {name:'MARTIN',status:'idle',tasks_completed:89,error_count:1,last_heartbeat:now,role:'Document Intelligence'},
+            {name:'NOVA',status:'idle',tasks_completed:203,error_count:0,last_heartbeat:now,role:'Income & DTI Analysis'},
+            {name:'JARVIS',status:'idle',tasks_completed:156,error_count:2,last_heartbeat:now,role:'Condition Resolution'},
+            {name:'ATLAS',status:'running',tasks_completed:312,error_count:0,last_heartbeat:now,role:'Full-Stack Engineering'},
+            {name:'NEXUS',status:'idle',tasks_completed:78,error_count:0,last_heartbeat:now,role:'Code Quality'},
+            {name:'CIPHER',status:'idle',tasks_completed:45,error_count:0,last_heartbeat:now,role:'Security Engineering'},
+            {name:'FORGE',status:'idle',tasks_completed:67,error_count:1,last_heartbeat:now,role:'DevOps Engineering'},
+            {name:'STORM',status:'idle',tasks_completed:94,error_count:0,last_heartbeat:now,role:'Data Engineering'},
         ];
-        if (url.includes('/api/status')) return {running:true,uptime:'24h 13m 47s',degraded:false,agents:Object.fromEntries(agents.map(a=>[a.name,a])),queue:{pending:3,completed:1268,failed:4},health:'healthy'};
-        if (url.includes('/api/health')) return {overall:'healthy',agents:Object.fromEntries(agents.map(a=>[a.name,a])),queue:{pending:3,completed:1268,failed:4},system:{uptime_seconds:87227,cpu_percent:12.4,memory_percent:34.2,memory_used_mb:2187}};
+        if (url.includes('/api/status')) return {running:true,uptime:'72h 41m 12s',degraded:false,agents:Object.fromEntries(agents.map(a=>[a.name,a])),queue:{pending:3,completed:1191,failed:4},health:'healthy'};
+        if (url.includes('/api/health')) return {overall:'healthy',agents:Object.fromEntries(agents.map(a=>[a.name,a])),queue:{pending:3,completed:1191,failed:4},system:{uptime_seconds:261672,cpu_percent:12.4,memory_percent:34.2,memory_used_mb:2187}};
         if (url.includes('/api/agents')) return agents;
-        if (url.includes('/api/queue')) return {pending:3,completed:1268,failed:4,total_processed:1272,recent_tasks:[]};
-        if (url.includes('/api/schedule')) return [{name:'document_audit',run_time:'06:00:00',interval_minutes:null,day_of_week:null,last_run:new Date().toISOString(),enabled:true},{name:'income_recalculation',run_time:'06:30:00',interval_minutes:null,day_of_week:null,last_run:new Date().toISOString(),enabled:true},{name:'pipeline_health_check',run_time:'07:00:00',interval_minutes:null,day_of_week:null,last_run:new Date().toISOString(),enabled:true},{name:'queue_health_check',run_time:'00:00:00',interval_minutes:60,day_of_week:null,last_run:new Date().toISOString(),enabled:true},{name:'weekly_pipeline_report',run_time:'08:00:00',interval_minutes:null,day_of_week:0,last_run:null,enabled:true}];
+        if (url.includes('/api/queue')) return {pending:3,completed:1191,failed:4,total_processed:1195,recent_tasks:[
+            {id:'TSK-0847',agent:'ATLAS',action:'build_feature',priority:'HIGH',status:'completed'},
+            {id:'TSK-0846',agent:'DIEGO',action:'triage_loan',priority:'MEDIUM',status:'completed'},
+            {id:'TSK-0845',agent:'MARTIN',action:'classify_document',priority:'MEDIUM',status:'completed'},
+            {id:'TSK-0844',agent:'NOVA',action:'calculate_w2_income',priority:'HIGH',status:'completed'},
+            {id:'TSK-0843',agent:'CIPHER',action:'owasp_scan',priority:'CRITICAL',status:'completed'},
+        ]};
+        if (url.includes('/api/schedule')) return [
+            {name:'document_audit',run_time:'06:00:00',interval_minutes:null,day_of_week:null,last_run:now,enabled:true},
+            {name:'income_recalculation',run_time:'06:30:00',interval_minutes:null,day_of_week:null,last_run:now,enabled:true},
+            {name:'pipeline_health_check',run_time:'07:00:00',interval_minutes:null,day_of_week:null,last_run:now,enabled:true},
+            {name:'queue_health_check',run_time:'00:00:00',interval_minutes:60,day_of_week:null,last_run:now,enabled:true},
+            {name:'weekly_pipeline_report',run_time:'08:00:00',interval_minutes:null,day_of_week:0,last_run:null,enabled:true}
+        ];
         if (url.includes('/api/alerts')) return [];
-        if (url.includes('/api/actionlog')) return {entries:[],agent_counts:{},timeline:{}};
-        if (url.includes('/api/telemetry')) return {agents:{},predictions:[],system_risk:0.12};
+        if (url.includes('/api/actionlog') || url.includes('/api/action-log')) return {entries:[],agent_counts:{},timeline:{},total_entries:0,success_rate:100,failures:0};
+        if (url.includes('/api/telemetry')) return {agents:{},predictions:[],system_risk:0.08,system_level:'low',total_tracked:9,critical_agents:[]};
         if (url.includes('/api/agentdb')) return {branches:['main'],tables:6,total_records:0};
-        if (url.includes('/api/hydrospeed')) return {nodes:[],edges:[],divisions:{}};
+        if (url.includes('/api/hydrospeed')) return {nodes:[],edges:[],divisions:{},flows:{flows:[]},proposals:{proposals:[]},recommendations:{recommendations:[]}};
         return {};
     }
 }
 </script>
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MortgageFintechOS — Dashboard</title>
-    <style>
-/* MortgageFintechOS Dashboard — Professional Theme v3 */
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mortgage/Coding OS — Autonomous Intelligence Platform</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⬡</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Mortgage/Coding OS -- Dark Theme (inline from style.css) */
 :root {
-    --bg-primary: #ffffff;
-    --bg-secondary: #f8f9fa;
-    --bg-card: #ffffff;
-    --text-primary: #1a1a1a;
-    --text-secondary: #4a4a4a;
-    --text-muted: #6c757d;
-    --border: #dee2e6;
-    --border-light: #e9ecef;
-    --accent: #0d6efd;
-    --accent-dark: #0a58ca;
-    --success: #198754;
-    --warning: #fd7e14;
-    --danger: #dc3545;
-    --info: #0dcaf0;
-    --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-    --radius: 6px;
-    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-card: #1c2333;
+    --bg-hover: #252d3a;
+    --bg-input: #0d1117;
+    --border: #30363d;
+    --border-light: #21262d;
+    --accent: #2f81f7;
+    --accent-bright: #58a6ff;
+    --accent-glow: rgba(47, 129, 247, 0.15);
+    --accent-dark: #1a6dd4;
+    --success: #3fb950;
+    --success-bg: rgba(63, 185, 80, 0.12);
+    --warning: #d29922;
+    --warning-bg: rgba(210, 153, 34, 0.12);
+    --danger: #f85149;
+    --danger-bg: rgba(248, 81, 73, 0.12);
+    --info: #58a6ff;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #484f58;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 1px rgba(47, 129, 247, 0.05);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --shadow-glow: 0 0 20px rgba(47, 129, 247, 0.1);
+    --radius: 8px;
+    --radius-lg: 12px;
+    --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-mono: "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+    --sidebar-width: 260px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
     font-family: var(--font);
-    background: var(--bg-secondary);
+    background: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    display: flex;
+    min-height: 100vh;
 }
 
-/* Header */
-.header {
-    background: var(--bg-primary);
+/* Sidebar */
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 200;
+    overflow-y: auto;
+}
+.sidebar-brand {
+    padding: 24px 20px 4px;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text-primary);
+}
+.sidebar-brand span { color: var(--accent); }
+.sidebar-subtitle {
+    padding: 0 20px 20px;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
     border-bottom: 1px solid var(--border);
-    padding: 16px 32px;
+}
+.sidebar-nav { flex: 1; padding: 12px 0; }
+.nav-section-label {
+    padding: 16px 20px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-muted);
+}
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all 0.15s ease;
+    text-decoration: none;
+}
+.nav-item:hover { color: var(--text-primary); background: var(--bg-hover); }
+.nav-item.active {
+    color: var(--accent-bright);
+    background: var(--accent-glow);
+    border-left-color: var(--accent);
+    font-weight: 600;
+}
+.nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.7; }
+.nav-item.active svg { opacity: 1; }
+.sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-muted);
+}
+.sidebar-status { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+
+/* Main Content */
+.main-content { flex: 1; margin-left: var(--sidebar-width); min-height: 100vh; }
+.topbar {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 32px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    box-shadow: var(--shadow);
     position: sticky;
-    top: 0;
-    z-index: 100;
+    top: 0; z-index: 100;
 }
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.topbar-title { font-size: 16px; font-weight: 700; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.last-updated { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
 
-.header-left { display: flex; align-items: center; gap: 16px; }
-.header-logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
-.header-logo span { color: var(--accent); }
-.header-subtitle { font-size: 13px; color: var(--text-muted); border-left: 1px solid var(--border); padding-left: 16px; }
-.header-right { display: flex; align-items: center; gap: 12px; }
-.last-updated { font-size: 12px; color: var(--text-muted); font-family: var(--font-mono); }
+/* Pages */
+.page { display: none; }
+.page.active { display: block; }
+.page-body { max-width: 1440px; margin: 0 auto; padding: 24px 32px; }
 
-/* Status badges */
+/* Status Badges */
 .status-badge {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 4px 12px; border-radius: 20px;
-    font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
 }
-.status-badge.healthy, .status-badge.low { background: #d1e7dd; color: var(--success); }
-.status-badge.critical, .status-badge.high { background: #f8d7da; color: var(--danger); }
-.status-badge.warning, .status-badge.medium { background: #fff3cd; color: #997404; }
+.status-badge.healthy, .status-badge.low { background: var(--success-bg); color: var(--success); }
+.status-badge.critical, .status-badge.high { background: var(--danger-bg); color: var(--danger); }
+.status-badge.warning, .status-badge.medium { background: var(--warning-bg); color: var(--warning); }
 .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-/* Tab Navigation */
-.tab-nav {
-    background: var(--bg-primary);
-    border-bottom: 2px solid var(--border);
-    padding: 0 32px;
-    display: flex;
-    gap: 0;
-    overflow-x: auto;
-    position: sticky;
-    top: 57px;
-    z-index: 99;
-}
-
-.tab-btn {
-    padding: 12px 20px;
-    border: none;
-    background: none;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-muted);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
-    white-space: nowrap;
-    transition: color 0.2s, border-color 0.2s;
-}
-
-.tab-btn:hover { color: var(--text-primary); }
-.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-
-/* Main layout */
-.main { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
-
-/* Metric cards */
+/* Metric Cards */
 .metrics-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
+    gap: 16px; margin-bottom: 24px;
 }
-
 .metric-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 20px;
     box-shadow: var(--shadow);
+    transition: border-color 0.2s;
 }
-
-.metric-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 4px; }
-.metric-value { font-size: 28px; font-weight: 700; font-family: var(--font-mono); }
+.metric-card:hover { border-color: var(--accent); }
+.metric-card.accent-border { border-left: 3px solid var(--accent); }
+.metric-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 6px; }
+.metric-value { font-size: 28px; font-weight: 700; font-family: var(--font-mono); color: var(--text-primary); }
 .metric-value.success { color: var(--success); }
 .metric-value.danger { color: var(--danger); }
 .metric-value.warning { color: var(--warning); }
-.metric-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.metric-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
 
-/* Grid layouts */
-.grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+/* Grid Layouts */
+.grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+.grid-3col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 24px; }
 .grid-full { margin-bottom: 24px; }
 
 /* Cards */
@@ -188,753 +242,406 @@ body {
     box-shadow: var(--shadow);
     overflow: hidden;
 }
-
 .card-header {
     padding: 14px 20px;
     border-bottom: 1px solid var(--border-light);
     display: flex; align-items: center; justify-content: space-between;
+    background: rgba(22, 27, 34, 0.5);
 }
-
-.card-title { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.card-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-secondary); }
 .card-body { padding: 0; }
-.card-controls { display: flex; align-items: center; gap: 12px; }
 
 /* Tables */
-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
 thead th {
     text-align: left; padding: 10px 16px;
-    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
     color: var(--text-muted); background: var(--bg-secondary); border-bottom: 1px solid var(--border);
 }
-tbody td { padding: 10px 16px; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+tbody td { padding: 10px 16px; border-bottom: 1px solid var(--border-light); vertical-align: middle; color: var(--text-secondary); }
 tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover { background: var(--bg-secondary); }
+tbody tr:hover { background: var(--bg-hover); }
 
-/* Agent badges */
-.agent-name { font-weight: 700; font-family: var(--font-mono); font-size: 13px; }
+/* Agent Badges */
+.agent-name { font-weight: 700; font-family: var(--font-mono); font-size: 13px; color: var(--text-primary); }
 .agent-badge {
     display: inline-flex; align-items: center; gap: 5px;
-    padding: 2px 10px; border-radius: 4px;
-    font-size: 12px; font-weight: 600; font-family: var(--font-mono);
+    padding: 3px 10px; border-radius: 4px;
+    font-size: 11px; font-weight: 700; font-family: var(--font-mono); text-transform: uppercase;
 }
-.agent-badge.idle { background: #d1e7dd; color: var(--success); }
-.agent-badge.running { background: #cfe2ff; color: var(--accent); }
-.agent-badge.error { background: #f8d7da; color: var(--danger); }
-.agent-badge.stopped { background: #e2e3e5; color: var(--text-muted); }
+.agent-badge.idle { background: var(--success-bg); color: var(--success); }
+.agent-badge.running { background: var(--accent-glow); color: var(--accent); }
+.agent-badge.error { background: var(--danger-bg); color: var(--danger); }
+.agent-badge.stopped { background: rgba(72, 79, 88, 0.3); color: var(--text-muted); }
+
+/* Priority Badges */
+.priority-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; font-family: var(--font-mono); }
+.priority-badge.CRITICAL { background: var(--danger-bg); color: var(--danger); }
+.priority-badge.HIGH { background: var(--warning-bg); color: var(--warning); }
+.priority-badge.MEDIUM { background: var(--accent-glow); color: var(--accent); }
+.priority-badge.LOW { background: rgba(72, 79, 88, 0.3); color: var(--text-muted); }
 
 /* Schedule */
-.schedule-time { font-family: var(--font-mono); font-weight: 600; font-size: 13px; }
+.schedule-time { font-family: var(--font-mono); font-weight: 600; font-size: 13px; color: var(--accent-bright); }
 .schedule-enabled { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
 .schedule-disabled { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
 
-/* Alerts */
-.alert-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border-light); font-size: 13px; }
-.alert-row:last-child { border-bottom: none; }
-.alert-severity { flex-shrink: 0; padding: 1px 8px; border-radius: 3px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-.alert-severity.critical { background: #f8d7da; color: var(--danger); }
-.alert-severity.warning { background: #fff3cd; color: #997404; }
-.alert-severity.info { background: #cff4fc; color: #055160; }
-.alert-message { flex: 1; color: var(--text-secondary); }
-.alert-time { flex-shrink: 0; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
-
-/* Priority badges */
-.priority-badge { font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 3px; text-transform: uppercase; font-family: var(--font-mono); }
-.priority-badge.CRITICAL { background: #f8d7da; color: var(--danger); }
-.priority-badge.HIGH { background: #fff3cd; color: #997404; }
-.priority-badge.MEDIUM { background: #cfe2ff; color: var(--accent); }
-.priority-badge.LOW { background: #e2e3e5; color: var(--text-muted); }
-
-/* Empty state */
-.empty-state { padding: 32px; text-align: center; color: var(--text-muted); font-size: 13px; }
-
-/* Controls */
-.control-select {
-    padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;
-    font-size: 12px; background: var(--bg-primary); color: var(--text-primary);
-}
-.control-input {
-    padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px;
-    font-size: 14px; width: 80px; font-family: var(--font-mono);
-}
-.control-label { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+/* Empty State */
+.empty-state { padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px; }
 
 /* Buttons */
 .btn {
-    padding: 6px 16px; border: 1px solid var(--border); border-radius: 4px;
-    font-size: 13px; font-weight: 600; cursor: pointer; background: var(--bg-primary);
-    transition: background 0.2s;
+    padding: 6px 16px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    background: var(--bg-card); color: var(--text-primary); transition: all 0.15s;
 }
-.btn:hover { background: var(--bg-secondary); }
-.btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+.btn:hover { background: var(--bg-hover); border-color: var(--text-muted); }
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
 .btn-primary:hover { background: var(--accent-dark); }
-.btn-sm { padding: 4px 10px; font-size: 12px; }
-.btn-danger { background: var(--danger); color: white; border-color: var(--danger); }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
 
-/* Timeline chart */
-.timeline-chart {
-    display: flex; align-items: flex-end; gap: 2px; height: 80px;
-}
-.timeline-bar {
-    flex: 1; min-width: 4px; border-radius: 2px 2px 0 0;
-    background: var(--accent); opacity: 0.7;
-    transition: opacity 0.2s;
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 40px;
+    margin-bottom: 24px;
     position: relative;
+    overflow: hidden;
 }
-.timeline-bar:hover { opacity: 1; }
-.timeline-bar.has-failures { background: linear-gradient(to top, var(--danger) 0%, var(--accent) 100%); }
-
-/* Risk bar */
-.risk-bar {
-    height: 6px; border-radius: 3px; background: var(--border);
-    overflow: hidden; width: 100px; display: inline-block; vertical-align: middle;
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: -50%; right: -20%;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    pointer-events: none;
 }
-.risk-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
-.risk-fill.low { background: var(--success); }
-.risk-fill.medium { background: var(--warning); }
-.risk-fill.high { background: #e65100; }
-.risk-fill.critical { background: var(--danger); }
+.hero-title { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; position: relative; }
+.hero-title span { color: var(--accent-bright); }
+.hero-subtitle { font-size: 15px; color: var(--text-secondary); margin-bottom: 24px; max-width: 600px; position: relative; }
+.hero-metrics { display: flex; gap: 32px; position: relative; }
+.hero-metric-item { display: flex; flex-direction: column; }
+.hero-metric-value { font-size: 24px; font-weight: 700; font-family: var(--font-mono); color: var(--accent-bright); }
+.hero-metric-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); }
 
-/* Tip cards */
-.tip-card {
-    padding: 16px 20px; border-bottom: 1px solid var(--border-light);
+/* Architecture Layers */
+.arch-layers { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.arch-layer {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+    transition: all 0.2s;
 }
-.tip-card:last-child { border-bottom: none; }
-.tip-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-.tip-title { font-weight: 700; font-size: 14px; }
-.tip-body { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
-.tip-agents { margin-top: 6px; font-size: 11px; color: var(--text-muted); }
+.arch-layer:hover { border-color: var(--accent); box-shadow: var(--shadow-glow); }
+.arch-layer-icon { font-size: 28px; margin-bottom: 12px; }
+.arch-layer-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; color: var(--text-primary); }
+.arch-layer-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
 
-/* Division cards */
-.division-section { padding: 16px 20px; border-bottom: 1px solid var(--border-light); }
-.division-section:last-child { border-bottom: none; }
-.division-name { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; color: var(--accent); }
-.division-agents { display: flex; flex-wrap: wrap; gap: 8px; }
-.division-agent {
-    padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px;
-    font-size: 12px; font-family: var(--font-mono); cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
+/* Capability Grid */
+.capability-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px; margin-bottom: 24px;
 }
-.division-agent:hover { border-color: var(--accent); background: #e8f0fe; }
-
-/* Flow graph */
-.flow-edge {
-    display: flex; align-items: center; gap: 8px; padding: 6px 20px;
-    font-size: 12px; border-bottom: 1px solid var(--border-light);
+.capability-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex; align-items: flex-start; gap: 12px;
+    transition: all 0.15s; cursor: default;
 }
-.flow-edge:last-child { border-bottom: none; }
-.flow-node { font-family: var(--font-mono); font-weight: 700; font-size: 12px; }
-.flow-arrow { color: var(--text-muted); }
-.flow-label { color: var(--text-muted); font-style: italic; }
-
-/* Prediction cards */
-.prediction-card {
-    padding: 16px 20px; border-bottom: 1px solid var(--border-light);
-    border-left: 3px solid var(--warning);
+.capability-item:hover { border-color: var(--accent); background: var(--bg-hover); }
+.capability-dot {
+    width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0;
 }
-.prediction-card.critical { border-left-color: var(--danger); }
-.prediction-card:last-child { border-bottom: none; }
-.prediction-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-.prediction-text { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
-.prediction-solutions { font-size: 12px; color: var(--text-muted); }
+.capability-dot.healthy { background: var(--success); box-shadow: 0 0 6px var(--success); }
+.capability-dot.unknown { background: var(--text-muted); }
+.capability-info { flex: 1; min-width: 0; }
+.capability-name { font-size: 13px; font-weight: 700; font-family: var(--font-mono); color: var(--text-primary); }
+.capability-role { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-/* Feature cards */
-.feature-card {
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--radius); box-shadow: var(--shadow);
-    padding: 24px; margin-bottom: 16px;
+/* Integration Row */
+.integration-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+.integration-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+    background: var(--bg-card); color: var(--text-secondary);
 }
-.feature-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-.feature-desc { font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.6; }
-.feature-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.feature-meta-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 2px; }
-.feature-meta-value { font-size: 13px; color: var(--text-secondary); }
+.integration-chip.connected { border-color: var(--success); color: var(--success); }
+.integration-chip .int-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); }
+.integration-chip.connected .int-dot { background: var(--success); }
 
-/* Profile view */
-.profile-section { padding: 16px 20px; }
-.profile-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
-.profile-value { font-size: 13px; margin-bottom: 12px; }
-.profile-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
-.profile-tag { padding: 2px 8px; background: var(--bg-secondary); border-radius: 3px; font-size: 11px; font-family: var(--font-mono); }
-
-/* Modal */
-.modal {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.4); z-index: 200;
-    display: flex; align-items: center; justify-content: center;
-}
-.modal-content {
-    background: var(--bg-primary); border-radius: var(--radius);
-    padding: 24px; box-shadow: var(--shadow-md); min-width: 320px;
-}
-.modal-content h3 { margin-bottom: 16px; }
-.modal-form { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
-.modal-form label { font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
-.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
-
-/* Formula display */
+/* Formula Display */
 .formula-display {
-    font-family: var(--font-mono); font-size: 14px; padding: 12px;
-    background: var(--bg-secondary); border-radius: 4px;
-    text-align: center; letter-spacing: 0.3px;
+    font-family: var(--font-mono); font-size: 14px; padding: 16px;
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: var(--radius); text-align: center; color: var(--text-secondary);
 }
-.formula-weight { color: var(--accent); font-weight: 700; }
+.formula-weight { color: var(--accent-bright); font-weight: 700; }
 
 /* Footer */
-.footer { text-align: center; padding: 24px; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border-light); margin-top: 24px; }
+.footer {
+    text-align: center; padding: 24px; font-size: 11px;
+    color: var(--text-muted); border-top: 1px solid var(--border-light); margin-top: 24px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
 /* Responsive */
+@media (max-width: 1200px) { .arch-layers { grid-template-columns: 1fr; } .grid-3col { grid-template-columns: 1fr; } }
 @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main-content { margin-left: 0; }
     .grid-2col { grid-template-columns: 1fr; }
-    .header { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
-    .main { padding: 16px; }
+    .page-body { padding: 16px; }
     .metrics-row { grid-template-columns: repeat(2, 1fr); }
-    .tab-nav { padding: 0 16px; }
+    .hero-section { padding: 24px; }
+    .hero-title { font-size: 24px; }
+    .hero-metrics { flex-wrap: wrap; gap: 16px; }
 }
-@media (max-width: 600px) {
-    .metrics-row { grid-template-columns: 1fr; }
-    .tab-btn { padding: 10px 12px; font-size: 12px; }
-}
-
-/* ─── Agent Database (Dolt-style) ─── */
-
-.schema-table { padding: 10px 0; border-bottom: 1px solid var(--border-light); }
-.schema-table:last-child { border-bottom: none; }
-.schema-table-name { font-weight: 700; font-family: var(--font-mono); font-size: 13px; color: var(--accent); margin-bottom: 4px; }
-.schema-columns { display: flex; flex-wrap: wrap; gap: 4px; }
-.schema-col { background: var(--bg-secondary); padding: 2px 8px; border-radius: 3px; font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); }
-.schema-sql { font-family: var(--font-mono); font-size: 12px; background: #1a1a2e; color: #e0e0e0; padding: 16px; border-radius: var(--radius); white-space: pre-wrap; line-height: 1.5; max-height: 400px; overflow-y: auto; }
-
-.diff-entry { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; margin-bottom: 4px; font-size: 12px; }
-.diff-added { background: #d1fae5; }
-.diff-removed { background: #fee2e2; }
-.diff-modified { background: #fef3c7; }
-.diff-icon { font-weight: 700; font-family: var(--font-mono); width: 16px; text-align: center; }
-.diff-added .diff-icon { color: var(--success); }
-.diff-removed .diff-icon { color: var(--danger); }
-.diff-modified .diff-icon { color: var(--warning); }
-.diff-table { font-weight: 600; color: var(--text-primary); min-width: 120px; }
-.diff-id { font-family: var(--font-mono); color: var(--text-muted); min-width: 70px; }
-.diff-detail { color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-
-.commit-entry { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-light); font-size: 12px; flex-wrap: wrap; }
-.commit-entry:last-child { border-bottom: none; }
-.commit-header { display: flex; gap: 10px; align-items: center; }
-.commit-id { font-family: var(--font-mono); color: var(--accent); background: var(--bg-secondary); padding: 2px 6px; border-radius: 3px; font-weight: 600; }
-.commit-author { font-weight: 600; color: var(--text-primary); }
-.commit-message { color: var(--text-secondary); flex: 1; }
-.commit-time { color: var(--text-muted); font-size: 11px; }
-
-.agent-db-status { display: flex; flex-direction: column; gap: 16px; }
-.adb-stat-section { padding: 12px 0; border-bottom: 1px solid var(--border-light); }
-.adb-stat-section:last-child { border-bottom: none; }
-.adb-stat-title { font-weight: 700; font-size: 13px; margin-bottom: 8px; color: var(--text-primary); }
-.adb-stat-row { display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; color: var(--text-secondary); }
-
+@media (max-width: 600px) { .metrics-row { grid-template-columns: 1fr; } .capability-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 
-<!-- Header -->
-<header class="header">
-    <div class="header-left">
-        <div class="header-logo">Mortgage<span>FintechOS</span></div>
-        <div class="header-subtitle">Fully Connected Autonomous AI Operating System</div>
+<!-- Sidebar -->
+<aside class="sidebar">
+    <div class="sidebar-brand">Mortgage/<span>Coding OS</span></div>
+    <div class="sidebar-subtitle">Autonomous Intelligence Platform</div>
+    <nav class="sidebar-nav">
+        <div class="nav-section-label">Platform</div>
+        <a class="nav-item active" onclick="showPage('home')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+            Platform Home
+        </a>
+        <a class="nav-item" onclick="showPage('overview')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            System Overview
+        </a>
+        <div class="nav-section-label">Operations</div>
+        <a class="nav-item" onclick="showPage('schedule')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            Schedule Control
+        </a>
+        <a class="nav-item" onclick="showPage('telemetry')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            Predictive Telemetry
+        </a>
+        <div class="nav-section-label">Visualization</div>
+        <a class="nav-item" href="/ontology.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4m-9-9h4m14 0h4M4.22 4.22l2.83 2.83m9.9 9.9l2.83 2.83M4.22 19.78l2.83-2.83m9.9-9.9l2.83-2.83"/></svg>
+            Domain Ontology
+        </a>
+        <a class="nav-item" href="/orchestration.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+            Orchestration Map
+        </a>
+    </nav>
+    <div class="sidebar-footer">
+        <div class="sidebar-status">
+            <span class="status-dot" style="width:6px;height:6px;background:var(--success)"></span>
+            <span id="sidebar-mode">Static Fallback Mode</span>
+        </div>
+        <div>v3.0.0 &middot; Cory Lawson</div>
     </div>
-    <div class="header-right">
-        <span id="system-risk" class="status-badge healthy" title="System Risk Level">
-            <span class="status-dot"></span><span id="risk-label">low</span>
-        </span>
-        <span id="overall-status" class="status-badge healthy">
-            <span class="status-dot"></span>healthy
-        </span>
-        <span id="last-updated" class="last-updated">Loading...</span>
-    </div>
-</header>
+</aside>
 
-<!-- Navigation Tabs -->
-<nav class="tab-nav">
-    <button class="tab-btn active" data-tab="overview">Overview</button>
-    <button class="tab-btn" data-tab="action-log">Action Log</button>
-    <button class="tab-btn" data-tab="schedule">Schedule Control</button>
-    <button class="tab-btn" data-tab="ontology">Hydrospeed Ontology</button>
-    <button class="tab-btn" data-tab="telemetry">Predictive Telemetry</button>
-    <button class="tab-btn" data-tab="tips">Expert Tips</button>
-    <button class="tab-btn" data-tab="agentdb">Agent DB</button>
-    <button class="tab-btn" data-tab="features">Features Guide</button>
-</nav>
+<!-- Main Content -->
+<div class="main-content">
+    <header class="topbar">
+        <div class="topbar-left">
+            <span class="topbar-title" id="page-title">Platform Home</span>
+        </div>
+        <div class="topbar-right">
+            <span id="system-risk" class="status-badge healthy"><span class="status-dot"></span><span id="risk-label">healthy</span></span>
+            <span id="last-updated" class="last-updated">Loading...</span>
+        </div>
+    </header>
 
-<main class="main">
-
-    <!-- ===== TAB: OVERVIEW ===== -->
-    <div class="tab-content active" id="tab-overview">
-        <section class="metrics-row">
-            <div class="metric-card">
-                <div class="metric-label">Uptime</div>
-                <div id="metric-uptime" class="metric-value">--</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Active Agents</div>
-                <div id="metric-agents" class="metric-value">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Queue Pending</div>
-                <div id="metric-pending" class="metric-value">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Tasks Completed</div>
-                <div id="metric-completed" class="metric-value success">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Tasks Failed</div>
-                <div id="metric-failed" class="metric-value">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">CPU</div>
-                <div id="metric-cpu" class="metric-value">--</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Memory</div>
-                <div id="metric-mem" class="metric-value">--</div>
-            </div>
-        </section>
-
-        <section class="grid-2col">
-            <div class="card">
-                <div class="card-header"><span class="card-title">AI Agents</span></div>
-                <div class="card-body">
-                    <table>
-                        <thead><tr><th>Agent</th><th>Role</th><th>Status</th><th>Tasks</th><th>Errors</th><th>Heartbeat</th></tr></thead>
-                        <tbody id="agents-tbody"><tr><td colspan="6" class="empty-state">Loading...</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header"><span class="card-title">Recent Tasks</span></div>
-                <div class="card-body">
-                    <table>
-                        <thead><tr><th>ID</th><th>Agent</th><th>Action</th><th>Priority</th><th>Status</th></tr></thead>
-                        <tbody id="queue-tbody"><tr><td colspan="5" class="empty-state">Loading...</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header"><span class="card-title">Alerts</span></div>
-                <div class="card-body" id="alerts-container"><div class="empty-state">Loading...</div></div>
-            </div>
-        </section>
-    </div>
-
-    <!-- ===== TAB: ACTION LOG ===== -->
-    <div class="tab-content" id="tab-action-log">
-        <section class="metrics-row">
-            <div class="metric-card">
-                <div class="metric-label">Total Actions</div>
-                <div id="al-total" class="metric-value">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Success Rate</div>
-                <div id="al-rate" class="metric-value success">0%</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Failures</div>
-                <div id="al-failures" class="metric-value">0</div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Activity Timeline (24h)</span>
-                </div>
-                <div class="card-body" style="padding:16px;">
-                    <div id="al-timeline" class="timeline-chart"></div>
-                </div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Agent Action Log</span>
-                    <div class="card-controls">
-                        <select id="al-agent-filter" class="control-select"><option value="">All Agents</option></select>
-                        <label class="control-label"><input type="checkbox" id="al-failures-only"> Failures only</label>
+    <!-- PAGE: HOME -->
+    <div class="page active" id="page-home">
+        <div class="page-body">
+            <div class="hero-section">
+                <div class="hero-title">Mortgage/<span>Coding OS</span></div>
+                <div class="hero-subtitle">Autonomous Intelligence Platform with 9 AI agents across 2 divisions operating 24/7 with predictive telemetry, live ontology mapping, and enterprise integrations.</div>
+                <div class="hero-metrics">
+                    <div class="hero-metric-item">
+                        <div class="hero-metric-value" id="home-agents">9</div>
+                        <div class="hero-metric-label">AI Agents</div>
+                    </div>
+                    <div class="hero-metric-item">
+                        <div class="hero-metric-value" id="home-tasks">1,191</div>
+                        <div class="hero-metric-label">Tasks Completed</div>
+                    </div>
+                    <div class="hero-metric-item">
+                        <div class="hero-metric-value" id="home-uptime">72h</div>
+                        <div class="hero-metric-label">Uptime</div>
+                    </div>
+                    <div class="hero-metric-item">
+                        <div class="hero-metric-value">99.7%</div>
+                        <div class="hero-metric-label">Success Rate</div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <table>
-                        <thead><tr><th>Time</th><th>Agent</th><th>Type</th><th>Action</th><th>Duration</th><th>Status</th><th>Detail</th></tr></thead>
-                        <tbody id="al-tbody"><tr><td colspan="7" class="empty-state">Loading...</td></tr></tbody>
-                    </table>
-                </div>
             </div>
-        </section>
-    </div>
 
-    <!-- ===== TAB: SCHEDULE CONTROL ===== -->
-    <div class="tab-content" id="tab-schedule">
-        <section class="grid-2col">
-            <div class="card">
-                <div class="card-header"><span class="card-title">Scheduled Jobs</span></div>
-                <div class="card-body">
-                    <table>
-                        <thead><tr><th></th><th>Job</th><th>Time</th><th>Last Run</th><th>Actions</th></tr></thead>
-                        <tbody id="sched-tbody"><tr><td colspan="5" class="empty-state">Loading...</td></tr></tbody>
-                    </table>
+            <div class="arch-layers">
+                <div class="arch-layer">
+                    <div class="arch-layer-icon">Layer 1</div>
+                    <div class="arch-layer-title">AIOS Kernel</div>
+                    <div class="arch-layer-desc">Central orchestrator daemon managing task dispatch, scheduling, health monitoring, and state persistence for all agents.</div>
+                </div>
+                <div class="arch-layer">
+                    <div class="arch-layer-icon">Layer 2</div>
+                    <div class="arch-layer-title">Agent Network</div>
+                    <div class="arch-layer-desc">9 specialized AI agents: 4 Mortgage Operations (DIEGO, MARTIN, NOVA, JARVIS) + 5 Codebase Engineering (ATLAS, NEXUS, CIPHER, FORGE, STORM).</div>
+                </div>
+                <div class="arch-layer">
+                    <div class="arch-layer-icon">Layer 3</div>
+                    <div class="arch-layer-title">Integrations</div>
+                    <div class="arch-layer-desc">Puter.js (500+ LLMs), Open Notebook (RAG), Paperclip AI, Telegram Bot, Notion, GitHub, Google Drive, Netlify/Vercel.</div>
                 </div>
             </div>
-            <div class="card">
-                <div class="card-header"><span class="card-title">Schedule Recommendations</span></div>
-                <div class="card-body" id="sched-recommendations"><div class="empty-state">Loading...</div></div>
-            </div>
-        </section>
 
-        <!-- Schedule Edit Modal -->
-        <div id="sched-modal" class="modal" style="display:none;">
-            <div class="modal-content">
-                <h3>Edit Schedule: <span id="sched-modal-name"></span></h3>
-                <div class="modal-form">
-                    <label>Hour (0-23): <input type="number" id="sched-hour" min="0" max="23" class="control-input"></label>
-                    <label>Minute (0-59): <input type="number" id="sched-minute" min="0" max="59" class="control-input"></label>
+            <div class="card" style="margin-bottom:24px">
+                <div class="card-header"><span class="card-title">Active Agents</span></div>
+                <div class="card-body">
+                    <div class="capability-grid" id="home-agent-grid" style="padding:16px"></div>
                 </div>
-                <div class="modal-actions">
-                    <button class="btn btn-primary" onclick="saveSchedule()">Save</button>
-                    <button class="btn" onclick="closeModal()">Cancel</button>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><span class="card-title">Platform Integrations</span></div>
+                <div class="card-body" style="padding:16px">
+                    <div class="integration-row" id="home-integrations"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ===== TAB: HYDROSPEED ONTOLOGY ===== -->
-    <div class="tab-content" id="tab-ontology">
-        <section class="metrics-row">
-            <div class="metric-card" style="border-left:4px solid var(--accent)">
-                <div class="metric-label">Hydrospeed Engine</div>
-                <div class="metric-value" style="font-size:16px;">Live Ontology</div>
-                <div class="metric-sub">Real-time agent relationship mapping</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Agents</div>
-                <div id="onto-agents" class="metric-value">13</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Integrations</div>
-                <div id="onto-integrations" class="metric-value">9</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Data Flows</div>
-                <div id="onto-flows" class="metric-value">0</div>
-            </div>
-        </section>
-
-        <section class="grid-2col">
-            <div class="card">
-                <div class="card-header"><span class="card-title">Agent Divisions</span></div>
-                <div class="card-body" id="onto-divisions"><div class="empty-state">Loading...</div></div>
-            </div>
-            <div class="card">
-                <div class="card-header"><span class="card-title">Data Flow Graph</span></div>
-                <div class="card-body" id="onto-graph"><div class="empty-state">Loading...</div></div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Agent Profiles</span>
-                    <select id="onto-agent-select" class="control-select"><option value="">Select Agent...</option></select>
-                </div>
-                <div class="card-body" id="onto-profile"><div class="empty-state">Select an agent to view its ontology profile</div></div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Agent Proposals</span>
-                    <button class="btn btn-sm" onclick="showProposalForm()">+ New Proposal</button>
-                </div>
-                <div class="card-body" id="onto-proposals"><div class="empty-state">No proposals yet</div></div>
-            </div>
-        </section>
-    </div>
-
-    <!-- ===== TAB: PREDICTIVE TELEMETRY ===== -->
-    <div class="tab-content" id="tab-telemetry">
-        <section class="metrics-row">
-            <div class="metric-card" style="border-left:4px solid var(--accent)">
-                <div class="metric-label">System Risk Score</div>
-                <div id="tele-score" class="metric-value">0.0</div>
-                <div id="tele-level" class="metric-sub">low</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Agents Tracked</div>
-                <div id="tele-tracked" class="metric-value">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Critical Agents</div>
-                <div id="tele-critical" class="metric-value danger">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Active Predictions</div>
-                <div id="tele-predictions" class="metric-value warning">0</div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header"><span class="card-title">Risk Formula</span></div>
-                <div class="card-body" style="padding:16px;">
-                    <div class="formula-display">
-                        R(agent) = <span class="formula-weight">0.30</span>*ErrorRate + <span class="formula-weight">0.15</span>*Latency + <span class="formula-weight">0.25</span>*DependencyHealth + <span class="formula-weight">0.15</span>*CapacityPressure + <span class="formula-weight">0.15</span>*QualityDelta
+    <!-- PAGE: OVERVIEW -->
+    <div class="page" id="page-overview">
+        <div class="page-body">
+            <section class="metrics-row">
+                <div class="metric-card"><div class="metric-label">Uptime</div><div id="metric-uptime" class="metric-value">--</div></div>
+                <div class="metric-card"><div class="metric-label">Active Agents</div><div id="metric-agents" class="metric-value">0</div></div>
+                <div class="metric-card"><div class="metric-label">Queue Pending</div><div id="metric-pending" class="metric-value">0</div></div>
+                <div class="metric-card"><div class="metric-label">Tasks Completed</div><div id="metric-completed" class="metric-value success">0</div></div>
+                <div class="metric-card"><div class="metric-label">Tasks Failed</div><div id="metric-failed" class="metric-value">0</div></div>
+                <div class="metric-card"><div class="metric-label">CPU</div><div id="metric-cpu" class="metric-value">--</div></div>
+                <div class="metric-card"><div class="metric-label">Memory</div><div id="metric-mem" class="metric-value">--</div></div>
+            </section>
+            <section class="grid-2col">
+                <div class="card">
+                    <div class="card-header"><span class="card-title">AI Agents</span></div>
+                    <div class="card-body">
+                        <table>
+                            <thead><tr><th>Agent</th><th>Role</th><th>Status</th><th>Tasks</th><th>Errors</th></tr></thead>
+                            <tbody id="agents-tbody"><tr><td colspan="5" class="empty-state">Loading...</td></tr></tbody>
+                        </table>
                     </div>
                 </div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header"><span class="card-title">Failure Predictions</span></div>
-                <div class="card-body" id="tele-pred-list"><div class="empty-state">No active predictions -- system is healthy</div></div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header"><span class="card-title">Per-Agent Risk Breakdown</span></div>
-                <div class="card-body">
-                    <table>
-                        <thead><tr><th>Agent</th><th>Risk Score</th><th>Level</th><th>Dominant Factor</th><th>Error Rate</th><th>Latency</th><th>Cascade</th></tr></thead>
-                        <tbody id="tele-agents-tbody"><tr><td colspan="7" class="empty-state">Collecting telemetry...</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <!-- ===== TAB: EXPERT TIPS ===== -->
-    <div class="tab-content" id="tab-tips">
-        <section class="metrics-row">
-            <div class="metric-card">
-                <div class="metric-label">Total Tips</div>
-                <div id="tips-total" class="metric-value">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Critical</div>
-                <div id="tips-critical" class="metric-value danger">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Categories</div>
-                <div id="tips-categories" class="metric-value">0</div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Expert Operations Tips</span>
-                    <div class="card-controls">
-                        <select id="tips-cat-filter" class="control-select">
-                            <option value="">All Categories</option>
-                            <option value="scheduling">Scheduling</option>
-                            <option value="cost_optimization">Cost Optimization</option>
-                            <option value="safety">Safety</option>
-                            <option value="monitoring">Monitoring</option>
-                            <option value="workflow">Workflow</option>
-                            <option value="scaling">Scaling</option>
-                            <option value="resilience">Resilience</option>
-                            <option value="deployment">Deployment</option>
-                            <option value="compliance">Compliance</option>
-                        </select>
+                <div class="card">
+                    <div class="card-header"><span class="card-title">Recent Tasks</span></div>
+                    <div class="card-body">
+                        <table>
+                            <thead><tr><th>ID</th><th>Agent</th><th>Action</th><th>Priority</th><th>Status</th></tr></thead>
+                            <tbody id="queue-tbody"><tr><td colspan="5" class="empty-state">Loading...</td></tr></tbody>
+                        </table>
                     </div>
                 </div>
-                <div class="card-body" id="tips-list"><div class="empty-state">Loading...</div></div>
-            </div>
-        </section>
-    </div>
-
-    <!-- ===== TAB: AGENT DATABASE ===== -->
-    <div class="tab-content" id="tab-agentdb">
-        <section class="metrics-row">
-            <div class="metric-card" style="border-left:4px solid var(--accent)">
-                <div class="metric-label">Agent Database</div>
-                <div class="metric-value" style="font-size:16px;">Version Controlled</div>
-                <div class="metric-sub">Dolt-inspired Git-style branching</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Branches</div>
-                <div id="adb-branches-count" class="metric-value">1</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Tables</div>
-                <div id="adb-tables-count" class="metric-value">6</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Total Rows</div>
-                <div id="adb-rows-count" class="metric-value">0</div>
-            </div>
-        </section>
-
-        <section class="grid-2col">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Branches</span>
-                    <button class="btn btn-sm" onclick="showCreateBranch()">+ New Branch</button>
-                </div>
-                <div class="card-body">
-                    <table>
-                        <thead><tr><th>Branch</th><th>Parent</th><th>Commits</th><th>Rows</th><th>Last Commit</th><th>Actions</th></tr></thead>
-                        <tbody id="adb-branches-tbody"><tr><td colspan="6" class="empty-state">Loading...</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Schema</span>
-                    <button class="btn btn-sm" onclick="showSchemaSQL()">View SQL</button>
-                </div>
-                <div class="card-body" id="adb-schema-view"><div class="empty-state">Loading...</div></div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Table Browser</span>
-                    <div class="card-controls">
-                        <select id="adb-branch-select" class="control-select"><option value="main">main</option></select>
-                        <select id="adb-table-select" class="control-select">
-                            <option value="agent_operations">agent_operations</option>
-                            <option value="agent_state">agent_state</option>
-                            <option value="integration_events">integration_events</option>
-                            <option value="schedule_history">schedule_history</option>
-                            <option value="audit_trail">audit_trail</option>
-                            <option value="workflow_proposals">workflow_proposals</option>
-                        </select>
-                        <button class="btn btn-sm btn-primary" onclick="queryTable()">Query</button>
-                    </div>
-                </div>
-                <div class="card-body" id="adb-table-data"><div class="empty-state">Select a branch and table, then click Query</div></div>
-            </div>
-        </section>
-
-        <section class="grid-2col">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Diff Viewer</span>
-                    <div class="card-controls">
-                        <select id="adb-diff-from" class="control-select"><option value="main">main</option></select>
-                        <span style="color:var(--text-muted);padding:0 4px;">vs</span>
-                        <select id="adb-diff-to" class="control-select"><option value="">Select branch...</option></select>
-                        <button class="btn btn-sm" onclick="computeDiff()">Compute Diff</button>
-                    </div>
-                </div>
-                <div class="card-body" id="adb-diff-view"><div class="empty-state">Select two branches and compute diff</div></div>
-            </div>
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Commit Log</span>
-                    <div class="card-controls">
-                        <select id="adb-log-branch" class="control-select"><option value="main">main</option></select>
-                        <button class="btn btn-sm" onclick="loadCommitLog()">Load</button>
-                    </div>
-                </div>
-                <div class="card-body" id="adb-commit-log"><div class="empty-state">Select a branch and load commits</div></div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Agent Branch Status</span>
-                    <div class="card-controls">
-                        <select id="adb-agent-select" class="control-select"><option value="">Select Agent...</option></select>
-                        <button class="btn btn-sm" onclick="loadAgentDbStatus()">View</button>
-                    </div>
-                </div>
-                <div class="card-body" id="adb-agent-status"><div class="empty-state">Select an agent to view its branch status and pending changes</div></div>
-            </div>
-        </section>
-
-        <!-- Merge/Create Branch Modal -->
-        <div id="adb-modal" class="modal" style="display:none;">
-            <div class="modal-content">
-                <h3 id="adb-modal-title">Action</h3>
-                <div class="modal-form" id="adb-modal-body"></div>
-                <div class="modal-actions">
-                    <button class="btn btn-primary" id="adb-modal-confirm">Confirm</button>
-                    <button class="btn" onclick="document.getElementById('adb-modal').style.display='none'">Cancel</button>
-                </div>
-            </div>
+            </section>
         </div>
     </div>
 
-    <!-- ===== TAB: FEATURES GUIDE ===== -->
-    <div class="tab-content" id="tab-features">
-        <section class="grid-full">
-            <div class="card" style="border-left:4px solid var(--accent)">
-                <div class="card-body" style="padding:24px;">
-                    <h2 style="margin-bottom:4px;">MortgageFintechOS v3.0.0</h2>
-                    <p style="color:var(--text-muted);margin-bottom:16px;">Fully Connected Autonomous AI Operating System</p>
-                    <p>13 AI agents across 4 divisions operating 24/7 with 9 integrations, predictive telemetry, live ontology mapping, and expert-guided operations. Built by Cory Lawson / The Lawson Group.</p>
+    <!-- PAGE: SCHEDULE -->
+    <div class="page" id="page-schedule">
+        <div class="page-body">
+            <section class="grid-full">
+                <div class="card">
+                    <div class="card-header"><span class="card-title">Scheduled Jobs</span></div>
+                    <div class="card-body">
+                        <table>
+                            <thead><tr><th></th><th>Job</th><th>Schedule</th><th>Last Run</th></tr></thead>
+                            <tbody id="sched-tbody"><tr><td colspan="4" class="empty-state">Loading...</td></tr></tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-        </section>
-        <section class="grid-full" id="features-list">
-            <div class="empty-state">Loading features...</div>
-        </section>
+            </section>
+        </div>
     </div>
 
-</main>
-
-<footer class="footer">
-    MortgageFintechOS v3.0.0 &mdash; Cory Lawson / The Lawson Group &mdash; Fully Connected Autonomous AI Operating System
-</footer>
+    <!-- PAGE: TELEMETRY -->
+    <div class="page" id="page-telemetry">
+        <div class="page-body">
+            <section class="metrics-row">
+                <div class="metric-card accent-border"><div class="metric-label">System Risk Score</div><div id="tele-score" class="metric-value">0.08</div><div class="metric-sub">low</div></div>
+                <div class="metric-card"><div class="metric-label">Agents Tracked</div><div class="metric-value">9</div></div>
+                <div class="metric-card"><div class="metric-label">Critical Agents</div><div class="metric-value">0</div></div>
+            </section>
+            <section class="grid-full">
+                <div class="card">
+                    <div class="card-header"><span class="card-title">Risk Formula</span></div>
+                    <div class="card-body" style="padding:16px;">
+                        <div class="formula-display">
+                            R(agent) = <span class="formula-weight">0.30</span>*ErrorRate + <span class="formula-weight">0.15</span>*Latency + <span class="formula-weight">0.25</span>*DependencyHealth + <span class="formula-weight">0.15</span>*CapacityPressure + <span class="formula-weight">0.15</span>*QualityDelta
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section class="grid-full">
+                <div class="card">
+                    <div class="card-header"><span class="card-title">System Status</span></div>
+                    <div class="card-body"><div class="empty-state">No active predictions -- system is healthy</div></div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
 
 <script>
-/**
- * MortgageFintechOS Dashboard v3
- * Fully Connected Autonomous AI Operating System
- * Action Log, Schedule Control, Hydrospeed Ontology, Predictive Telemetry, Expert Tips
- */
-
-const REFRESH_INTERVAL = 5000;
-
-const AGENT_DESCRIPTIONS = {
+const AGENT_ROLES = {
     DIEGO: "Pipeline Orchestration",
     MARTIN: "Document Intelligence",
     NOVA: "Income & DTI Analysis",
     JARVIS: "Condition Resolution",
     ATLAS: "Full-Stack Engineering",
+    NEXUS: "Code Quality",
     CIPHER: "Security Engineering",
     FORGE: "DevOps Engineering",
-    NEXUS: "Code Quality",
     STORM: "Data Engineering",
-    SENTINEL: "System Intelligence",
-    HUNTER: "Lead Generation",
-    HERALD: "Content Marketing",
-    AMBASSADOR: "Community Engagement",
 };
 
-let refreshTimer = null;
-let currentTab = "overview";
-let editingJob = "";
+const INTEGRATIONS = [
+    {name:"Puter.js",connected:true},{name:"GitHub",connected:true},{name:"Netlify",connected:true},
+    {name:"Open Notebook",connected:false},{name:"Paperclip AI",connected:false},
+    {name:"Telegram Bot",connected:false},{name:"Notion",connected:false},
+    {name:"Google Drive",connected:false},{name:"Wispr Flow",connected:false},
+];
 
-// --- Utilities ---
+let currentPage = 'home';
 
-async function fetchJSON(url) {
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    return resp.json();
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + pageId).classList.add('active');
+    event.currentTarget.classList.add('active');
+    currentPage = pageId;
+    const titles = {home:'Platform Home',overview:'System Overview',schedule:'Schedule Control',telemetry:'Predictive Telemetry'};
+    document.getElementById('page-title').textContent = titles[pageId] || pageId;
+    refresh();
 }
 
-function formatTime(iso) {
-    if (!iso) return "--";
-    return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-}
+function esc(str) { const d = document.createElement("div"); d.textContent = str; return d.innerHTML; }
 
 function formatRelative(iso) {
     if (!iso) return "--";
@@ -944,75 +651,53 @@ function formatRelative(iso) {
     return Math.floor(diff / 3600) + "h ago";
 }
 
-function esc(str) {
-    const d = document.createElement("div");
-    d.textContent = str;
-    return d.innerHTML;
+async function fetchJSON(url) {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    return resp.json();
 }
-
-function severityClass(s) {
-    return s === "critical" ? "danger" : s === "high" ? "warning" : s === "medium" ? "warning" : "info";
-}
-
-// --- Tab Navigation ---
-
-document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-            document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-            btn.classList.add("active");
-            const tab = btn.dataset.tab;
-            document.getElementById("tab-" + tab).classList.add("active");
-            currentTab = tab;
-            refreshTab(tab);
-        });
-    });
-    refresh();
-    refreshTimer = setInterval(refresh, REFRESH_INTERVAL);
-});
-
-// --- Main Refresh ---
 
 async function refresh() {
     try {
-        const [status, health, agents, queue, schedule, alerts] = await Promise.all([
+        const [status, health, agents, queue, schedule] = await Promise.all([
             fetchJSON("/api/status"), fetchJSON("/api/health"),
             fetchJSON("/api/agents"), fetchJSON("/api/queue"),
-            fetchJSON("/api/schedule"), fetchJSON("/api/alerts"),
+            fetchJSON("/api/schedule"),
         ]);
 
-        renderMetrics(status, health);
-        renderAgents(agents);
-        renderQueue(queue);
-        renderAlerts(alerts);
-
+        // Update topbar
         document.getElementById("last-updated").textContent = "Updated " + new Date().toLocaleTimeString();
 
-        // Refresh active tab
-        refreshTab(currentTab);
-
+        if (currentPage === 'home') renderHome(agents, status);
+        if (currentPage === 'overview') renderOverview(status, health, agents, queue);
+        if (currentPage === 'schedule') renderSchedule(schedule);
     } catch (err) {
         console.error("Refresh failed:", err);
         document.getElementById("last-updated").textContent = "Connection error";
     }
 }
 
-async function refreshTab(tab) {
-    try {
-        if (tab === "action-log") await refreshActionLog();
-        if (tab === "schedule") await refreshSchedule();
-        if (tab === "ontology") await refreshOntology();
-        if (tab === "telemetry") await refreshTelemetry();
-        if (tab === "tips") await refreshTips();
-        if (tab === "agentdb") await refreshAgentDB();
-        if (tab === "features") await refreshFeatures();
-    } catch (e) { console.error("Tab refresh failed:", tab, e); }
+function renderHome(agents, status) {
+    const grid = document.getElementById("home-agent-grid");
+    grid.innerHTML = agents.map(a => `<div class="capability-item">
+        <div class="capability-dot ${a.status === 'error' ? 'critical' : 'healthy'}"></div>
+        <div class="capability-info">
+            <div class="capability-name">${esc(a.name)}</div>
+            <div class="capability-role">${esc(AGENT_ROLES[a.name] || '--')}</div>
+        </div>
+    </div>`).join("");
+
+    const intDiv = document.getElementById("home-integrations");
+    intDiv.innerHTML = INTEGRATIONS.map(i => `<div class="integration-chip ${i.connected ? 'connected' : ''}">
+        <span class="int-dot"></span>${esc(i.name)}
+    </div>`).join("");
+
+    document.getElementById("home-agents").textContent = agents.length;
+    document.getElementById("home-tasks").textContent = (status.queue?.completed || 0).toLocaleString();
+    document.getElementById("home-uptime").textContent = (status.uptime || '--').split(' ')[0];
 }
 
-// --- Overview Renderers ---
-
-function renderMetrics(status, health) {
+function renderOverview(status, health, agents, queue) {
     const q = status.queue || {};
     const s = health.system || {};
     document.getElementById("metric-uptime").textContent = status.uptime || "--";
@@ -1025,30 +710,20 @@ function renderMetrics(status, health) {
     document.getElementById("metric-cpu").textContent = s.cpu_percent !== undefined ? s.cpu_percent.toFixed(1) + "%" : "--";
     document.getElementById("metric-mem").textContent = s.memory_percent !== undefined ? s.memory_percent.toFixed(1) + "%" : "--";
 
-    const badge = document.getElementById("overall-status");
-    const overall = health.overall || "unknown";
-    badge.className = "status-badge " + overall;
-    badge.innerHTML = `<span class="status-dot"></span>${overall}`;
-}
-
-function renderAgents(agents) {
     const tbody = document.getElementById("agents-tbody");
-    if (!agents || !agents.length) { tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No agents</td></tr>`; return; }
+    if (!agents || !agents.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No agents</td></tr>'; return; }
     tbody.innerHTML = agents.map(a => `<tr>
         <td><span class="agent-name">${esc(a.name)}</span></td>
-        <td>${esc(AGENT_DESCRIPTIONS[a.name] || "--")}</td>
+        <td>${esc(AGENT_ROLES[a.name] || "--")}</td>
         <td><span class="agent-badge ${a.status}">${a.status}</span></td>
         <td style="font-family:var(--font-mono)">${a.tasks_completed}</td>
-        <td style="font-family:var(--font-mono);${a.error_count > 0 ? "color:var(--danger);font-weight:700" : ""}">${a.error_count}</td>
-        <td style="font-size:12px;color:var(--text-muted)">${formatRelative(a.last_heartbeat)}</td>
+        <td style="font-family:var(--font-mono);${a.error_count > 0 ? 'color:var(--danger);font-weight:700' : ''}">${a.error_count}</td>
     </tr>`).join("");
-}
 
-function renderQueue(queueData) {
-    const tbody = document.getElementById("queue-tbody");
-    const tasks = (queueData.recent_tasks || []).reverse().slice(0, 20);
-    if (!tasks.length) { tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No recent tasks</td></tr>`; return; }
-    tbody.innerHTML = tasks.map(t => `<tr>
+    const qtbody = document.getElementById("queue-tbody");
+    const tasks = (queue.recent_tasks || []).slice(0, 10);
+    if (!tasks.length) { qtbody.innerHTML = '<tr><td colspan="5" class="empty-state">No recent tasks</td></tr>'; return; }
+    qtbody.innerHTML = tasks.map(t => `<tr>
         <td style="font-family:var(--font-mono);font-size:12px">${esc(t.id)}</td>
         <td><span class="agent-name">${esc(t.agent)}</span></td>
         <td>${esc(t.action)}</td>
@@ -1057,655 +732,35 @@ function renderQueue(queueData) {
     </tr>`).join("");
 }
 
-function renderAlerts(alerts) {
-    const c = document.getElementById("alerts-container");
-    if (!alerts || !alerts.length) { c.innerHTML = `<div class="empty-state">No recent alerts</div>`; return; }
-    c.innerHTML = alerts.reverse().slice(0, 20).map(a => `<div class="alert-row">
-        <span class="alert-severity ${a.severity}">${a.severity}</span>
-        <span class="alert-message">${esc(a.message)}</span>
-        <span class="alert-time">${formatTime(a.timestamp)}</span>
-    </div>`).join("");
-}
-
-// --- Action Log ---
-
-async function refreshActionLog() {
-    const [stats, timeline, entries] = await Promise.all([
-        fetchJSON("/api/action-log/stats"),
-        fetchJSON("/api/action-log/timeline?hours=24"),
-        fetchJSON("/api/action-log?limit=50" +
-            (document.getElementById("al-agent-filter")?.value ? "&agent=" + document.getElementById("al-agent-filter").value : "") +
-            (document.getElementById("al-failures-only")?.checked ? "&failures=1" : "")),
-    ]);
-
-    document.getElementById("al-total").textContent = stats.total_entries || 0;
-    document.getElementById("al-rate").textContent = (stats.success_rate || 0) + "%";
-    const rateEl = document.getElementById("al-rate");
-    rateEl.className = "metric-value " + (stats.success_rate >= 95 ? "success" : stats.success_rate >= 80 ? "warning" : "danger");
-    document.getElementById("al-failures").textContent = stats.failures || 0;
-    const failEl = document.getElementById("al-failures");
-    failEl.className = "metric-value" + ((stats.failures || 0) > 0 ? " danger" : "");
-
-    // Populate agent filter
-    const select = document.getElementById("al-agent-filter");
-    if (select && select.options.length <= 1 && stats.agent_breakdown) {
-        Object.keys(stats.agent_breakdown).sort().forEach(name => {
-            const opt = document.createElement("option");
-            opt.value = name;
-            opt.textContent = name;
-            select.appendChild(opt);
-        });
-    }
-
-    // Timeline
-    const tlData = timeline.timeline || [];
-    const maxVal = Math.max(...tlData.map(b => b.total), 1);
-    document.getElementById("al-timeline").innerHTML = tlData.reverse().map(b => {
-        const h = Math.max((b.total / maxVal) * 100, 2);
-        const cls = b.failed > 0 ? "has-failures" : "";
-        return `<div class="timeline-bar ${cls}" style="height:${h}%" title="${b.total} actions (${b.failed} failed) - ${b.hour}h ago"></div>`;
-    }).join("");
-
-    // Table
-    const tbody = document.getElementById("al-tbody");
-    const rows = entries.entries || [];
-    if (!rows.length) { tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No actions recorded</td></tr>`; return; }
-    tbody.innerHTML = rows.map(e => `<tr>
-        <td style="font-size:12px;font-family:var(--font-mono)">${formatTime(e.timestamp)}</td>
-        <td><span class="agent-name">${esc(e.agent)}</span></td>
-        <td><span class="agent-badge ${e.action_type.includes('failed') ? 'error' : e.action_type.includes('completed') ? 'idle' : 'running'}">${esc(e.action_type)}</span></td>
-        <td>${esc(e.action)}</td>
-        <td style="font-family:var(--font-mono);font-size:12px">${e.duration_ms ? e.duration_ms + "ms" : "--"}</td>
-        <td>${e.success ? '<span style="color:var(--success)">OK</span>' : '<span style="color:var(--danger)">FAIL</span>'}</td>
-        <td style="font-size:12px;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.detail || "")}</td>
-    </tr>`).join("");
-}
-
-// Wire up action log filters
-document.addEventListener("DOMContentLoaded", () => {
-    const agentFilter = document.getElementById("al-agent-filter");
-    const failFilter = document.getElementById("al-failures-only");
-    if (agentFilter) agentFilter.addEventListener("change", () => refreshTab("action-log"));
-    if (failFilter) failFilter.addEventListener("change", () => refreshTab("action-log"));
-});
-
-// --- Schedule Control ---
-
-async function refreshSchedule() {
-    const [schedule, recs] = await Promise.all([
-        fetchJSON("/api/schedule"),
-        fetchJSON("/api/hydrospeed/schedule-recommendations"),
-    ]);
-
+function renderSchedule(schedule) {
     const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const tbody = document.getElementById("sched-tbody");
-    if (!schedule || !schedule.length) { tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No jobs</td></tr>`; return; }
-
+    if (!schedule || !schedule.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No jobs</td></tr>'; return; }
     tbody.innerHTML = schedule.map(j => {
         let sched = "";
-        if (j.interval_minutes) sched = `Every ${j.interval_minutes}m`;
-        else if (j.day_of_week !== null && j.day_of_week !== undefined) sched = `${DAYS[j.day_of_week]} ${j.run_time || ""}`;
-        else sched = `Daily ${j.run_time || ""}`;
+        if (j.interval_minutes) sched = "Every " + j.interval_minutes + "m";
+        else if (j.day_of_week !== null && j.day_of_week !== undefined) sched = DAYS[j.day_of_week] + " " + (j.run_time || "");
+        else sched = "Daily " + (j.run_time || "");
         const dot = j.enabled ? '<span class="schedule-enabled"></span>' : '<span class="schedule-disabled"></span>';
         return `<tr>
             <td>${dot}</td>
             <td>${esc(j.name)}</td>
             <td class="schedule-time">${sched}</td>
             <td style="font-size:12px;color:var(--text-muted)">${j.last_run ? formatRelative(j.last_run) : "Never"}</td>
-            <td>
-                <button class="btn btn-sm" onclick="editSchedule('${esc(j.name)}','${j.run_time || "00:00:00"}')">Edit</button>
-                <button class="btn btn-sm ${j.enabled ? 'btn-danger' : 'btn-primary'}" onclick="toggleJob('${esc(j.name)}',${!j.enabled})">${j.enabled ? "Disable" : "Enable"}</button>
-            </td>
-        </tr>`;
-    }).join("");
-
-    // Recommendations
-    const recsDiv = document.getElementById("sched-recommendations");
-    const recommendations = recs.recommendations || [];
-    if (!recommendations.length) { recsDiv.innerHTML = '<div class="empty-state">No recommendations</div>'; return; }
-    recsDiv.innerHTML = recommendations.map(r => `<div class="tip-card">
-        <div class="tip-header">
-            <span class="alert-severity ${r.severity}">${r.severity}</span>
-            <span class="tip-title">${esc(r.type)}</span>
-        </div>
-        <div class="tip-body">${esc(r.message)}</div>
-        ${r.fix ? `<div class="tip-agents">Fix: ${esc(r.fix)}</div>` : ""}
-    </div>`).join("");
-}
-
-function editSchedule(name, currentTime) {
-    editingJob = name;
-    document.getElementById("sched-modal-name").textContent = name;
-    const parts = currentTime.split(":");
-    document.getElementById("sched-hour").value = parseInt(parts[0]) || 0;
-    document.getElementById("sched-minute").value = parseInt(parts[1]) || 0;
-    document.getElementById("sched-modal").style.display = "flex";
-}
-
-function closeModal() { document.getElementById("sched-modal").style.display = "none"; }
-
-async function saveSchedule() {
-    const hour = parseInt(document.getElementById("sched-hour").value);
-    const minute = parseInt(document.getElementById("sched-minute").value);
-    await fetch(`/api/schedule/${editingJob}/update`, {
-        method: "POST", headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ hour, minute }),
-    });
-    closeModal();
-    refreshTab("schedule");
-}
-
-async function toggleJob(name, enabled) {
-    await fetch(`/api/schedule/${name}/toggle`, {
-        method: "POST", headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ enabled }),
-    });
-    refreshTab("schedule");
-}
-
-// --- Hydrospeed Ontology ---
-
-async function refreshOntology() {
-    const [ontology, divisions, flows, proposals] = await Promise.all([
-        fetchJSON("/api/hydrospeed/ontology"),
-        fetchJSON("/api/hydrospeed/divisions"),
-        fetchJSON("/api/hydrospeed/data-flows"),
-        fetchJSON("/api/hydrospeed/proposals"),
-    ]);
-
-    const agents = (ontology.nodes || []).filter(n => n.type === "agent");
-    const integrations = (ontology.nodes || []).filter(n => n.type === "integration");
-    document.getElementById("onto-agents").textContent = agents.length;
-    document.getElementById("onto-integrations").textContent = integrations.length;
-    document.getElementById("onto-flows").textContent = (ontology.edges || []).length;
-
-    // Populate agent select
-    const select = document.getElementById("onto-agent-select");
-    if (select && select.options.length <= 1) {
-        agents.forEach(a => {
-            const opt = document.createElement("option");
-            opt.value = a.id;
-            opt.textContent = `${a.id} - ${a.role}`;
-            select.appendChild(opt);
-        });
-        select.addEventListener("change", () => loadAgentProfile(select.value));
-    }
-
-    // Divisions
-    const divDiv = document.getElementById("onto-divisions");
-    const divNames = { mortgage_ops: "Mortgage Operations", engineering: "Engineering", intelligence: "Intelligence", growth_ops: "Growth Ops" };
-    divDiv.innerHTML = Object.entries(divisions).map(([key, agents]) => `<div class="division-section">
-        <div class="division-name">${divNames[key] || key}</div>
-        <div class="division-agents">
-            ${agents.map(a => `<div class="division-agent" onclick="loadAgentProfile('${a.id}')" title="${a.role}">${a.id}</div>`).join("")}
-        </div>
-    </div>`).join("");
-
-    // Data flow graph
-    const graphDiv = document.getElementById("onto-graph");
-    const flowEdges = flows.flows || [];
-    if (!flowEdges.length) { graphDiv.innerHTML = '<div class="empty-state">No data flows</div>'; return; }
-    graphDiv.innerHTML = flowEdges.map(e => `<div class="flow-edge">
-        <span class="flow-node">${esc(e.from)}</span>
-        <span class="flow-arrow">--&gt;</span>
-        <span class="flow-node">${esc(e.to)}</span>
-        <span class="flow-label">${esc(e.label)}</span>
-    </div>`).join("");
-
-    // Proposals
-    const propDiv = document.getElementById("onto-proposals");
-    const props = proposals.proposals || [];
-    if (!props.length) { propDiv.innerHTML = '<div class="empty-state">No proposals yet. Create one to define new agent workflows.</div>'; return; }
-    propDiv.innerHTML = props.map(p => `<div class="tip-card">
-        <div class="tip-header">
-            <span class="alert-severity ${p.priority}">${p.priority}</span>
-            <span class="tip-title">${esc(p.title)}</span>
-            <span style="font-size:11px;color:var(--text-muted)">${p.id}</span>
-        </div>
-        <div class="tip-body">${esc(p.description)}</div>
-        <div class="tip-agents">Agents: ${p.agents.join(", ")} | Steps: ${p.workflow_steps.length} | Status: ${p.status}</div>
-    </div>`).join("");
-}
-
-async function loadAgentProfile(name) {
-    if (!name) return;
-    const profile = await fetchJSON(`/api/hydrospeed/agent/${name}`);
-    const div = document.getElementById("onto-profile");
-    if (profile.error) { div.innerHTML = `<div class="empty-state">${esc(profile.error)}</div>`; return; }
-
-    const p = profile.profile || {};
-    div.innerHTML = `<div class="profile-section">
-        <div class="profile-label">Agent</div>
-        <div class="profile-value"><span class="agent-name">${esc(p.id)}</span> -- ${esc(p.role)} (${esc(p.division || "")})</div>
-
-        <div class="profile-label">Capabilities</div>
-        <div class="profile-tags">${(p.capabilities || []).map(c => `<span class="profile-tag">${esc(c)}</span>`).join("")}</div>
-
-        <div class="profile-label">Inputs</div>
-        <div class="profile-tags">${(p.inputs || []).map(i => `<span class="profile-tag">${esc(i)}</span>`).join("")}</div>
-
-        <div class="profile-label">Outputs</div>
-        <div class="profile-tags">${(p.outputs || []).map(o => `<span class="profile-tag">${esc(o)}</span>`).join("")}</div>
-
-        <div class="profile-label">Dependencies (upstream)</div>
-        <div class="profile-value">${(profile.dependencies || []).join(", ") || "None"}</div>
-
-        <div class="profile-label">Dependents (downstream)</div>
-        <div class="profile-value">${(profile.dependents || []).join(", ") || "None"}</div>
-
-        <div class="profile-label">Expert Tips for ${esc(p.id)}</div>
-        ${(profile.tips || []).map(t => `<div class="tip-card" style="padding:8px 0">
-            <div class="tip-header"><span class="alert-severity ${t.severity}">${t.severity}</span><span class="tip-title">${esc(t.title)}</span></div>
-            <div class="tip-body">${esc(t.tip)}</div>
-        </div>`).join("")}
-    </div>`;
-
-    document.getElementById("onto-agent-select").value = name;
-}
-
-function showProposalForm() {
-    const title = prompt("Proposal title:");
-    if (!title) return;
-    const description = prompt("Description:");
-    const agents = prompt("Agents (comma-separated, e.g. ATLAS,NEXUS,FORGE):");
-    const steps = prompt("Workflow steps (comma-separated):");
-    if (!agents || !steps) return;
-
-    fetch("/api/hydrospeed/proposals", {
-        method: "POST", headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            title, description: description || "",
-            agents: agents.split(",").map(s => s.trim()),
-            workflow_steps: steps.split(",").map(s => s.trim()),
-        }),
-    }).then(() => refreshTab("ontology"));
-}
-
-// --- Predictive Telemetry ---
-
-async function refreshTelemetry() {
-    const [risks, predictions] = await Promise.all([
-        fetchJSON("/api/telemetry/risks"),
-        fetchJSON("/api/telemetry/predictions"),
-    ]);
-
-    document.getElementById("tele-score").textContent = risks.system_risk || "0.0";
-    const level = risks.system_level || "low";
-    document.getElementById("tele-level").textContent = level;
-    document.getElementById("tele-tracked").textContent = risks.total_tracked || 0;
-    document.getElementById("tele-critical").textContent = (risks.critical_agents || []).length;
-    document.getElementById("tele-predictions").textContent = (predictions.predictions || []).length;
-
-    // System risk badge in header
-    const riskBadge = document.getElementById("system-risk");
-    riskBadge.className = "status-badge " + level;
-    document.getElementById("risk-label").textContent = "risk: " + level;
-
-    // Predictions
-    const predDiv = document.getElementById("tele-pred-list");
-    const preds = predictions.predictions || [];
-    if (!preds.length) { predDiv.innerHTML = '<div class="empty-state">No active predictions -- system is healthy</div>'; return; }
-    predDiv.innerHTML = preds.map(p => `<div class="prediction-card ${p.level === 'critical' ? 'critical' : ''}">
-        <div class="prediction-header">
-            <div><span class="agent-name">${esc(p.agent)}</span> <span class="alert-severity ${p.level}">${p.level}</span></div>
-            <span style="font-size:12px;color:var(--text-muted)">Confidence: ${(p.confidence * 100).toFixed(0)}%</span>
-        </div>
-        <div class="prediction-text">${esc(p.prediction)}</div>
-        <div class="prediction-solutions">
-            ${(p.solutions || []).map(s => `<div style="margin-top:4px">- [${s.severity}] ${esc(s.action)}</div>`).join("")}
-        </div>
-    </div>`).join("");
-
-    // Per-agent risk table
-    const tbody = document.getElementById("tele-agents-tbody");
-    const agentRisks = risks.agents || {};
-    const entries = Object.entries(agentRisks);
-    if (!entries.length) { tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Collecting telemetry...</td></tr>`; return; }
-    tbody.innerHTML = entries.sort((a, b) => b[1].risk_score - a[1].risk_score).map(([name, r]) => {
-        const f = r.factors || {};
-        return `<tr>
-            <td><span class="agent-name">${esc(name)}</span></td>
-            <td style="font-family:var(--font-mono)">${r.risk_score.toFixed(3)} <div class="risk-bar"><div class="risk-fill ${r.level}" style="width:${r.risk_score * 100}%"></div></div></td>
-            <td><span class="alert-severity ${r.level}">${r.level}</span></td>
-            <td>${esc(r.dominant_factor || "--")}</td>
-            <td style="font-family:var(--font-mono);font-size:12px">${((f.error_rate||{}).value||0).toFixed(2)}</td>
-            <td style="font-family:var(--font-mono);font-size:12px">${((r.telemetry||{}).avg_latency_ms||0).toFixed(0)}ms</td>
-            <td style="font-family:var(--font-mono);font-size:12px">${((f.dependency||{}).value||0).toFixed(2)}</td>
         </tr>`;
     }).join("");
 }
 
-// --- Expert Tips ---
-
-async function refreshTips() {
-    const cat = document.getElementById("tips-cat-filter")?.value || "";
-    const data = await fetchJSON("/api/hydrospeed/tips" + (cat ? "?category=" + cat : ""));
-    const tips = data.tips || [];
-
-    document.getElementById("tips-total").textContent = tips.length;
-    document.getElementById("tips-critical").textContent = tips.filter(t => t.severity === "critical").length;
-    const categories = new Set(tips.map(t => t.category));
-    document.getElementById("tips-categories").textContent = categories.size;
-
-    const div = document.getElementById("tips-list");
-    if (!tips.length) { div.innerHTML = '<div class="empty-state">No tips match this filter</div>'; return; }
-    div.innerHTML = tips.map(t => `<div class="tip-card">
-        <div class="tip-header">
-            <span class="alert-severity ${t.severity}">${t.severity}</span>
-            <span class="priority-badge MEDIUM">${esc(t.category)}</span>
-            <span class="tip-title">${esc(t.title)}</span>
-        </div>
-        <div class="tip-body">${esc(t.tip)}</div>
-        <div class="tip-agents">Applies to: ${(t.applies_to || []).join(", ")}</div>
-    </div>`).join("");
-}
-
+// Init
 document.addEventListener("DOMContentLoaded", () => {
-    const catFilter = document.getElementById("tips-cat-filter");
-    if (catFilter) catFilter.addEventListener("change", () => refreshTab("tips"));
+    if (IS_STATIC) {
+        document.getElementById("sidebar-mode").textContent = "Static Fallback Mode";
+    } else {
+        document.getElementById("sidebar-mode").textContent = "Connected to Backend";
+    }
+    refresh();
+    setInterval(refresh, 5000);
 });
-
-// --- Features Guide ---
-
-async function refreshFeatures() {
-    const data = await fetchJSON("/api/features");
-    const div = document.getElementById("features-list");
-    const sections = data.sections || [];
-    if (!sections.length) { div.innerHTML = '<div class="empty-state">No features</div>'; return; }
-
-    div.innerHTML = sections.map(s => `<div class="feature-card">
-        <div class="feature-title">${esc(s.title)}</div>
-        <div class="feature-desc">${esc(s.description)}</div>
-        <div class="feature-meta">
-            <div>
-                <div class="feature-meta-label">Technology</div>
-                <div class="feature-meta-value">${esc(s.tech)}</div>
-            </div>
-            <div>
-                <div class="feature-meta-label">How to Use</div>
-                <div class="feature-meta-value">${esc(s.how_to_use)}</div>
-            </div>
-        </div>
-        ${s.agents ? `<div style="margin-top:12px">
-            <div class="feature-meta-label">Agents</div>
-            <div class="profile-tags">${s.agents.map(a => `<span class="profile-tag" title="${a.division}: ${a.actions.join(', ')}">${a.name}</span>`).join("")}</div>
-        </div>` : ""}
-    </div>`).join("");
-}
-
-// --- Agent Database (Dolt-style version control) ---
-
-let adbBranchesLoaded = false;
-
-async function refreshAgentDB() {
-    const [branches, tables] = await Promise.all([
-        fetchJSON("/api/agentdb/branches"),
-        fetchJSON("/api/agentdb/tables?branch=main"),
-    ]);
-
-    const branchList = branches.branches || [];
-    document.getElementById("adb-branches-count").textContent = branchList.length;
-    document.getElementById("adb-tables-count").textContent = Object.keys((tables.tables || {})).length;
-    const totalRows = Object.values(tables.tables || {}).reduce((sum, t) => sum + (t.row_count || 0), 0);
-    document.getElementById("adb-rows-count").textContent = totalRows;
-
-    // Branches table
-    const tbody = document.getElementById("adb-branches-tbody");
-    tbody.innerHTML = branchList.map(b => {
-        const lastMsg = b.last_commit ? esc(b.last_commit.message).slice(0, 40) : "--";
-        const lastTime = b.last_commit ? formatRelative(b.last_commit.timestamp) : "--";
-        const actions = b.name === "main"
-            ? '<span style="color:var(--text-muted);font-size:12px">protected</span>'
-            : `<button class="btn btn-sm" onclick="mergeBranch('${esc(b.name)}')">Merge</button>
-               <button class="btn btn-sm" onclick="diffBranch('${esc(b.name)}')">Diff</button>`;
-        return `<tr>
-            <td><span class="agent-name">${esc(b.name)}</span></td>
-            <td style="font-size:12px;color:var(--text-muted)">${esc(b.parent || "--")}</td>
-            <td style="font-family:var(--font-mono)">${b.commits}</td>
-            <td style="font-family:var(--font-mono)">${b.total_rows}</td>
-            <td style="font-size:12px" title="${lastMsg}">${lastTime}</td>
-            <td>${actions}</td>
-        </tr>`;
-    }).join("");
-
-    // Schema view
-    const schemaDiv = document.getElementById("adb-schema-view");
-    const tblStats = tables.tables || {};
-    schemaDiv.innerHTML = Object.entries(tblStats).map(([name, info]) => `<div class="schema-table">
-        <div class="schema-table-name">${esc(name)}</div>
-        <div class="schema-columns">${(info.columns || []).map(c => `<span class="schema-col">${esc(c)}</span>`).join("")}</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${info.row_count} rows</div>
-    </div>`).join("");
-
-    // Populate branch selects
-    if (!adbBranchesLoaded) {
-        const selects = ["adb-branch-select", "adb-diff-from", "adb-diff-to", "adb-log-branch"];
-        selects.forEach(id => {
-            const sel = document.getElementById(id);
-            if (!sel) return;
-            sel.innerHTML = "";
-            if (id === "adb-diff-to") {
-                sel.innerHTML = '<option value="">Select branch...</option>';
-            }
-            branchList.forEach(b => {
-                const opt = document.createElement("option");
-                opt.value = b.name;
-                opt.textContent = b.name;
-                sel.appendChild(opt);
-            });
-        });
-
-        // Agent select
-        const agentSel = document.getElementById("adb-agent-select");
-        if (agentSel && agentSel.options.length <= 1) {
-            Object.keys(AGENT_DESCRIPTIONS).forEach(name => {
-                const opt = document.createElement("option");
-                opt.value = name;
-                opt.textContent = name + " - " + AGENT_DESCRIPTIONS[name];
-                agentSel.appendChild(opt);
-            });
-        }
-        adbBranchesLoaded = true;
-    }
-}
-
-async function queryTable() {
-    const branch = document.getElementById("adb-branch-select").value;
-    const table = document.getElementById("adb-table-select").value;
-    const data = await fetchJSON(`/api/agentdb/query/${table}?branch=${branch}&limit=50`);
-    const div = document.getElementById("adb-table-data");
-
-    if (data.error) { div.innerHTML = `<div class="empty-state">${esc(data.error)}</div>`; return; }
-    const rows = data.rows || [];
-    if (!rows.length) { div.innerHTML = `<div class="empty-state">No rows in ${table} on branch ${branch}</div>`; return; }
-
-    const cols = Object.keys(rows[0]);
-    div.innerHTML = `<div style="overflow-x:auto"><table>
-        <thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead>
-        <tbody>${rows.map(r => `<tr>${cols.map(c => {
-            let val = r[c];
-            if (typeof val === "object" && val !== null) val = JSON.stringify(val).slice(0, 80);
-            return `<td style="font-size:12px;font-family:var(--font-mono);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(String(val ?? ""))}</td>`;
-        }).join("")}</tr>`).join("")}
-        </tbody>
-    </table></div>
-    <div style="font-size:12px;color:var(--text-muted);padding:8px">Showing ${rows.length} of ${data.total} rows on <b>${esc(branch)}</b></div>`;
-}
-
-async function computeDiff() {
-    const from = document.getElementById("adb-diff-from").value;
-    const to = document.getElementById("adb-diff-to").value;
-    if (!to) { alert("Select a target branch"); return; }
-
-    const data = await fetchJSON(`/api/agentdb/diff?from=${from}&to=${to}`);
-    const div = document.getElementById("adb-diff-view");
-    const diffs = data.diffs || [];
-
-    if (!diffs.length) {
-        div.innerHTML = `<div class="empty-state">No differences between ${esc(from)} and ${esc(to)}</div>`;
-        return;
-    }
-
-    div.innerHTML = `<div style="font-size:12px;color:var(--text-muted);padding:8px 0">${diffs.length} change(s)</div>` +
-        diffs.map(d => {
-            const typeClass = d.diff_type === "added" ? "diff-added" : d.diff_type === "removed" ? "diff-removed" : "diff-modified";
-            const icon = d.diff_type === "added" ? "+" : d.diff_type === "removed" ? "-" : "~";
-            const detail = d.diff_type === "added"
-                ? JSON.stringify(d.to_row || {}).slice(0, 120)
-                : d.diff_type === "removed"
-                ? JSON.stringify(d.from_row || {}).slice(0, 120)
-                : `FROM: ${JSON.stringify(d.from_row || {}).slice(0, 60)} TO: ${JSON.stringify(d.to_row || {}).slice(0, 60)}`;
-            return `<div class="diff-entry ${typeClass}">
-                <span class="diff-icon">${icon}</span>
-                <span class="diff-table">${esc(d.table)}</span>
-                <span class="diff-id">${esc((d.row_id || "").slice(0, 8))}</span>
-                <span class="diff-detail">${esc(detail)}</span>
-            </div>`;
-        }).join("");
-}
-
-function diffBranch(branch) {
-    document.getElementById("adb-diff-from").value = "main";
-    document.getElementById("adb-diff-to").value = branch;
-    computeDiff();
-}
-
-async function mergeBranch(source) {
-    if (!confirm(`Merge '${source}' into 'main'? This will apply all changes atomically.`)) return;
-    const resp = await fetch("/api/agentdb/merge", {
-        method: "POST", headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ source, target: "main", author: "DASHBOARD" }),
-    });
-    const result = await resp.json();
-    if (result.error) { alert("Merge error: " + result.error); return; }
-    alert(`Merged! Added: ${result.added}, Modified: ${result.modified}, Removed: ${result.removed}`);
-    adbBranchesLoaded = false;
-    refreshTab("agentdb");
-}
-
-async function loadCommitLog() {
-    const branch = document.getElementById("adb-log-branch").value;
-    const data = await fetchJSON(`/api/agentdb/log/${branch}?limit=20`);
-    const div = document.getElementById("adb-commit-log");
-    const commits = data.commits || [];
-
-    if (!commits.length || commits[0]?.error) {
-        div.innerHTML = `<div class="empty-state">No commits on ${esc(branch)}</div>`;
-        return;
-    }
-
-    div.innerHTML = commits.map(c => `<div class="commit-entry">
-        <div class="commit-header">
-            <span class="commit-id">${esc((c.id || "").slice(0, 8))}</span>
-            <span class="commit-author">${esc(c.author)}</span>
-            <span class="commit-time">${formatRelative(c.timestamp)}</span>
-        </div>
-        <div class="commit-message">${esc(c.message)}</div>
-    </div>`).join("");
-}
-
-async function loadAgentDbStatus() {
-    const name = document.getElementById("adb-agent-select").value;
-    if (!name) return;
-    const data = await fetchJSON(`/api/agentdb/agent/${name}`);
-    const div = document.getElementById("adb-agent-status");
-
-    if (data.error) {
-        div.innerHTML = `<div class="empty-state">${esc(data.error)}</div>`;
-        return;
-    }
-
-    const state = data.state || {};
-    const ops = data.recent_operations || [];
-    const diffs = data.diffs || [];
-    const commits = data.recent_commits || [];
-
-    div.innerHTML = `
-        <div class="agent-db-status">
-            <div class="adb-stat-section">
-                <div class="adb-stat-title">Branch: <span class="agent-name">${esc(data.branch)}</span></div>
-                <div class="adb-stat-row">
-                    <span>Pending changes: <b>${data.pending_changes}</b></span>
-                    <span>Status: <span class="agent-badge ${state.status || 'idle'}">${state.status || "unknown"}</span></span>
-                    <span>Tasks: ${state.tasks_completed || 0} completed, ${state.tasks_failed || 0} failed</span>
-                    <span>Health: ${(state.health_score || 1.0).toFixed(2)}</span>
-                </div>
-            </div>
-
-            ${diffs.length ? `<div class="adb-stat-section">
-                <div class="adb-stat-title">Pending Diffs (${diffs.length})</div>
-                ${diffs.slice(0, 10).map(d => {
-                    const tc = d.diff_type === "added" ? "diff-added" : d.diff_type === "removed" ? "diff-removed" : "diff-modified";
-                    return `<div class="diff-entry ${tc}">
-                        <span class="diff-icon">${d.diff_type === "added" ? "+" : d.diff_type === "removed" ? "-" : "~"}</span>
-                        <span class="diff-table">${esc(d.table)}</span>
-                        <span class="diff-id">${esc((d.row_id || "").slice(0, 8))}</span>
-                    </div>`;
-                }).join("")}
-                ${diffs.length > 10 ? `<div style="font-size:12px;color:var(--text-muted)">...and ${diffs.length - 10} more</div>` : ""}
-                <button class="btn btn-sm btn-primary" style="margin-top:8px" onclick="mergeBranch('${esc(data.branch)}')">Merge to main</button>
-            </div>` : ""}
-
-            ${ops.length ? `<div class="adb-stat-section">
-                <div class="adb-stat-title">Recent Operations</div>
-                <table><thead><tr><th>Action</th><th>Status</th><th>Duration</th><th>Time</th></tr></thead>
-                <tbody>${ops.map(o => `<tr>
-                    <td>${esc(o.action)}</td>
-                    <td><span class="agent-badge ${o.status === 'completed' ? 'idle' : 'error'}">${o.status}</span></td>
-                    <td style="font-family:var(--font-mono);font-size:12px">${o.duration_ms ? o.duration_ms + "ms" : "--"}</td>
-                    <td style="font-size:12px;color:var(--text-muted)">${formatRelative(o.created_at)}</td>
-                </tr>`).join("")}</tbody></table>
-            </div>` : ""}
-
-            ${commits.length ? `<div class="adb-stat-section">
-                <div class="adb-stat-title">Recent Commits</div>
-                ${commits.slice(0, 5).map(c => `<div class="commit-entry">
-                    <span class="commit-id">${esc((c.id || "").slice(0, 8))}</span>
-                    <span class="commit-message">${esc(c.message)}</span>
-                    <span class="commit-time">${formatRelative(c.timestamp)}</span>
-                </div>`).join("")}
-            </div>` : ""}
-        </div>`;
-}
-
-function showCreateBranch() {
-    const modal = document.getElementById("adb-modal");
-    document.getElementById("adb-modal-title").textContent = "Create Branch";
-    document.getElementById("adb-modal-body").innerHTML = `
-        <label>Branch name: <input type="text" id="adb-new-branch-name" class="control-input" placeholder="feature/my-branch"></label>
-        <label>From branch:
-            <select id="adb-new-branch-from" class="control-select">
-                ${(document.getElementById("adb-branch-select")?.innerHTML || '<option value="main">main</option>')}
-            </select>
-        </label>`;
-    document.getElementById("adb-modal-confirm").onclick = async () => {
-        const name = document.getElementById("adb-new-branch-name").value.trim();
-        const from = document.getElementById("adb-new-branch-from").value;
-        if (!name) { alert("Branch name required"); return; }
-        const resp = await fetch("/api/agentdb/branches", {
-            method: "POST", headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ name, from }),
-        });
-        const result = await resp.json();
-        if (result.error) { alert(result.error); return; }
-        modal.style.display = "none";
-        adbBranchesLoaded = false;
-        refreshTab("agentdb");
-    };
-    modal.style.display = "flex";
-}
-
-async function showSchemaSQL() {
-    const resp = await fetch("/api/agentdb/schema/sql");
-    const sql = await resp.text();
-    const modal = document.getElementById("adb-modal");
-    document.getElementById("adb-modal-title").textContent = "Database Schema (SQL)";
-    document.getElementById("adb-modal-body").innerHTML = `<pre class="schema-sql">${esc(sql)}</pre>`;
-    document.getElementById("adb-modal-confirm").onclick = () => { modal.style.display = "none"; };
-    document.getElementById("adb-modal-confirm").textContent = "Close";
-    modal.style.display = "flex";
-}
-
 </script>
 </body>
 </html>

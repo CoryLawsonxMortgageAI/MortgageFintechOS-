@@ -67,13 +67,14 @@ function severityClass(s) {
 
 const PAGE_TITLES = {
     home: "Platform Home",
-    command: "Command Center",
+    "command-center": "Command Center",
     "action-log": "Action Log",
     schedule: "Schedule Control",
     ontology: "Ontology Graph",
     telemetry: "Predictive Telemetry",
     tips: "Expert Tips",
     agentdb: "Agent Database",
+    skills: "Agent Skills",
     features: "Features Guide",
 };
 
@@ -107,13 +108,14 @@ function refreshCurrentPage() {
     try {
         switch (currentPage) {
             case "home": refreshHome(); break;
-            case "command": refreshCommand(); break;
+            case "command-center": refreshCommand(); break;
             case "action-log": refreshActionLog(); break;
             case "schedule": refreshSchedule(); break;
             case "ontology": refreshOntology(); break;
             case "telemetry": refreshTelemetry(); break;
             case "tips": refreshTips(); break;
             case "agentdb": refreshAgentDB(); break;
+            case "skills": refreshSkills(); break;
             case "features": refreshFeatures(); break;
         }
     } catch (e) {
@@ -1364,6 +1366,86 @@ async function refreshFeatures() {
         console.error("Features refresh failed:", err);
     }
 }
+
+// ===================================================================
+// Agent Skills
+// ===================================================================
+
+async function refreshSkills() {
+    try {
+        const division = document.getElementById("skills-division-filter")?.value || "";
+        const url = "/api/agents/skills" + (division ? "?division=" + division : "");
+        const data = await fetchJSON(url);
+        const skills = data.skills || {};
+        const summary = data.summary || {};
+
+        // Update metrics
+        const totalEl = document.getElementById("skills-total-count");
+        if (totalEl) totalEl.textContent = summary.total_skills || 0;
+        const divEl = document.getElementById("skills-divisions-count");
+        if (divEl) divEl.textContent = summary.divisions || 4;
+        const catEl = document.getElementById("skills-methods-count");
+        if (catEl) catEl.textContent = (summary.categories || []).length;
+
+        const container = document.getElementById("skills-list");
+        if (!container) return;
+
+        const entries = Object.entries(skills);
+        if (!entries.length) {
+            container.innerHTML = '<div class="empty-state">No skills found for this division</div>';
+            return;
+        }
+
+        container.innerHTML = entries.map(([agentName, agentSkills]) => {
+            if (!agentSkills.length) return "";
+            const role = AGENT_DESCRIPTIONS[agentName] || "";
+            return `<div style="margin-bottom:24px;">
+                <h3 style="margin-bottom:12px;font-size:16px;color:var(--accent-bright);">
+                    <span class="agent-name">${esc(agentName)}</span>
+                    <span style="font-weight:400;color:var(--text-secondary);font-size:13px;margin-left:8px;">${esc(role)}</span>
+                </h3>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:12px;">
+                    ${agentSkills.map(skill => `<div class="card" style="margin:0;">
+                        <div class="card-body" style="padding:16px;">
+                            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
+                                <div style="font-weight:600;font-size:14px;color:var(--text-primary);">${esc(skill.name)}</div>
+                                <span class="alert-severity ${skill.difficulty === 'expert' ? 'critical' : skill.difficulty === 'advanced' ? 'high' : 'medium'}">${esc(skill.difficulty)}</span>
+                            </div>
+                            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">${esc(skill.description)}</div>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+                                <span class="profile-tag">${esc(skill.category)}</span>
+                                <span style="font-size:11px;color:var(--text-muted);">${esc(skill.industry_source)}</span>
+                            </div>
+                            <details style="margin-top:8px;">
+                                <summary style="cursor:pointer;font-size:12px;color:var(--accent-bright);">Methods (${(skill.methods || []).length} steps)</summary>
+                                <ol style="padding-left:20px;margin-top:6px;font-size:12px;color:var(--text-secondary);">
+                                    ${(skill.methods || []).map(m => `<li style="margin-bottom:4px;">${esc(m)}</li>`).join("")}
+                                </ol>
+                            </details>
+                            <div style="display:flex;gap:16px;margin-top:8px;font-size:11px;color:var(--text-muted);">
+                                <span>Inputs: ${(skill.inputs || []).join(", ")}</span>
+                            </div>
+                            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">
+                                Outputs: ${(skill.outputs || []).join(", ")}
+                            </div>
+                        </div>
+                    </div>`).join("")}
+                </div>
+            </div>`;
+        }).join("");
+
+    } catch (err) {
+        console.error("Skills refresh failed:", err);
+        const container = document.getElementById("skills-list");
+        if (container) container.innerHTML = '<div class="empty-state">Skills endpoint not available</div>';
+    }
+}
+
+// Wire skills filter
+document.addEventListener("DOMContentLoaded", () => {
+    const skillsFilter = document.getElementById("skills-division-filter");
+    if (skillsFilter) skillsFilter.addEventListener("change", () => { if (currentPage === "skills") refreshSkills(); });
+});
 
 // ===================================================================
 // Prompt Generator

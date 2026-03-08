@@ -160,6 +160,9 @@ class DashboardServer:
         self._app.router.add_get("/api/agentdb/log/{branch}", self._handle_agentdb_log)
         self._app.router.add_get("/api/agentdb/agent/{agent_name}", self._handle_agentdb_agent_status)
 
+        # Agent Skills
+        self._app.router.add_get("/api/agents/skills", self._handle_agent_skills)
+
         # Static files
         self._app.router.add_static("/static", STATIC_DIR, show_index=False)
 
