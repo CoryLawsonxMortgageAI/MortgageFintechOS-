@@ -141,17 +141,37 @@ optgroup{font-weight:700;color:var(--t);font-size:11px}
     </div></div>
   </div>
   <div class="gr g2">
-    <div class="cd"><div class="ch"><span class="ct">Employees (9 Agents)</span></div>
-    <table><thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Completed</th><th>Errors</th></tr></thead><tbody id="tb-emp"></tbody></table></div>
-    <div class="cd"><div class="ch"><span class="ct">Office Activity Log</span><span class="cc" id="log-ct">0</span></div>
-    <div id="office-log" style="max-height:280px;overflow-y:auto"><div class="empty">Office opened — waiting for tasks</div></div></div>
+    <div>
+      <div class="cd" style="margin-bottom:12px;border-left:3px solid var(--g)"><div class="ch" style="background:var(--gb)"><span class="ct" style="color:var(--g)">Mortgage Operations (4 Agents)</span></div>
+      <table><thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Completed</th><th>Errors</th></tr></thead><tbody id="tb-emp-ops"></tbody></table></div>
+      <div class="cd" style="border-left:3px solid var(--t)"><div class="ch"><span class="ct">Codebase Engineering (6 Agents)</span></div>
+      <table><thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Completed</th><th>Errors</th></tr></thead><tbody id="tb-emp-code"></tbody></table></div>
+    </div>
+    <div>
+      <div class="cd" style="margin-bottom:12px"><div class="ch"><span class="ct">Office Activity Log</span><span class="cc" id="log-ct">0</span></div>
+      <div id="office-log" style="max-height:280px;overflow-y:auto"><div class="empty">Office opened — waiting for tasks</div></div></div>
+      <div class="cd" id="github-ops-card"><div class="ch"><span class="ct">GitHub Code Ops</span><span class="cc" id="gh-ops-st">Not loaded</span></div>
+      <div style="padding:12px">
+        <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="ghLoadOps()">Load Repo Status</button>
+          <button class="btn btn-sm" onclick="ghSecScan()">Run Security Scan</button>
+        </div>
+        <div class="gr g3" style="margin-bottom:8px">
+          <div class="kpi"><div class="kl">Open PRs</div><div class="kv bl" id="gh-prs">—</div></div>
+          <div class="kpi"><div class="kl">Security Alerts</div><div class="kv" id="gh-alerts">—</div></div>
+          <div class="kpi"><div class="kl">Actions Runs</div><div class="kv" id="gh-actions">—</div></div>
+        </div>
+        <div id="gh-commits" style="display:none;font-size:9px;font-family:var(--m);max-height:120px;overflow-y:auto"></div>
+        <div id="gh-sec-result" style="display:none;font-size:9px;font-family:var(--m);padding:6px;background:var(--a);border-radius:4px;margin-top:6px"></div>
+      </div></div>
+    </div>
   </div>
 </div>
 
 <!-- OFFICE MANAGER -->
 <div id="pg-mgr" class="pg">
   <div class="gr g1">
-    <div class="cd"><div class="ch"><span class="ct">Office Manager — AIOS Kernel</span><span class="cc">Supervises all 9 agents</span></div>
+    <div class="cd"><div class="ch"><span class="ct">Office Manager — AIOS Kernel</span><span class="cc">Supervises all 10 agents</span></div>
     <div style="padding:14px">
       <p style="font-size:11px;color:var(--t2);margin-bottom:12px">The Office Manager assigns work to employees, checks quality, routes tasks through the pipeline, and escalates issues. It prioritizes CIPHER (security) as critical, FORGE (deploys) as high, and balances the rest.</p>
       <div class="gr g3" id="mgr-cards"></div>
@@ -162,6 +182,8 @@ optgroup{font-weight:700;color:var(--t);font-size:11px}
         <span style="padding:3px 8px;background:var(--vb);border-radius:4px;color:var(--v);font-weight:600">NEXUS reviews</span><span style="color:var(--td)">→</span>
         <span style="padding:3px 8px;background:var(--rb);border-radius:4px;color:var(--r);font-weight:600">CIPHER scans</span><span style="color:var(--td)">→</span>
         <span style="padding:3px 8px;background:var(--gb);border-radius:4px;color:var(--g);font-weight:600">FORGE deploys</span>
+        <span style="color:var(--td);margin:0 8px">|</span>
+        <span style="padding:3px 8px;background:var(--a);border-radius:4px;font-weight:600">SENTINEL scouts</span><span style="color:var(--td)">→ feeds all</span>
         <span style="color:var(--td);margin:0 8px">|</span>
         <b>Mortgage Ops:</b>
         <span style="padding:3px 8px;background:var(--a);border-radius:4px;font-weight:600">DIEGO→MARTIN→NOVA→JARVIS</span>
@@ -208,6 +230,7 @@ optgroup{font-weight:700;color:var(--t);font-size:11px}
             <div id="lane-CIPHER" class="swim-lane"><div class="lane-hd"><span class="an">CIPHER</span><span class="bd bd-idle" id="live-st-CIPHER">idle</span></div><div class="lane-task" id="live-task-CIPHER">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-CIPHER"></div></div></div>
             <div id="lane-FORGE" class="swim-lane"><div class="lane-hd"><span class="an">FORGE</span><span class="bd bd-idle" id="live-st-FORGE">idle</span></div><div class="lane-task" id="live-task-FORGE">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-FORGE"></div></div></div>
             <div id="lane-STORM" class="swim-lane"><div class="lane-hd"><span class="an">STORM</span><span class="bd bd-idle" id="live-st-STORM">idle</span></div><div class="lane-task" id="live-task-STORM">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-STORM"></div></div></div>
+            <div id="lane-SENTINEL" class="swim-lane"><div class="lane-hd"><span class="an">SENTINEL</span><span class="bd bd-idle" id="live-st-SENTINEL">idle</span></div><div class="lane-task" id="live-task-SENTINEL">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-SENTINEL"></div></div></div>
           </div>
         </div>
       </div>
@@ -368,7 +391,7 @@ optgroup{font-weight:700;color:var(--t);font-size:11px}
     <div class="cd"><div class="ch"><span class="ct">Ticket System & Approvals</span><span class="cc" id="clip-tkt-ct">0 tickets</span></div>
     <div style="padding:12px">
       <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:end;margin-bottom:8px">
-        <div class="cmf"><label>Assign To</label><select id="clip-assign"><option value="DIEGO">DIEGO — Pipeline</option><option value="MARTIN">MARTIN — Documents</option><option value="NOVA">NOVA — Income/DTI</option><option value="JARVIS">JARVIS — Conditions</option><option value="ATLAS">ATLAS — Full-Stack</option><option value="CIPHER">CIPHER — Security</option><option value="FORGE">FORGE — DevOps</option><option value="NEXUS">NEXUS — Code Quality</option><option value="STORM">STORM — Data Eng</option></select></div>
+        <div class="cmf"><label>Assign To</label><select id="clip-assign"><option value="DIEGO">DIEGO — Pipeline</option><option value="MARTIN">MARTIN — Documents</option><option value="NOVA">NOVA — Income/DTI</option><option value="JARVIS">JARVIS — Conditions</option><option value="ATLAS">ATLAS — Full-Stack</option><option value="CIPHER">CIPHER — Security</option><option value="FORGE">FORGE — DevOps</option><option value="NEXUS">NEXUS — Code Quality</option><option value="STORM">STORM — Data Eng</option><option value="SENTINEL">SENTINEL — Codebase Intel</option></select></div>
         <div class="cmf"><label>Ticket Title</label><input id="clip-title" placeholder="e.g. Deploy pricing page to production"></div>
         <button class="btn btn-sm" onclick="clipCreateTicket()">Create</button>
       </div>
@@ -394,7 +417,7 @@ optgroup{font-weight:700;color:var(--t);font-size:11px}
       <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap">
         <div>
           <div style="padding:4px 10px;background:var(--blb);border-radius:4px;font-size:9px;font-weight:700;color:var(--bl);margin-bottom:4px">CTO: ATLAS</div>
-          <div style="font-size:8px;color:var(--td);font-family:var(--m)">NEXUS · CIPHER · FORGE · STORM</div>
+          <div style="font-size:8px;color:var(--td);font-family:var(--m)">NEXUS · CIPHER · FORGE · STORM · SENTINEL</div>
         </div>
         <div>
           <div style="padding:4px 10px;background:var(--gb);border-radius:4px;font-size:9px;font-weight:700;color:var(--g);margin-bottom:4px">COO: DIEGO</div>
@@ -480,23 +503,33 @@ optgroup{font-weight:700;color:var(--t);font-size:11px}
     <div class="cd"><div class="ch"><span class="ct">Connected Services</span></div>
     <div style="padding:12px">
       <div style="margin-bottom:10px;padding:10px;background:var(--a);border-radius:6px;border:1px solid var(--b)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b style="font-size:11px">Notion</b><span class="bd bd-idle" id="notion-st">Ready</span></div>
-        <div style="font-size:10px;color:var(--t2);margin-bottom:6px">Sync notebooks ↔ Notion pages. Push research notes as Notion blocks.</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b style="font-size:11px">Notion</b><span style="font-size:8px;font-family:var(--m);color:var(--td);margin-left:4px">API v2025-09-03</span><span class="bd bd-idle" id="notion-st">Ready</span></div>
+        <div style="font-size:10px;color:var(--t2);margin-bottom:6px">Sync notebooks ↔ Notion pages. Push research notes as Notion blocks. Agents auto-log results.</div>
         <div class="cmf" style="margin-bottom:4px"><label>Notion API Token</label><input id="notion-tok" type="password" placeholder="secret_..."></div>
         <div class="cmf" style="margin-bottom:4px"><label>Database ID</label><input id="notion-db" placeholder="Notion database ID"></div>
-        <button class="btn btn-sm" onclick="notionSync()">Sync to Notion</button>
+        <div class="cmf" style="margin-bottom:4px"><label>Data Source ID (v2025-09-03)</label><input id="notion-ds" placeholder="Data source ID (optional, overrides database ID)"></div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="notionSync()">Sync to Notion</button>
+          <button class="btn btn-sm" onclick="notionBrowse()">Browse Pages</button>
+        </div>
+        <div id="notion-pages" style="display:none;margin-top:6px;max-height:140px;overflow-y:auto;font-size:9px;font-family:var(--m)"></div>
         <span id="notion-log" style="font-size:9px;color:var(--tm);font-family:var(--m);margin-left:6px"></span>
       </div>
       <div style="margin-bottom:10px;padding:10px;background:var(--a);border-radius:6px;border:1px solid var(--b)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b style="font-size:11px">Wispr Flow</b><span class="bd bd-idle" id="wispr-st">Ready</span></div>
-        <div style="font-size:10px;color:var(--t2);margin-bottom:6px">Voice-to-text dictation for notes. Wispr captures speech → Open Notebook stores it.</div>
-        <div class="cmf" style="margin-bottom:4px"><label>Wispr Webhook URL</label><input id="wispr-hook" placeholder="https://hooks.wispr.flow/..."></div>
-        <button class="btn btn-sm" onclick="wisprConnect()">Connect Wispr</button>
+        <div style="font-size:10px;color:var(--t2);margin-bottom:6px">Voice-to-text dictation for loan officers. Wispr captures speech → MARTIN classifies → Notion logs result.</div>
+        <div style="font-size:9px;font-family:var(--m);color:var(--tm);margin-bottom:4px;padding:4px 6px;background:var(--a);border-radius:3px">Webhook endpoint: <b style="color:var(--t)">POST /api/wispr/webhook</b> (configure in Wispr app)</div>
+        <div class="cmf" style="margin-bottom:4px"><label>Wispr Webhook URL (outgoing)</label><input id="wispr-hook" placeholder="https://hooks.wispr.flow/..."></div>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-sm" onclick="wisprConnect()">Connect Wispr</button>
+          <button class="btn btn-sm" onclick="wisprCheckStatus()">Check Status</button>
+        </div>
+        <div id="wispr-notes-ct" style="display:none;margin-top:4px;font-size:9px;font-family:var(--m);color:var(--g)"></div>
         <span id="wispr-log" style="font-size:9px;color:var(--tm);font-family:var(--m);margin-left:6px"></span>
       </div>
       <div style="padding:10px;background:var(--a);border-radius:6px;border:1px solid var(--b)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b style="font-size:11px">Google Drive</b><span class="bd bd-idle" id="gdrive-st">Ready</span></div>
-        <div style="font-size:10px;color:var(--t2);margin-bottom:6px">Import docs/PDFs from Google Drive into Open Notebook as sources. Uses Drive API v3.</div>
+        <div style="font-size:10px;color:var(--t2);margin-bottom:6px">Import docs/PDFs from Google Drive → MARTIN classifies → Notion logs. Uses Drive API v3 with service account.</div>
         <div class="cmf" style="margin-bottom:4px"><label>Drive Folder ID</label><input id="gdrive-fid" placeholder="Google Drive folder ID"></div>
         <button class="btn btn-sm" onclick="gdriveImport()">Import from Drive</button>
         <span id="gdrive-log" style="font-size:9px;color:var(--tm);font-family:var(--m);margin-left:6px"></span>
@@ -573,19 +606,24 @@ docker compose up -d
       <div><span class="bd bd-idle">OK</span> <b>Vercel</b> — Auto-deploy on push to main</div>
       <div><span class="bd" style="background:var(--ab);color:var(--am)">CFG</span> <b>Telegram</b> — Configure token above</div>
       <div><span class="bd" style="background:var(--a);color:var(--tm)">REF</span> <b>NotebookLM</b> — Reference knowledge base</div>
+      <div><span class="bd bd-idle">OK</span> <b>Notion API</b> — v2025-09-03, data_source_id support</div>
+      <div><span class="bd bd-idle">OK</span> <b>Google Drive</b> — API v3, service account JWT</div>
+      <div><span class="bd bd-idle">OK</span> <b>Wispr Flow</b> — Webhook receiver + note classification</div>
+      <div><span class="bd bd-idle">OK</span> <b>GitHub Code Ops</b> — PRs, Actions, Security Scanning</div>
+      <div><span class="bd bd-idle">OK</span> <b>LLM Router</b> — OpenAI + Anthropic + OpenRouter multi-model</div>
     </div></div>
   </div>
 </div>
 
 </div>
-<footer class="ft">MortgageFintechOS AI Office v1.0 · Cory Lawson / The Lawson Group · 9 Agents · Puter.js · <a href="https://github.com/CoryLawsonxMortgageAI/MortgageFintechOS-" target="_blank">GitHub</a></footer>
+<footer class="ft">MortgageFintechOS AI Office v2.0 · Cory Lawson / The Lawson Group · 10 Agents · Notion + Drive + Wispr + GitHub Ops · <a href="https://github.com/CoryLawsonxMortgageAI/MortgageFintechOS-" target="_blank">GitHub</a></footer>
 
 <script>
 const T0=new Date("2026-03-06T04:00:00Z");
-const R={DIEGO:"Pipeline Orchestration",MARTIN:"Document Intelligence",NOVA:"Income & DTI",JARVIS:"Condition Resolution",ATLAS:"Full-Stack Engineering",CIPHER:"Security Engineering",FORGE:"DevOps Engineering",NEXUS:"Code Quality",STORM:"Data Engineering"};
-const TP={DIEGO:"ops",MARTIN:"ops",NOVA:"ops",JARVIS:"ops",ATLAS:"code",CIPHER:"code",FORGE:"code",NEXUS:"code",STORM:"code"};
+const R={DIEGO:"Pipeline Orchestration",MARTIN:"Document Intelligence",NOVA:"Income & DTI",JARVIS:"Condition Resolution",ATLAS:"Full-Stack Engineering",CIPHER:"Security Engineering",FORGE:"DevOps Engineering",NEXUS:"Code Quality",STORM:"Data Engineering",SENTINEL:"Codebase Intelligence"};
+const TP={DIEGO:"ops",MARTIN:"ops",NOVA:"ops",JARVIS:"ops",ATLAS:"code",CIPHER:"code",FORGE:"code",NEXUS:"code",STORM:"code",SENTINEL:"code"};
 let exC=0;
-const A={DIEGO:{s:"idle",e:0,c:47},MARTIN:{s:"idle",e:1,c:132},NOVA:{s:"idle",e:0,c:89},JARVIS:{s:"idle",e:2,c:64},ATLAS:{s:"idle",e:0,c:28},CIPHER:{s:"idle",e:0,c:15},FORGE:{s:"idle",e:1,c:22},NEXUS:{s:"idle",e:0,c:41},STORM:{s:"idle",e:0,c:19}};
+const A={DIEGO:{s:"idle",e:0,c:47},MARTIN:{s:"idle",e:1,c:132},NOVA:{s:"idle",e:0,c:89},JARVIS:{s:"idle",e:2,c:64},ATLAS:{s:"idle",e:0,c:28},CIPHER:{s:"idle",e:0,c:15},FORGE:{s:"idle",e:1,c:22},NEXUS:{s:"idle",e:0,c:41},STORM:{s:"idle",e:0,c:19},SENTINEL:{s:"idle",e:0,c:8}};
 const log=[];
 const ACT={
   DIEGO:["triage_loan","check_pipeline_health","get_pipeline_report","advance_stage","assign_priority"],
@@ -596,7 +634,8 @@ const ACT={
   CIPHER:["owasp_scan","compliance_check","encryption_audit","patch_vulnerability"],
   FORGE:["deploy","rollback","build_pipeline","rotate_secrets"],
   NEXUS:["review_pr","generate_tests","analyze_debt","refactor"],
-  STORM:["build_etl","optimize_query","hmda_report","uldd_export"]
+  STORM:["build_etl","optimize_query","hmda_report","uldd_export"],
+  SENTINEL:["scan_codebase","analyze_trends","reverse_engineer","generate_build_plan"]
 };
 const MODELS=[
   {n:"Claude Opus 4.5",p:"Anthropic",s:87,t:["code","reason"],f:false,c:"$15/M"},
@@ -703,6 +742,12 @@ function run(ag,act){
     if(act==="hmda_report")return{records:rI(500,5000),format:"pipe-delimited",status:"generated"};
     if(act==="uldd_export")return{loans:rI(10,100),investor:pk(["FNMA","FHLMC"]),status:"exported"};
   }
+  if(ag==="SENTINEL"){
+    if(act==="scan_codebase")return{files_scanned:rI(50,300),languages:["Python","TypeScript","YAML"],patterns_found:rI(3,12),recommendations:rI(2,6)};
+    if(act==="analyze_trends")return{trends:pk(["AI agents","RAG pipelines","edge ML"]),relevance:"high",action_items:rI(2,5)};
+    if(act==="reverse_engineer")return{target:pk(["auth module","API gateway","data pipeline"]),components:rI(3,8),build_ready:true};
+    if(act==="generate_build_plan")return{steps:rI(5,12),agents_involved:rI(2,4),estimated_files:rI(8,25)};
+  }
   return{status:"done"};
 }
 
@@ -798,6 +843,7 @@ function getCreds(){return{
   tg_chat_id:document.getElementById("tg-cid")?.value||"",
   notion_token:document.getElementById("notion-tok")?.value||"",
   notion_db:document.getElementById("notion-db")?.value||"",
+  notion_ds:document.getElementById("notion-ds")?.value||"",
   on_url:document.getElementById("on-url")?.value||"http://localhost:5055",
   on_password:document.getElementById("on-pw")?.value||"",
   gdrive_fid:document.getElementById("gdrive-fid")?.value||""
@@ -819,7 +865,7 @@ async function syncBus(event,source,targets,payload){
       if(t==="notion"&&creds.notion_token&&creds.notion_db){
         const title=(payload.title||event)+" — "+new Date().toLocaleTimeString();
         const content=payload.content||payload.message||JSON.stringify(payload).substring(0,1500);
-        const r=await fetch("https://api.notion.com/v1/pages",{method:"POST",headers:{"Authorization":"Bearer "+creds.notion_token,"Content-Type":"application/json","Notion-Version":"2022-06-28"},body:JSON.stringify({parent:{database_id:creds.notion_db},properties:{Name:{title:[{text:{content:title}}]}},children:[{object:"block",type:"paragraph",paragraph:{rich_text:[{text:{content:content.substring(0,2000)}}]}}]})});
+        const r=await fetch("https://api.notion.com/v1/pages",{method:"POST",headers:{"Authorization":"Bearer "+creds.notion_token,"Content-Type":"application/json","Notion-Version":"2025-09-03"},body:JSON.stringify({parent:creds.notion_ds?{data_source_id:creds.notion_ds}:{database_id:creds.notion_db},properties:{Name:{title:[{text:{content:title}}]}},children:[{object:"block",type:"paragraph",paragraph:{rich_text:[{text:{content:content.substring(0,2000)}}]}}]})});
         const d=await r.json();results.notion=d.id?"✓ page:"+d.id.substring(0,8):"✗ error";
       }
       if(t==="open_notebook"&&creds.on_url){
@@ -855,7 +901,7 @@ async function tgTest(){
   if(!tok||!cid){box.textContent="Enter token and chat ID first";return;}
   box.textContent="Testing connection...";
   try{
-    const r=await fetch("https://api.telegram.org/bot"+tok+"/sendMessage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:cid,text:"✅ MortgageFintechOS AI Office connected\n9 agents operational\nUptime: "+up()})});
+    const r=await fetch("https://api.telegram.org/bot"+tok+"/sendMessage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:cid,text:"✅ MortgageFintechOS AI Office connected\n10 agents operational\nUptime: "+up()})});
     const d=await r.json();
     box.textContent=d.ok?"✓ Message sent successfully!":"✗ Error: "+JSON.stringify(d);
   }catch(e){box.textContent="✗ "+e.message;}
@@ -866,7 +912,7 @@ const clipTickets=[];
 const clipAudit=[];
 const clipBudgets={
   DIEGO:{budget:500,used:127},MARTIN:{budget:500,used:312},NOVA:{budget:400,used:198},JARVIS:{budget:400,used:89},
-  ATLAS:{budget:800,used:445},CIPHER:{budget:600,used:201},FORGE:{budget:700,used:388},NEXUS:{budget:500,used:267},STORM:{budget:300,used:45}
+  ATLAS:{budget:800,used:445},CIPHER:{budget:600,used:201},FORGE:{budget:700,used:388},NEXUS:{budget:500,used:267},STORM:{budget:300,used:45},SENTINEL:{budget:400,used:112}
 };
 let clipConnected=false;
 
@@ -1027,13 +1073,13 @@ async function onChat(){
   },800+Math.random()*1500);
 }
 async function notionSync(){
-  const tok=document.getElementById("notion-tok").value;const db=document.getElementById("notion-db").value;
+  const tok=document.getElementById("notion-tok").value;const db=document.getElementById("notion-db").value;const ds=document.getElementById("notion-ds")?.value||"";
   const log=document.getElementById("notion-log");
-  if(!tok||!db){log.textContent="Enter token + database ID";return;}
+  if(!tok||(!db&&!ds)){log.textContent="Enter token + database ID or data source ID";return;}
   log.textContent="Syncing...";
   try{
-    const r=await fetch("https://api.notion.com/v1/pages",{method:"POST",headers:{"Authorization":"Bearer "+tok,"Content-Type":"application/json","Notion-Version":"2022-06-28"},
-    body:JSON.stringify({parent:{database_id:db},properties:{Name:{title:[{text:{content:"MortgageFintechOS Research — "+new Date().toLocaleDateString()}}]}}})});
+    const r=await fetch("https://api.notion.com/v1/pages",{method:"POST",headers:{"Authorization":"Bearer "+tok,"Content-Type":"application/json","Notion-Version":"2025-09-03"},
+    body:JSON.stringify({parent:ds?{data_source_id:ds}:{database_id:db},properties:{Name:{title:[{text:{content:"MortgageFintechOS Research — "+new Date().toLocaleDateString()}}]}}})});
     const d=await r.json();log.textContent=d.id?"✓ Page created: "+d.id.substring(0,8):"✗ "+JSON.stringify(d).substring(0,60);
     document.getElementById("notion-st").textContent="Connected";document.getElementById("notion-st").className="bd bd-idle";
   }catch(e){log.textContent="✗ "+e.message;}
@@ -1048,20 +1094,99 @@ function wisprConnect(){
   const tgts=["open_notebook"];if(document.getElementById("notion-tok")?.value)tgts.push("notion");
   syncBus("wispr_connected","Wispr",tgts,{title:"Wispr Flow Connected",message:"Voice-to-text pipeline active. Dictated notes will auto-sync to Open Notebook and Notion.",action:"create_note"});
 }
-function gdriveImport(){
+async function gdriveImport(){
   const fid=document.getElementById("gdrive-fid").value;
   const log=document.getElementById("gdrive-log");
   if(!fid){log.textContent="Enter folder ID";return;}
   log.textContent="Importing files from Drive folder...";
-  setTimeout(()=>{
-    const files=["FHA_HB_4000.1_Update.pdf","FNMA_Selling_Guide_2026.pdf","Borrower_Income_Analysis.docx"];
-    files.forEach((f,i)=>{setTimeout(()=>{onSources.unshift({name:f,type:"pdf",status:i<2?"indexed":"processing"});renderKB();},i*600);});
-    log.textContent="✓ Imported "+files.length+" files from Google Drive";
-    // SYNC: Drive files → Open Notebook + notify Notion + Telegram
-    const tgts=["open_notebook"];if(document.getElementById("notion-tok")?.value)tgts.push("notion");if(document.getElementById("tg-tok")?.value)tgts.push("telegram");
-    syncBus("drive_import","GoogleDrive",tgts,{title:"Google Drive Import: "+files.length+" files",message:"Imported: "+files.join(", "),content:"Files imported from Google Drive and added as Open Notebook sources",action:"add_source"});
-    document.getElementById("gdrive-st").textContent="Connected";document.getElementById("gdrive-st").className="bd bd-idle";
-  },1500);
+  try{
+    const r=await fetch("/api/drive/import",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({folder_id:fid})});
+    if(r.ok){
+      const d=await r.json();
+      const files=d.files||[];
+      files.forEach(f=>{onSources.unshift({name:f.name||f.filename||"file",type:f.type||"pdf",status:"indexed"});});
+      renderKB();
+      log.textContent="✓ Imported "+(d.imported||files.length)+" files from Google Drive";
+      document.getElementById("gdrive-st").textContent="Connected";document.getElementById("gdrive-st").className="bd bd-idle";
+      const tgts=[];if(document.getElementById("notion-tok")?.value)tgts.push("notion");if(document.getElementById("tg-tok")?.value)tgts.push("telegram");
+      if(tgts.length)syncBus("drive_import","GoogleDrive",tgts,{title:"Drive Import: "+(d.imported||files.length)+" files",message:"Files imported via backend API"});
+      return;
+    }
+  }catch(e){}
+  // Fallback: simulate if backend not available
+  const files=["FHA_HB_4000.1_Update.pdf","FNMA_Selling_Guide_2026.pdf","Borrower_Income_Analysis.docx"];
+  files.forEach((f,i)=>{setTimeout(()=>{onSources.unshift({name:f,type:"pdf",status:i<2?"indexed":"processing"});renderKB();},i*600);});
+  log.textContent="✓ Imported "+files.length+" files (simulated — backend not connected)";
+  document.getElementById("gdrive-st").textContent="Connected";document.getElementById("gdrive-st").className="bd bd-idle";
+}
+async function notionBrowse(){
+  const tok=document.getElementById("notion-tok").value;const db=document.getElementById("notion-db").value;const ds=document.getElementById("notion-ds")?.value||"";
+  const log=document.getElementById("notion-log");const pagesEl=document.getElementById("notion-pages");
+  if(!tok||(!db&&!ds)){log.textContent="Enter token + database/data source ID";return;}
+  log.textContent="Browsing pages...";
+  try{
+    // Try backend first
+    const r=await fetch("/api/notion/pages?filter=");
+    if(r.ok){const d=await r.json();const results=d.results||d||[];
+      pagesEl.style.display="block";
+      pagesEl.innerHTML=results.slice(0,10).map(p=>{const title=p.properties?.Name?.title?.[0]?.plain_text||p.id||"Untitled";return'<div style="padding:3px 0;border-bottom:1px solid var(--b)"><b>'+esc(title)+'</b> <span style="color:var(--td)">'+((p.id||"").substring(0,8))+'</span></div>';}).join("")||'<div class="empty">No pages found</div>';
+      log.textContent="✓ "+results.length+" pages loaded";return;}
+  }catch(e){}
+  // Direct Notion API fallback
+  try{
+    const endpoint=ds?"https://api.notion.com/v1/data_sources/"+ds+"/query":"https://api.notion.com/v1/databases/"+db+"/query";
+    const r=await fetch(endpoint,{method:"POST",headers:{"Authorization":"Bearer "+tok,"Content-Type":"application/json","Notion-Version":"2025-09-03"},body:JSON.stringify({page_size:10})});
+    const d=await r.json();const results=d.results||[];
+    pagesEl.style.display="block";
+    pagesEl.innerHTML=results.slice(0,10).map(p=>{const title=p.properties?.Name?.title?.[0]?.plain_text||p.id||"Untitled";return'<div style="padding:3px 0;border-bottom:1px solid var(--b)"><b>'+esc(title)+'</b> <span style="color:var(--td)">'+((p.id||"").substring(0,8))+'</span></div>';}).join("")||'<div class="empty">No pages found</div>';
+    log.textContent="✓ "+results.length+" pages";
+    document.getElementById("notion-st").textContent="Connected";document.getElementById("notion-st").className="bd bd-idle";
+  }catch(e){log.textContent="✗ "+e.message;}
+}
+async function wisprCheckStatus(){
+  const log=document.getElementById("wispr-log");const ctEl=document.getElementById("wispr-notes-ct");
+  try{
+    const r=await fetch("/api/wispr/status");
+    if(r.ok){const d=await r.json();
+      if(d.configured){document.getElementById("wispr-st").textContent="Connected";document.getElementById("wispr-st").className="bd bd-idle";
+        ctEl.style.display="block";ctEl.textContent="✓ Wispr configured — "+d.notes_processed+" notes processed";
+      }else{log.textContent="Wispr not configured on backend — set WISPR_WEBHOOK_SECRET";}
+      return;}
+  }catch(e){}
+  log.textContent="Backend not available — configure webhook manually";
+}
+async function ghLoadOps(){
+  const stEl=document.getElementById("gh-ops-st");stEl.textContent="Loading...";
+  try{
+    const [prs,sec,actions,commits]=await Promise.all([
+      fetch("/api/github/prs").then(r=>r.ok?r.json():{}).catch(()=>({})),
+      fetch("/api/github/security").then(r=>r.ok?r.json():{}).catch(()=>({})),
+      fetch("/api/github/actions").then(r=>r.ok?r.json():{}).catch(()=>({})),
+      fetch("/api/github/commits").then(r=>r.ok?r.json():{}).catch(()=>({}))
+    ]);
+    const prList=prs.pull_requests||prs||[];
+    const alertCount=(sec.code_scanning_alerts||[]).length+(sec.dependabot_alerts||[]).length+(sec.secret_scanning_alerts||[]).length;
+    const runsList=actions.workflow_runs||actions||[];
+    document.getElementById("gh-prs").textContent=Array.isArray(prList)?prList.length:"—";
+    document.getElementById("gh-alerts").textContent=alertCount||"0";
+    document.getElementById("gh-alerts").className="kv"+(alertCount>0?" er":"");
+    document.getElementById("gh-actions").textContent=Array.isArray(runsList)?runsList.length:"—";
+    // Show recent commits
+    const commitList=commits.commits||commits||[];
+    if(Array.isArray(commitList)&&commitList.length){
+      const el=document.getElementById("gh-commits");el.style.display="block";
+      el.innerHTML='<b>Recent Commits:</b><br>'+commitList.slice(0,5).map(c=>'<div style="padding:2px 0;border-bottom:1px solid var(--b)">'+esc((c.commit?.message||c.message||"").substring(0,60))+' <span style="color:var(--td)">'+esc((c.sha||"").substring(0,7))+'</span></div>').join("");
+    }
+    stEl.textContent="Connected";
+  }catch(e){stEl.textContent="Error: "+e.message;}
+}
+async function ghSecScan(){
+  const el=document.getElementById("gh-sec-result");el.style.display="block";el.textContent="Queuing security scan...";
+  try{
+    const r=await fetch("/api/github/security/scan",{method:"POST"});
+    if(r.ok){const d=await r.json();el.innerHTML='<span style="color:var(--g)">✓ Scan queued</span> — Task ID: '+(d.task_id||"submitted")+' — Status: '+(d.status||"queued");}
+    else{el.textContent="Failed to queue scan: HTTP "+r.status;}
+  }catch(e){el.textContent="Backend not available — "+e.message;}
 }
 function renderKB(){
   document.getElementById("on-nb-ct").textContent=onNotebooks.length;
@@ -1080,13 +1205,15 @@ function render(){
   const tc=Object.values(A).reduce((s,a)=>s+a.c,0);
   document.getElementById("kpis").innerHTML=`
     <div class="kpi"><div class="kl">Uptime</div><div class="kv">${up()}</div></div>
-    <div class="kpi"><div class="kl">Employees</div><div class="kv">9</div></div>
+    <div class="kpi"><div class="kl">Employees</div><div class="kv">10</div></div>
     <div class="kpi"><div class="kl">Tasks Done</div><div class="kv ok">${tc}</div></div>
     <div class="kpi"><div class="kl">Errors</div><div class="kv${Object.values(A).reduce((s,a)=>s+a.e,0)>0?' er':''}">${Object.values(A).reduce((s,a)=>s+a.e,0)}</div></div>
     <div class="kpi"><div class="kl">LLM Models</div><div class="kv bl">500+</div></div>
     <div class="kpi"><div class="kl">CPU</div><div class="kv">${(15+Math.random()*10).toFixed(1)}%</div></div>
     <div class="kpi"><div class="kl">Memory</div><div class="kv">${(42+Math.random()*8).toFixed(1)}%</div></div>`;
-  document.getElementById("tb-emp").innerHTML=Object.entries(A).map(([n,a])=>`<tr><td><span class="an">${n}</span></td><td style="font-size:10px;color:var(--tm)">${R[n]}</td><td><span class="bd bd-${a.s}">${a.s}</span></td><td style="font-family:var(--m);font-size:10px">${a.c}</td><td style="font-family:var(--m);font-size:10px;${a.e>0?'color:var(--r);font-weight:700':''}">${a.e}</td></tr>`).join("");
+  const empRow=(n,a)=>`<tr><td><span class="an">${n}</span></td><td style="font-size:10px;color:var(--tm)">${R[n]}</td><td><span class="bd bd-${a.s}">${a.s}</span></td><td style="font-family:var(--m);font-size:10px">${a.c}</td><td style="font-family:var(--m);font-size:10px;${a.e>0?'color:var(--r);font-weight:700':''}">${a.e}</td></tr>`;
+  document.getElementById("tb-emp-ops").innerHTML=Object.entries(A).filter(([n])=>TP[n]==="ops").map(([n,a])=>empRow(n,a)).join("");
+  document.getElementById("tb-emp-code").innerHTML=Object.entries(A).filter(([n])=>TP[n]==="code").map(([n,a])=>empRow(n,a)).join("");
   document.getElementById("log-ct").textContent=log.length;
   const logBox=document.getElementById("office-log");
   if(log.length)logBox.innerHTML=log.slice(0,20).map(l=>`<div class="office-log"><span class="ol-time">${fmt(l.ts)}</span><span class="ol-mgr">${l.mgr}</span><span class="ol-msg">${esc(l.msg)}</span></div>`).join("");
@@ -1146,7 +1273,7 @@ let liveCodeCount=0;
 const liveLog=[];
 const liveTimes=[];
 const OPS_AGENTS=["DIEGO","MARTIN","NOVA","JARVIS"];
-const CODE_AGENTS=["ATLAS","NEXUS","CIPHER","FORGE","STORM"];
+const CODE_AGENTS=["ATLAS","NEXUS","CIPHER","FORGE","STORM","SENTINEL"];
 
 function liveStart(){
   if(liveRunning)return;

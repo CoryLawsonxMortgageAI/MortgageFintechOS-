@@ -1,9 +1,12 @@
 """GitHub integration client for MortgageFintechOS.
 
-Provides async GitHub API operations for issue creation, commenting,
-and daily status reporting.
+Provides async GitHub API operations for issue tracking, repository
+content management, pull requests, GitHub Actions CI/CD, and
+security scanning (code scanning, Dependabot, secret scanning).
 """
 
+import base64
+import json
 from datetime import datetime, timezone
 from typing import Any
 
@@ -26,6 +29,10 @@ class GitHubClient:
             "Authorization": f"token {token}",
             "Accept": "application/vnd.github.v3+json",
         }
+
+    # ═══════════════════════════════════════════════════════
+    # ISSUE TRACKING
+    # ═══════════════════════════════════════════════════════
 
     async def create_issue(
         self,
@@ -122,14 +129,504 @@ class GitHubClient:
             "",
             "### Result",
             "```json",
+            json.dumps(result, indent=2, default=str),
+            "```",
+            "",
+            "---",
+            "*Auto-created by MortgageFintechOS*",
         ]
-
-        import json
-        body_lines.append(json.dumps(result, indent=2, default=str))
-        body_lines.extend(["```", "", "---", "*Auto-created by MortgageFintechOS*"])
 
         return await self.create_issue(
             title=title,
             body="\n".join(body_lines),
             labels=[f"agent-{agent_name.lower()}", "automated"],
         )
+
+    # ═══════════════════════════════════════════════════════
+    # REPOSITORY CONTENT OPERATIONS (for ATLAS)
+    # ═══════════════════════════════════════════════════════
+
+    async def get_file_content(self, path: str, ref: str = "main") -> dict[str, Any]:
+        """Read a file from the repository."""
+        url = f"{GITHUB_API}/repos/{self._repo}/contents/{path}"
+        params = {"ref": ref}
+
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.get(url, params=params) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    content = base64.b64decode(data.get("content", "")).decode("utf-8", errors="replace")
+                    self._log.info("file_read", path=path, size=len(content))
+                    return {
+                        "path": path,
+                        "content": content,
+                        "sha": data.get("sha", ""),
+                        "size": data.get("size", 0),
+                    }
+                elif resp.status == 404:
+                    return {"error": "File not found", "path": path, "status": 404}
+                else:
+                    error = await resp.text()
+                    return {"error": error[:200], "status": resp.status}
+
+    async def create_or_update_file(
+        self,
+        path: str,
+        content: str,
+        message: str,
+        branch: str = "main",
+        sha: str = "",
+    ) -> dict[str, Any]:
+        """Create or update a file in the repository."""
+        url = f"{GITHUB_API}/repos/{self._repo}/contents/{path}"
+        encoded = base64.b64encode(content.encode()).decode()
+        payload: dict[str, Any] = {
+            "message": message,
+            "content": encoded,
+            "branch": branch,
+        }
+        if sha:
+            payload["sha"] = sha
+
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.put(url, json=payload) as resp:
+                data = await resp.json()
+                if resp.status in (200, 201):
+                    self._log.info("file_written", path=path, branch=branch)
+                    return {
+                        "path": path,
+                        "sha": data.get("content", {}).get("sha", ""),
+                        "commit_sha": data.get("commit", {}).get("sha", ""),
+                        "url": data.get("content", {}).get("html_url", ""),
+                    }
+                else:
+                    self._log.error("file_write_failed", path=path, status=resp.status)
+                    return {"error": str(data)[:200], "status": resp.status}
+
+    async def list_directory(self, path: str = "", ref: str = "main") -> dict[str, Any]:
+        """List directory contents."""
+        url = f"{GITHUB_API}/repos/{self._repo}/contents/{path}"
+        params = {"ref": ref}
+
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.get(url, params=params) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if isinstance(data, list):
+                        items = [{"name": f["name"], "type": f["type"], "path": f["path"], "size": f.get("size", 0)} for f in data]
+                        return {"path": path, "items": items, "count": len(items)}
+                    return {"path": path, "items": [], "count": 0}
+                else:
+                    error = await resp.text()
+                    return {"error": error[:200], "status": resp.status}
+
+    async def create_branch(self, branch_name: str, from_ref: str = "main") -> dict[str, Any]:
+        """Create a new branch from a reference."""
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.get(f"{GITHUB_API}/repos/{self._repo}/git/ref/heads/{from_ref}") as resp:
+                if resp.status != 200:
+                    error = await resp.text()
+                    return {"error": f"Source ref not found: {error[:100]}", "status": resp.status}
+                ref_data = await resp.json()
+                sha = ref_data["object"]["sha"]
+
+            payload = {"ref": f"refs/heads/{branch_name}", "sha": sha}
+            async with session.post(f"{GITHUB_API}/repos/{self._repo}/git/refs", json=payload) as resp:
+                if resp.status == 201:
+                    self._log.info("branch_created", branch=branch_name, from_ref=from_ref)
+                    return {"branch": branch_name, "sha": sha}
+                else:
+                    error = await resp.text()
+                    return {"error": error[:200], "status": resp.status}
+
+    async def delete_branch(self, branch_name: str) -> dict[str, Any]:
+        """Delete a branch."""
+        url = f"{GITHUB_API}/repos/{self._repo}/git/refs/heads/{branch_name}"
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.delete(url) as resp:
+                if resp.status == 204:
+                    self._log.info("branch_deleted", branch=branch_name)
+                    return {"deleted": branch_name}
+                else:
+                    error = await resp.text()
+                    return {"error": error[:200], "status": resp.status}
+
+    # ═══════════════════════════════════════════════════════
+    # PULL REQUEST OPERATIONS (for NEXUS)
+    # ═══════════════════════════════════════════════════════
+
+    async def create_pull_request(
+        self, title: str, body: str, head: str, base: str = "main",
+    ) -> dict[str, Any]:
+        """Create a pull request."""
+        url = f"{GITHUB_API}/repos/{self._repo}/pulls"
+        payload = {"title": title, "body": body, "head": head, "base": base}
+
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.post(url, json=payload) as resp:
+                data = await resp.json()
+                if resp.status == 201:
+                    self._log.info("pr_created", number=data["number"], title=title)
+                    return {"number": data["number"], "url": data["html_url"], "state": data["state"]}
+                else:
+                    return {"error": str(data)[:200], "status": resp.status}
+
+    async def get_pull_request(self, pr_number: int) -> dict[str, Any]:
+        """Get pull request details."""
+        url = f"{GITHUB_API}/repos/{self._repo}/pulls/{pr_number}"
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.get(url) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    return {
+                        "number": data["number"],
+                        "title": data["title"],
+                        "state": data["state"],
+                        "body": data.get("body", ""),
+                        "user": data["user"]["login"],
+                        "head": data["head"]["ref"],
+                        "base": data["base"]["ref"],
+                        "mergeable": data.get("mergeable"),
+                        "additions": data.get("additions", 0),
+                        "deletions": data.get("deletions", 0),
+                        "changed_files": data.get("changed_files", 0),
+                        "url": data["html_url"],
+                        "created_at": data["created_at"],
+                        "updated_at": data["updated_at"],
+                    }
+                else:
+                    error = await resp.text()
+                    return {"error": error[:200], "status": resp.status}
+
+    async def get_pr_diff(self, pr_number: int) -> dict[str, Any]:
+        """Get the diff of a pull request."""
+        url = f"{GITHUB_API}/repos/{self._repo}/pulls/{pr_number}"
+        headers = {**self._headers, "Accept": "application/vnd.github.v3.diff"}
+
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.get(url) as resp:
+                if resp.status == 200:
+                    diff = await resp.text()
+                    self._log.info("pr_diff_fetched", pr=pr_number, size=len(diff))
+                    return {"pr_number": pr_number, "diff": diff, "size": len(diff)}
+                else:
+                    error = await resp.text()
+                    return {"error": error[:200], "status": resp.status}
+
+    async def get_pr_files(self, pr_number: int) -> dict[str, Any]:
+        """Get list of files changed in a PR."""
+        url = f"{GITHUB_API}/repos/{self._repo}/pulls/{pr_number}/files"
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.get(url) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    files = [{
+                        "filename": f["filename"],
+                        "status": f["status"],
+                        "additions": f["additions"],
+                        "deletions": f["deletions"],
+                        "patch": f.get("patch", "")[:2000],
+                    } for f in data]
+                    return {"files": files, "count": len(files)}
+                else:
+                    error = await resp.text()
+                    return {"error": error[:200], "status": resp.status}
+
+    async def create_review(
+        self, pr_number: int, body: str, event: str = "COMMENT",
+        comments: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Submit a PR review. event: APPROVE, REQUEST_CHANGES, COMMENT."""
+        url = f"{GITHUB_API}/repos/{self._repo}/pulls/{pr_number}/reviews"
+        payload: dict[str, Any] = {"body": body, "event": event}
+        if comments:
+            payload["comments"] = comments
+
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.post(url, json=payload) as resp:
+                data = await resp.json()
+                if resp.status == 200:
+                    self._log.info("review_submitted", pr=pr_number, event=event)
+                    return {"id": data.get("id"), "state": data.get("state"), "url": data.get("html_url", "")}
+                else:
+                    return {"error": str(data)[:200], "status": resp.status}
+
+    async def list_pull_requests(self, state: str = "open", per_page: int = 30) -> dict[str, Any]:
+        """List pull requests."""
+        url = f"{GITHUB_API}/repos/{self._repo}/pulls"
+        params = {"state": state, "per_page": per_page, "sort": "updated", "direction": "desc"}
+
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.get(url, params=params) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    prs = [{
+                        "number": pr["number"],
+                        "title": pr["title"],
+                        "state": pr["state"],
+                        "user": pr["user"]["login"],
+                        "head": pr["head"]["ref"],
+                        "base": pr["base"]["ref"],
+                        "created_at": pr["created_at"],
+                        "updated_at": pr["updated_at"],
+                        "url": pr["html_url"],
+                    } for pr in data]
+                    return {"pull_requests": prs, "count": len(prs)}
+                else:
+                    error = await resp.text()
+                    return {"error": error[:200], "status": resp.status}
+
+    async def merge_pull_request(self, pr_number: int, method: str = "squash") -> dict[str, Any]:
+        """Merge a pull request. method: merge, squash, rebase."""
+        url = f"{GITHUB_API}/repos/{self._repo}/pulls/{pr_number}/merge"
+        payload = {"merge_method": method}
+
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.put(url, json=payload) as resp:
+                data = await resp.json()
+                if resp.status == 200:
+                    self._log.info("pr_merged", pr=pr_number, method=method)
+                    return {"merged": True, "sha": data.get("sha", ""), "message": data.get("message", "")}
+                else:
+                    return {"error": str(data)[:200], "status": resp.status}
+
+    # ═══════════════════════════════════════════════════════
+    # GITHUB ACTIONS / CI-CD (for FORGE)
+    # ═══════════════════════════════════════════════════════
+
+    async def trigger_workflow(
+        self, workflow_id: str, ref: str = "main", inputs: dict[str, str] | None = None
+    ) -> dict[str, Any]:
+        """Trigger a GitHub Actions workflow dispatch."""
+        url = f"{GITHUB_API}/repos/{self._repo}/actions/workflows/{workflow_id}/dispatches"
+        payload: dict[str, Any] = {"ref": ref}
+        if inputs:
+            payload["inputs"] = inputs
+
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.post(url, json=payload) as resp:
+                if resp.status == 204:
+                    self._log.info("workflow_triggered", workflow=workflow_id, ref=ref)
+                    return {"triggered": True, "workflow": workflow_id, "ref": ref}
+                else:
+                    error = await resp.text()
+                    return {"error": error[:200], "status": resp.status}
+
+    async def list_workflow_runs(self, workflow_id: str = "", per_page: int = 10) -> dict[str, Any]:
+        """List recent workflow runs."""
+        if workflow_id:
+            url = f"{GITHUB_API}/repos/{self._repo}/actions/workflows/{workflow_id}/runs"
+        else:
+            url = f"{GITHUB_API}/repos/{self._repo}/actions/runs"
+        params = {"per_page": per_page}
+
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.get(url, params=params) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    runs = [{
+                        "id": r["id"],
+                        "name": r.get("name", ""),
+                        "status": r["status"],
+                        "conclusion": r.get("conclusion"),
+                        "branch": r["head_branch"],
+                        "event": r["event"],
+                        "created_at": r["created_at"],
+                        "updated_at": r["updated_at"],
+                        "url": r["html_url"],
+                    } for r in data.get("workflow_runs", [])]
+                    return {"runs": runs, "total_count": data.get("total_count", 0)}
+                else:
+                    error = await resp.text()
+                    return {"error": error[:200], "status": resp.status}
+
+    async def get_workflow_run(self, run_id: int) -> dict[str, Any]:
+        """Get details of a specific workflow run."""
+        url = f"{GITHUB_API}/repos/{self._repo}/actions/runs/{run_id}"
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.get(url) as resp:
+                if resp.status == 200:
+                    r = await resp.json()
+                    return {
+                        "id": r["id"], "name": r.get("name", ""),
+                        "status": r["status"], "conclusion": r.get("conclusion"),
+                        "branch": r["head_branch"], "event": r["event"],
+                        "run_started_at": r.get("run_started_at"), "url": r["html_url"],
+                    }
+                else:
+                    error = await resp.text()
+                    return {"error": error[:200], "status": resp.status}
+
+    async def cancel_workflow_run(self, run_id: int) -> dict[str, Any]:
+        """Cancel a workflow run."""
+        url = f"{GITHUB_API}/repos/{self._repo}/actions/runs/{run_id}/cancel"
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.post(url) as resp:
+                if resp.status == 202:
+                    self._log.info("workflow_cancelled", run_id=run_id)
+                    return {"cancelled": True, "run_id": run_id}
+                else:
+                    error = await resp.text()
+                    return {"error": error[:200], "status": resp.status}
+
+    # ═══════════════════════════════════════════════════════
+    # SECURITY SCANNING (for CIPHER)
+    # ═══════════════════════════════════════════════════════
+
+    async def list_code_scanning_alerts(self, state: str = "open") -> dict[str, Any]:
+        """List code scanning (SAST) alerts."""
+        url = f"{GITHUB_API}/repos/{self._repo}/code-scanning/alerts"
+        params = {"state": state, "per_page": 100}
+
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.get(url, params=params) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    alerts = [{
+                        "number": a["number"],
+                        "rule_id": a["rule"]["id"],
+                        "rule_description": a["rule"].get("description", ""),
+                        "severity": a["rule"].get("security_severity_level", a["rule"].get("severity", "")),
+                        "state": a["state"],
+                        "tool": a.get("tool", {}).get("name", ""),
+                        "file": a.get("most_recent_instance", {}).get("location", {}).get("path", ""),
+                        "created_at": a["created_at"],
+                        "url": a["html_url"],
+                    } for a in data]
+                    return {"alerts": alerts, "count": len(alerts)}
+                elif resp.status == 404:
+                    return {"alerts": [], "count": 0, "note": "Code scanning not enabled"}
+                else:
+                    error = await resp.text()
+                    return {"error": error[:200], "status": resp.status}
+
+    async def list_dependabot_alerts(self, state: str = "open") -> dict[str, Any]:
+        """List Dependabot vulnerability alerts."""
+        url = f"{GITHUB_API}/repos/{self._repo}/dependabot/alerts"
+        params = {"state": state, "per_page": 100}
+
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.get(url, params=params) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    alerts = [{
+                        "number": a["number"],
+                        "state": a["state"],
+                        "package": a.get("dependency", {}).get("package", {}).get("name", ""),
+                        "ecosystem": a.get("dependency", {}).get("package", {}).get("ecosystem", ""),
+                        "severity": a.get("security_advisory", {}).get("severity", ""),
+                        "summary": a.get("security_advisory", {}).get("summary", ""),
+                        "cve_id": a.get("security_advisory", {}).get("cve_id", ""),
+                        "created_at": a["created_at"],
+                        "url": a["html_url"],
+                    } for a in data]
+                    return {"alerts": alerts, "count": len(alerts)}
+                elif resp.status == 404:
+                    return {"alerts": [], "count": 0, "note": "Dependabot not enabled"}
+                else:
+                    error = await resp.text()
+                    return {"error": error[:200], "status": resp.status}
+
+    async def list_secret_scanning_alerts(self, state: str = "open") -> dict[str, Any]:
+        """List secret scanning alerts."""
+        url = f"{GITHUB_API}/repos/{self._repo}/secret-scanning/alerts"
+        params = {"state": state, "per_page": 100}
+
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.get(url, params=params) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    alerts = [{
+                        "number": a["number"],
+                        "state": a["state"],
+                        "secret_type": a.get("secret_type_display_name", a.get("secret_type", "")),
+                        "resolution": a.get("resolution"),
+                        "created_at": a["created_at"],
+                        "url": a["html_url"],
+                    } for a in data]
+                    return {"alerts": alerts, "count": len(alerts)}
+                elif resp.status == 404:
+                    return {"alerts": [], "count": 0, "note": "Secret scanning not enabled"}
+                else:
+                    error = await resp.text()
+                    return {"error": error[:200], "status": resp.status}
+
+    async def get_security_summary(self) -> dict[str, Any]:
+        """Aggregate all security alerts into a single summary."""
+        code_alerts = await self.list_code_scanning_alerts()
+        dep_alerts = await self.list_dependabot_alerts()
+        secret_alerts = await self.list_secret_scanning_alerts()
+
+        return {
+            "code_scanning": {"count": code_alerts.get("count", 0), "alerts": code_alerts.get("alerts", [])[:10]},
+            "dependabot": {"count": dep_alerts.get("count", 0), "alerts": dep_alerts.get("alerts", [])[:10]},
+            "secret_scanning": {"count": secret_alerts.get("count", 0), "alerts": secret_alerts.get("alerts", [])[:10]},
+            "total_open": code_alerts.get("count", 0) + dep_alerts.get("count", 0) + secret_alerts.get("count", 0),
+            "scanned_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+    # ═══════════════════════════════════════════════════════
+    # REPO METADATA
+    # ═══════════════════════════════════════════════════════
+
+    async def get_repo_info(self) -> dict[str, Any]:
+        """Get repository metadata."""
+        url = f"{GITHUB_API}/repos/{self._repo}"
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.get(url) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    return {
+                        "name": data["full_name"],
+                        "description": data.get("description", ""),
+                        "default_branch": data["default_branch"],
+                        "language": data.get("language", ""),
+                        "stars": data.get("stargazers_count", 0),
+                        "forks": data.get("forks_count", 0),
+                        "open_issues": data.get("open_issues_count", 0),
+                        "size_kb": data.get("size", 0),
+                        "private": data["private"],
+                        "updated_at": data["updated_at"],
+                        "url": data["html_url"],
+                    }
+                else:
+                    error = await resp.text()
+                    return {"error": error[:200], "status": resp.status}
+
+    async def list_commits(self, sha: str = "main", path: str = "", per_page: int = 20) -> dict[str, Any]:
+        """List recent commits."""
+        url = f"{GITHUB_API}/repos/{self._repo}/commits"
+        params: dict[str, Any] = {"sha": sha, "per_page": per_page}
+        if path:
+            params["path"] = path
+
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.get(url, params=params) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    commits = [{
+                        "sha": c["sha"][:7],
+                        "message": c["commit"]["message"].split("\n")[0],
+                        "author": c["commit"]["author"]["name"],
+                        "date": c["commit"]["author"]["date"],
+                        "url": c["html_url"],
+                    } for c in data]
+                    return {"commits": commits, "count": len(commits)}
+                else:
+                    error = await resp.text()
+                    return {"error": error[:200], "status": resp.status}
+
+    async def list_branches(self, per_page: int = 30) -> dict[str, Any]:
+        """List repository branches."""
+        url = f"{GITHUB_API}/repos/{self._repo}/branches"
+        params = {"per_page": per_page}
+
+        async with aiohttp.ClientSession(headers=self._headers) as session:
+            async with session.get(url, params=params) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    branches = [{"name": b["name"], "sha": b["commit"]["sha"][:7], "protected": b.get("protected", False)} for b in data]
+                    return {"branches": branches, "count": len(branches)}
+                else:
+                    error = await resp.text()
+                    return {"error": error[:200], "status": resp.status}

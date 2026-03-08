@@ -10,7 +10,7 @@ from typing import Any
 
 import structlog
 
-from agents.base import BaseAgent
+from agents.base import BaseAgent, AgentCategory
 from core.task_queue import Task
 
 logger = structlog.get_logger()
@@ -60,7 +60,7 @@ class MartinAgent(BaseAgent):
     """MARTIN: Document intelligence — OCR, classification, fraud detection."""
 
     def __init__(self, max_retries: int = 3):
-        super().__init__(name="MARTIN", max_retries=max_retries)
+        super().__init__(name="MARTIN", max_retries=max_retries, category=AgentCategory.MORTGAGE)
         self._document_store: dict[str, list[dict[str, Any]]] = {}
 
     async def execute(self, task: Task) -> dict[str, Any]:

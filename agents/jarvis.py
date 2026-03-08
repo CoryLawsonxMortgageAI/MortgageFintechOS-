@@ -10,7 +10,7 @@ from typing import Any
 
 import structlog
 
-from agents.base import BaseAgent
+from agents.base import BaseAgent, AgentCategory
 from core.task_queue import Task
 
 logger = structlog.get_logger()
@@ -129,7 +129,7 @@ class JarvisAgent(BaseAgent):
     """JARVIS: Condition resolution — LOE drafting, compliance citations."""
 
     def __init__(self, max_retries: int = 3):
-        super().__init__(name="JARVIS", max_retries=max_retries)
+        super().__init__(name="JARVIS", max_retries=max_retries, category=AgentCategory.MORTGAGE)
         self._conditions: dict[str, list[dict[str, Any]]] = {}
 
     async def execute(self, task: Task) -> dict[str, Any]:
