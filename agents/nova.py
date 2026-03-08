@@ -10,7 +10,7 @@ from typing import Any
 
 import structlog
 
-from agents.base import BaseAgent
+from agents.base import BaseAgent, AgentCategory
 from core.task_queue import Task
 
 logger = structlog.get_logger()
@@ -41,7 +41,7 @@ class NovaAgent(BaseAgent):
     """NOVA: Income & DTI — W-2 dual-method, Schedule C, risk scoring."""
 
     def __init__(self, max_retries: int = 3):
-        super().__init__(name="NOVA", max_retries=max_retries)
+        super().__init__(name="NOVA", max_retries=max_retries, category=AgentCategory.MORTGAGE)
 
     async def execute(self, task: Task) -> dict[str, Any]:
         action = task.action

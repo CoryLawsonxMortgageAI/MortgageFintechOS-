@@ -11,6 +11,10 @@ import structlog
 from core.task_queue import Task
 
 if TYPE_CHECKING:
+    from integrations.github_client import GitHubClient
+    from integrations.notion_client import NotionClient
+    from integrations.gdrive_client import GDriveClient
+    from integrations.llm_router import LLMRouter
     from persistence.state_store import StateStore
 
 logger = structlog.get_logger()
@@ -23,11 +27,17 @@ class AgentStatus(str, Enum):
     STOPPED = "stopped"
 
 
+class AgentCategory(str, Enum):
+    MORTGAGE = "mortgage"
+    ENGINEERING = "engineering"
+
+
 class BaseAgent(ABC):
     """Base class for all MortgageFintechOS agents."""
 
-    def __init__(self, name: str, max_retries: int = 3):
+    def __init__(self, name: str, max_retries: int = 3, category: AgentCategory = AgentCategory.MORTGAGE):
         self.name = name
+        self.category = category
         self.status = AgentStatus.IDLE
         self.last_heartbeat: datetime = datetime.now(timezone.utc)
         self.error_count: int = 0
@@ -35,6 +45,10 @@ class BaseAgent(ABC):
         self.max_retries = max_retries
         self._running = False
         self._state_store: "StateStore | None" = None
+        self._github: "GitHubClient | None" = None
+        self._notion: "NotionClient | None" = None
+        self._gdrive: "GDriveClient | None" = None
+        self._llm: "LLMRouter | None" = None
         self._log = logger.bind(agent=name)
 
     @abstractmethod
@@ -78,6 +92,43 @@ class BaseAgent(ABC):
     def _update_heartbeat(self) -> None:
         self.last_heartbeat = datetime.now(timezone.utc)
 
+    # --- Integration hooks ---
+
+    def set_integrations(
+        self,
+        github: "GitHubClient | None" = None,
+        notion: "NotionClient | None" = None,
+        gdrive: "GDriveClient | None" = None,
+        llm: "LLMRouter | None" = None,
+    ) -> None:
+        """Inject integration clients for this agent to use."""
+        self._github = github
+        self._notion = notion
+        self._gdrive = gdrive
+        self._llm = llm
+        self._log.info("integrations_set", github=bool(github), notion=bool(notion), gdrive=bool(gdrive), llm=bool(llm))
+
+    async def llm_complete(
+        self,
+        action: str,
+        system_prompt: str,
+        user_prompt: str,
+        temperature: float = 0.3,
+        max_tokens: int = 4096,
+    ) -> str:
+        """Route an LLM completion through the router. Returns response text."""
+        if not self._llm:
+            return ""
+        result = await self._llm.complete(
+            agent_name=self.name,
+            action=action,
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+        return result.get("response", "")
+
     # --- Persistence hooks ---
 
     def set_state_store(self, store: "StateStore") -> None:
@@ -108,6 +159,7 @@ class BaseAgent(ABC):
     def get_info(self) -> dict[str, Any]:
         return {
             "name": self.name,
+            "category": self.category.value,
             "status": self.status.value,
             "last_heartbeat": self.last_heartbeat.isoformat(),
             "error_count": self.error_count,
