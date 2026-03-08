@@ -1,1480 +1,1711 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MortgageFintechOS — AI Office</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⬡</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://js.puter.com/v2/"></script>
-<style>
-/* MortgageFintechOS AI Office — v2 Production UI/UX */
-:root{
-  --w:#fff;--bg:#fafafa;--s:#fff;--a:#f4f4f5;--b:#e4e4e7;--t:#09090b;--t2:#27272a;
-  --tm:#71717a;--td:#a1a1aa;--g:#16a34a;--gb:#f0fdf4;--gbb:#bbf7d0;
-  --r:#dc2626;--rb:#fef2f2;--am:#92400e;--ab:#fef3c7;
-  --bl:#09090b;--blb:#f4f4f5;--v:#09090b;--vb:#f4f4f5;
-  --f:'Instrument Sans',-apple-system,sans-serif;
-  --m:'IBM Plex Mono','SF Mono',monospace;
-  --rd:6px;--sh:0 1px 2px rgba(0,0,0,.04);--sh-h:0 2px 8px rgba(0,0,0,.07)
+<script>
+// Static hosting detection — if not on localhost:8080, use simulation mode
+const IS_STATIC = !location.origin.includes('localhost:8080');
+if (IS_STATIC) {
+    const origFetch = window.fetch;
+    window.fetch = function(url, opts) {
+        if (typeof url === 'string' && url.startsWith('/api/')) {
+            // Return simulated data for static hosting
+            return Promise.resolve(new Response(JSON.stringify(getSimulatedData(url)), {
+                headers: {'Content-Type': 'application/json'}
+            }));
+        }
+        return origFetch.apply(this, arguments);
+    };
+    function getSimulatedData(url) {
+        const agents = [
+            {name:'DIEGO',status:'idle',tasks_completed:147,error_count:0,last_heartbeat:new Date().toISOString()},
+            {name:'MARTIN',status:'idle',tasks_completed:89,error_count:1,last_heartbeat:new Date().toISOString()},
+            {name:'NOVA',status:'idle',tasks_completed:203,error_count:0,last_heartbeat:new Date().toISOString()},
+            {name:'JARVIS',status:'idle',tasks_completed:156,error_count:2,last_heartbeat:new Date().toISOString()},
+            {name:'ATLAS',status:'running',tasks_completed:312,error_count:0,last_heartbeat:new Date().toISOString()},
+            {name:'NEXUS',status:'idle',tasks_completed:78,error_count:0,last_heartbeat:new Date().toISOString()},
+            {name:'CIPHER',status:'idle',tasks_completed:45,error_count:0,last_heartbeat:new Date().toISOString()},
+            {name:'FORGE',status:'idle',tasks_completed:67,error_count:1,last_heartbeat:new Date().toISOString()},
+            {name:'STORM',status:'idle',tasks_completed:94,error_count:0,last_heartbeat:new Date().toISOString()},
+            {name:'SENTINEL',status:'idle',tasks_completed:23,error_count:0,last_heartbeat:new Date().toISOString()},
+            {name:'HUNTER',status:'idle',tasks_completed:34,error_count:0,last_heartbeat:new Date().toISOString()},
+            {name:'HERALD',status:'idle',tasks_completed:12,error_count:0,last_heartbeat:new Date().toISOString()},
+            {name:'AMBASSADOR',status:'idle',tasks_completed:8,error_count:0,last_heartbeat:new Date().toISOString()}
+        ];
+        if (url.includes('/api/status')) return {running:true,uptime:'24h 13m 47s',degraded:false,agents:Object.fromEntries(agents.map(a=>[a.name,a])),queue:{pending:3,completed:1268,failed:4},health:'healthy'};
+        if (url.includes('/api/health')) return {overall:'healthy',agents:Object.fromEntries(agents.map(a=>[a.name,a])),queue:{pending:3,completed:1268,failed:4},system:{uptime_seconds:87227,cpu_percent:12.4,memory_percent:34.2,memory_used_mb:2187}};
+        if (url.includes('/api/agents')) return agents;
+        if (url.includes('/api/queue')) return {pending:3,completed:1268,failed:4,total_processed:1272,recent_tasks:[]};
+        if (url.includes('/api/schedule')) return [{name:'document_audit',run_time:'06:00:00',interval_minutes:null,day_of_week:null,last_run:new Date().toISOString(),enabled:true},{name:'income_recalculation',run_time:'06:30:00',interval_minutes:null,day_of_week:null,last_run:new Date().toISOString(),enabled:true},{name:'pipeline_health_check',run_time:'07:00:00',interval_minutes:null,day_of_week:null,last_run:new Date().toISOString(),enabled:true},{name:'queue_health_check',run_time:'00:00:00',interval_minutes:60,day_of_week:null,last_run:new Date().toISOString(),enabled:true},{name:'weekly_pipeline_report',run_time:'08:00:00',interval_minutes:null,day_of_week:0,last_run:null,enabled:true}];
+        if (url.includes('/api/alerts')) return [];
+        if (url.includes('/api/actionlog')) return {entries:[],agent_counts:{},timeline:{}};
+        if (url.includes('/api/telemetry')) return {agents:{},predictions:[],system_risk:0.12};
+        if (url.includes('/api/agentdb')) return {branches:['main'],tables:6,total_records:0};
+        if (url.includes('/api/hydrospeed')) return {nodes:[],edges:[],divisions:{}};
+        return {};
+    }
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:13px}
-body{font-family:var(--f);background:var(--bg);color:var(--t);line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-.hd{background:var(--t);color:#fff;height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.hd-l{display:flex;align-items:center;gap:12px}
-.lgi{width:20px;height:20px;background:rgba(255,255,255,.1);border-radius:3px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:7px;font-weight:700;font-family:var(--m);border:1px solid rgba(255,255,255,.12)}
-.lgt{font-size:12px;font-weight:700;letter-spacing:-.2px;color:#fff}.lgt span{font-weight:400;opacity:.4}
-.sep{width:1px;height:14px;background:rgba(255,255,255,.12)}
-.pill{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:8px;font-weight:600;font-family:var(--m);background:rgba(255,255,255,.08);color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.6px;border:1px solid rgba(255,255,255,.06)}
-.dot{width:5px;height:5px;border-radius:50%;background:#4ade80;animation:pulse 2s ease infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
-.nav{background:var(--s);border-bottom:1px solid var(--b);padding:0 24px;display:flex;gap:0;overflow-x:auto;scrollbar-width:none}
-.nav::-webkit-scrollbar{display:none}
-.nt{padding:10px 16px;font-size:11px;font-weight:600;color:var(--td);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s}
-.nt:hover{color:var(--t2)}.nt.on{color:var(--t);border-bottom-color:var(--t)}
-.app{max-width:1440px;margin:0 auto;padding:16px 24px 48px}
-.pg{display:none;animation:fadeIn .2s ease}.pg.on{display:block}
-@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-.gr{display:grid;gap:12px;margin-bottom:12px}
-.g7{grid-template-columns:repeat(7,1fr)}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}.g1{grid-template-columns:1fr}
-.kpi{background:var(--s);border:1px solid var(--b);border-radius:var(--rd);padding:14px 16px;box-shadow:var(--sh);transition:box-shadow .2s,transform .2s}
-.kpi:hover{box-shadow:var(--sh-h);transform:translateY(-1px)}
-.kl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--td);font-family:var(--m);margin-bottom:4px}
-.kv{font-size:20px;font-weight:700;font-family:var(--m);letter-spacing:-.5px;line-height:1.1}.kv.ok{color:var(--g)}.kv.er{color:var(--r)}.kv.bl{color:var(--t)}
-.cd{background:var(--s);border:1px solid var(--b);border-radius:var(--rd);box-shadow:var(--sh);overflow:hidden}
-.ch{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b);background:rgba(0,0,0,.008)}
-.ct{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
-.cc{font-size:9px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--a);color:var(--tm);font-family:var(--m);border:1px solid var(--b)}
-table{width:100%;border-collapse:collapse}
-thead th{text-align:left;padding:8px 14px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--td);font-family:var(--m);background:var(--a);border-bottom:1px solid var(--b)}
-tbody td{padding:8px 14px;border-bottom:1px solid #f4f4f5;font-size:11px;color:var(--t2);vertical-align:middle}
-tbody tr:last-child td{border-bottom:none}
-tbody tr:nth-child(even){background:rgba(0,0,0,.007)}
-tbody tr:hover{background:rgba(0,0,0,.018)}
-.an{font-weight:700;font-family:var(--m);font-size:11px;color:var(--t);letter-spacing:-.2px}
-.bd{display:inline-flex;padding:2px 7px;border-radius:3px;font-size:9px;font-weight:600;font-family:var(--m);text-transform:uppercase;letter-spacing:.2px}
-.bd-idle{background:var(--gb);color:var(--g);border:1px solid var(--gbb)}
-.bd-running{background:var(--a);color:var(--t);border:1px solid var(--b)}
-.bd-error{background:var(--rb);color:var(--r);border:1px solid #fecaca}
-.bd-reviewing{background:var(--a);color:var(--tm);border:1px solid var(--b)}
-.bd-completed{background:var(--gb);color:var(--g);border:1px solid var(--gbb)}
-.bd-stopped{background:var(--a);color:var(--td);border:1px solid var(--b)}
-.pr{font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px;font-family:var(--m)}
-.pr-HIGH{background:var(--ab);color:var(--am)}.pr-MEDIUM{background:var(--a);color:var(--tm)}.pr-LOW{background:var(--a);color:var(--td)}.pr-CRITICAL{background:var(--rb);color:var(--r)}
-.cmf label{display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--td);font-family:var(--m);margin-bottom:3px}
-.cmf select,.cmf input,.cmf textarea{width:100%;padding:6px 10px;border:1px solid var(--b);border-radius:4px;font-size:11px;font-family:var(--f);background:var(--s);color:var(--t);outline:none;transition:border-color .15s,box-shadow .15s}
-.cmf select:focus,.cmf input:focus,.cmf textarea:focus{border-color:var(--t);box-shadow:0 0 0 2px rgba(9,9,11,.06)}
-.btn{padding:6px 16px;background:var(--t);color:#fff;border:none;border-radius:4px;font-size:11px;font-weight:600;font-family:var(--f);cursor:pointer;white-space:nowrap;transition:background .12s,transform .1s,box-shadow .12s}
-.btn:hover{background:#27272a;box-shadow:0 1px 3px rgba(0,0,0,.12)}.btn:active{transform:scale(.97)}
-.btn:disabled{background:var(--td);cursor:not-allowed;transform:none;box-shadow:none}
-.btn-sm{padding:4px 12px;font-size:10px}
-.btn-bl{background:var(--t)}.btn-bl:hover{background:#27272a}
-.btn-g{background:var(--g)}.btn-g:hover{background:#15803d}
-.btn-v{background:var(--t)}.btn-v:hover{background:#27272a}
-.rbox{background:var(--a);border:1px solid var(--b);border-radius:4px;padding:12px;font-family:var(--m);font-size:10px;line-height:1.6;max-height:260px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;color:var(--t2);display:none}.rbox.on{display:block}
-.chat-box{background:var(--a);border:1px solid var(--b);border-radius:var(--rd);padding:12px;min-height:200px;max-height:360px;overflow-y:auto;font-size:11px}
-.msg{margin-bottom:8px;padding:8px 12px;border-radius:8px;max-width:82%;line-height:1.45}
-.msg-u{background:var(--t);color:#fff;margin-left:auto;border-bottom-right-radius:2px}
-.msg-a{background:var(--s);border:1px solid var(--b);border-bottom-left-radius:2px}
-.msg-m{font-size:9px;font-weight:600;color:var(--tm);font-family:var(--m);margin-bottom:3px}
-.office-log{font-size:10px;font-family:var(--m);padding:7px 14px;border-bottom:1px solid #f4f4f5;display:flex;gap:10px;align-items:flex-start;transition:background .1s}
-.office-log:hover{background:rgba(0,0,0,.015)}
-.ol-time{color:var(--td);font-size:9px;flex-shrink:0;width:60px}
-.ol-mgr{color:var(--t);font-weight:600;flex-shrink:0;width:80px}
-.ol-msg{color:var(--t2);flex:1}
-.empty{padding:28px;text-align:center;color:var(--td);font-size:11px;font-family:var(--m)}
-.ft{text-align:center;padding:20px;font-size:9px;color:var(--td);font-family:var(--m);border-top:1px solid var(--b);margin-top:12px;letter-spacing:.2px}
-.ft a{color:var(--tm);text-decoration:none}.ft a:hover{color:var(--t)}
-optgroup{font-weight:700;color:var(--t);font-size:11px}
-/* Live Monitor swim lanes */
-.swim-lane{padding:8px 14px;border-bottom:1px solid #f4f4f5;transition:background .2s}
-.swim-lane.active{background:rgba(22,163,74,.04)}
-.lane-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
-.lane-task{font-size:10px;font-family:var(--m);color:var(--tm);margin-bottom:4px;min-height:15px;transition:color .2s}
-.lane-task.working{color:var(--t);font-weight:600}
-.lane-bar{height:3px;background:var(--a);border-radius:2px;overflow:hidden}
-.lane-fill{height:100%;width:0;background:var(--g);border-radius:2px;transition:width .3s linear}
-.lane-fill.code{background:var(--t)}
-.lane-fill.err{background:var(--r)}
-@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-.lane-fill.running{background:linear-gradient(90deg,var(--g) 0%,var(--gbb) 50%,var(--g) 100%);background-size:200% 100%;animation:shimmer 1.5s infinite}
-.lane-fill.running.code{background:linear-gradient(90deg,var(--t) 0%,var(--td) 50%,var(--t) 100%);background-size:200% 100%;animation:shimmer 1.5s infinite}
-@media(max-width:1100px){.g7{grid-template-columns:repeat(4,1fr)}.g2,.g3{grid-template-columns:1fr}}
-@media(max-width:700px){.g7{grid-template-columns:repeat(2,1fr)}.app{padding:12px 16px 32px}.hd{padding:0 16px}.nav{padding:0 16px}}
+</script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MortgageFintechOS — Dashboard</title>
+    <style>
+/* MortgageFintechOS Dashboard — Professional Theme v3 */
+
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-card: #ffffff;
+    --text-primary: #1a1a1a;
+    --text-secondary: #4a4a4a;
+    --text-muted: #6c757d;
+    --border: #dee2e6;
+    --border-light: #e9ecef;
+    --accent: #0d6efd;
+    --accent-dark: #0a58ca;
+    --success: #198754;
+    --warning: #fd7e14;
+    --danger: #dc3545;
+    --info: #0dcaf0;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --radius: 6px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: var(--font);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Header */
+.header {
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-left { display: flex; align-items: center; gap: 16px; }
+.header-logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+.header-logo span { color: var(--accent); }
+.header-subtitle { font-size: 13px; color: var(--text-muted); border-left: 1px solid var(--border); padding-left: 16px; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.last-updated { font-size: 12px; color: var(--text-muted); font-family: var(--font-mono); }
+
+/* Status badges */
+.status-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.status-badge.healthy, .status-badge.low { background: #d1e7dd; color: var(--success); }
+.status-badge.critical, .status-badge.high { background: #f8d7da; color: var(--danger); }
+.status-badge.warning, .status-badge.medium { background: #fff3cd; color: #997404; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+/* Tab Navigation */
+.tab-nav {
+    background: var(--bg-primary);
+    border-bottom: 2px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    position: sticky;
+    top: 57px;
+    z-index: 99;
+}
+
+.tab-btn {
+    padding: 12px 20px;
+    border: none;
+    background: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    white-space: nowrap;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.tab-btn:hover { color: var(--text-primary); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Main layout */
+.main { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+
+/* Metric cards */
+.metrics-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+}
+
+.metric-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 4px; }
+.metric-value { font-size: 28px; font-weight: 700; font-family: var(--font-mono); }
+.metric-value.success { color: var(--success); }
+.metric-value.danger { color: var(--danger); }
+.metric-value.warning { color: var(--warning); }
+.metric-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+/* Grid layouts */
+.grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+.grid-full { margin-bottom: 24px; }
+
+/* Cards */
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: space-between;
+}
+
+.card-title { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.card-body { padding: 0; }
+.card-controls { display: flex; align-items: center; gap: 12px; }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+thead th {
+    text-align: left; padding: 10px 16px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--text-muted); background: var(--bg-secondary); border-bottom: 1px solid var(--border);
+}
+tbody td { padding: 10px 16px; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--bg-secondary); }
+
+/* Agent badges */
+.agent-name { font-weight: 700; font-family: var(--font-mono); font-size: 13px; }
+.agent-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 2px 10px; border-radius: 4px;
+    font-size: 12px; font-weight: 600; font-family: var(--font-mono);
+}
+.agent-badge.idle { background: #d1e7dd; color: var(--success); }
+.agent-badge.running { background: #cfe2ff; color: var(--accent); }
+.agent-badge.error { background: #f8d7da; color: var(--danger); }
+.agent-badge.stopped { background: #e2e3e5; color: var(--text-muted); }
+
+/* Schedule */
+.schedule-time { font-family: var(--font-mono); font-weight: 600; font-size: 13px; }
+.schedule-enabled { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+.schedule-disabled { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+
+/* Alerts */
+.alert-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border-light); font-size: 13px; }
+.alert-row:last-child { border-bottom: none; }
+.alert-severity { flex-shrink: 0; padding: 1px 8px; border-radius: 3px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.alert-severity.critical { background: #f8d7da; color: var(--danger); }
+.alert-severity.warning { background: #fff3cd; color: #997404; }
+.alert-severity.info { background: #cff4fc; color: #055160; }
+.alert-message { flex: 1; color: var(--text-secondary); }
+.alert-time { flex-shrink: 0; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+
+/* Priority badges */
+.priority-badge { font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 3px; text-transform: uppercase; font-family: var(--font-mono); }
+.priority-badge.CRITICAL { background: #f8d7da; color: var(--danger); }
+.priority-badge.HIGH { background: #fff3cd; color: #997404; }
+.priority-badge.MEDIUM { background: #cfe2ff; color: var(--accent); }
+.priority-badge.LOW { background: #e2e3e5; color: var(--text-muted); }
+
+/* Empty state */
+.empty-state { padding: 32px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+/* Controls */
+.control-select {
+    padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;
+    font-size: 12px; background: var(--bg-primary); color: var(--text-primary);
+}
+.control-input {
+    padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px;
+    font-size: 14px; width: 80px; font-family: var(--font-mono);
+}
+.control-label { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+
+/* Buttons */
+.btn {
+    padding: 6px 16px; border: 1px solid var(--border); border-radius: 4px;
+    font-size: 13px; font-weight: 600; cursor: pointer; background: var(--bg-primary);
+    transition: background 0.2s;
+}
+.btn:hover { background: var(--bg-secondary); }
+.btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent-dark); }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-danger { background: var(--danger); color: white; border-color: var(--danger); }
+
+/* Timeline chart */
+.timeline-chart {
+    display: flex; align-items: flex-end; gap: 2px; height: 80px;
+}
+.timeline-bar {
+    flex: 1; min-width: 4px; border-radius: 2px 2px 0 0;
+    background: var(--accent); opacity: 0.7;
+    transition: opacity 0.2s;
+    position: relative;
+}
+.timeline-bar:hover { opacity: 1; }
+.timeline-bar.has-failures { background: linear-gradient(to top, var(--danger) 0%, var(--accent) 100%); }
+
+/* Risk bar */
+.risk-bar {
+    height: 6px; border-radius: 3px; background: var(--border);
+    overflow: hidden; width: 100px; display: inline-block; vertical-align: middle;
+}
+.risk-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+.risk-fill.low { background: var(--success); }
+.risk-fill.medium { background: var(--warning); }
+.risk-fill.high { background: #e65100; }
+.risk-fill.critical { background: var(--danger); }
+
+/* Tip cards */
+.tip-card {
+    padding: 16px 20px; border-bottom: 1px solid var(--border-light);
+}
+.tip-card:last-child { border-bottom: none; }
+.tip-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.tip-title { font-weight: 700; font-size: 14px; }
+.tip-body { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+.tip-agents { margin-top: 6px; font-size: 11px; color: var(--text-muted); }
+
+/* Division cards */
+.division-section { padding: 16px 20px; border-bottom: 1px solid var(--border-light); }
+.division-section:last-child { border-bottom: none; }
+.division-name { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; color: var(--accent); }
+.division-agents { display: flex; flex-wrap: wrap; gap: 8px; }
+.division-agent {
+    padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px;
+    font-size: 12px; font-family: var(--font-mono); cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+.division-agent:hover { border-color: var(--accent); background: #e8f0fe; }
+
+/* Flow graph */
+.flow-edge {
+    display: flex; align-items: center; gap: 8px; padding: 6px 20px;
+    font-size: 12px; border-bottom: 1px solid var(--border-light);
+}
+.flow-edge:last-child { border-bottom: none; }
+.flow-node { font-family: var(--font-mono); font-weight: 700; font-size: 12px; }
+.flow-arrow { color: var(--text-muted); }
+.flow-label { color: var(--text-muted); font-style: italic; }
+
+/* Prediction cards */
+.prediction-card {
+    padding: 16px 20px; border-bottom: 1px solid var(--border-light);
+    border-left: 3px solid var(--warning);
+}
+.prediction-card.critical { border-left-color: var(--danger); }
+.prediction-card:last-child { border-bottom: none; }
+.prediction-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.prediction-text { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+.prediction-solutions { font-size: 12px; color: var(--text-muted); }
+
+/* Feature cards */
+.feature-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 24px; margin-bottom: 16px;
+}
+.feature-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.feature-desc { font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.6; }
+.feature-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.feature-meta-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 2px; }
+.feature-meta-value { font-size: 13px; color: var(--text-secondary); }
+
+/* Profile view */
+.profile-section { padding: 16px 20px; }
+.profile-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+.profile-value { font-size: 13px; margin-bottom: 12px; }
+.profile-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
+.profile-tag { padding: 2px 8px; background: var(--bg-secondary); border-radius: 3px; font-size: 11px; font-family: var(--font-mono); }
+
+/* Modal */
+.modal {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4); z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+}
+.modal-content {
+    background: var(--bg-primary); border-radius: var(--radius);
+    padding: 24px; box-shadow: var(--shadow-md); min-width: 320px;
+}
+.modal-content h3 { margin-bottom: 16px; }
+.modal-form { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+.modal-form label { font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* Formula display */
+.formula-display {
+    font-family: var(--font-mono); font-size: 14px; padding: 12px;
+    background: var(--bg-secondary); border-radius: 4px;
+    text-align: center; letter-spacing: 0.3px;
+}
+.formula-weight { color: var(--accent); font-weight: 700; }
+
+/* Footer */
+.footer { text-align: center; padding: 24px; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border-light); margin-top: 24px; }
+
+/* Responsive */
+@media (max-width: 900px) {
+    .grid-2col { grid-template-columns: 1fr; }
+    .header { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+    .main { padding: 16px; }
+    .metrics-row { grid-template-columns: repeat(2, 1fr); }
+    .tab-nav { padding: 0 16px; }
+}
+@media (max-width: 600px) {
+    .metrics-row { grid-template-columns: 1fr; }
+    .tab-btn { padding: 10px 12px; font-size: 12px; }
+}
+
+/* ─── Agent Database (Dolt-style) ─── */
+
+.schema-table { padding: 10px 0; border-bottom: 1px solid var(--border-light); }
+.schema-table:last-child { border-bottom: none; }
+.schema-table-name { font-weight: 700; font-family: var(--font-mono); font-size: 13px; color: var(--accent); margin-bottom: 4px; }
+.schema-columns { display: flex; flex-wrap: wrap; gap: 4px; }
+.schema-col { background: var(--bg-secondary); padding: 2px 8px; border-radius: 3px; font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); }
+.schema-sql { font-family: var(--font-mono); font-size: 12px; background: #1a1a2e; color: #e0e0e0; padding: 16px; border-radius: var(--radius); white-space: pre-wrap; line-height: 1.5; max-height: 400px; overflow-y: auto; }
+
+.diff-entry { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; margin-bottom: 4px; font-size: 12px; }
+.diff-added { background: #d1fae5; }
+.diff-removed { background: #fee2e2; }
+.diff-modified { background: #fef3c7; }
+.diff-icon { font-weight: 700; font-family: var(--font-mono); width: 16px; text-align: center; }
+.diff-added .diff-icon { color: var(--success); }
+.diff-removed .diff-icon { color: var(--danger); }
+.diff-modified .diff-icon { color: var(--warning); }
+.diff-table { font-weight: 600; color: var(--text-primary); min-width: 120px; }
+.diff-id { font-family: var(--font-mono); color: var(--text-muted); min-width: 70px; }
+.diff-detail { color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+
+.commit-entry { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-light); font-size: 12px; flex-wrap: wrap; }
+.commit-entry:last-child { border-bottom: none; }
+.commit-header { display: flex; gap: 10px; align-items: center; }
+.commit-id { font-family: var(--font-mono); color: var(--accent); background: var(--bg-secondary); padding: 2px 6px; border-radius: 3px; font-weight: 600; }
+.commit-author { font-weight: 600; color: var(--text-primary); }
+.commit-message { color: var(--text-secondary); flex: 1; }
+.commit-time { color: var(--text-muted); font-size: 11px; }
+
+.agent-db-status { display: flex; flex-direction: column; gap: 16px; }
+.adb-stat-section { padding: 12px 0; border-bottom: 1px solid var(--border-light); }
+.adb-stat-section:last-child { border-bottom: none; }
+.adb-stat-title { font-weight: 700; font-size: 13px; margin-bottom: 8px; color: var(--text-primary); }
+.adb-stat-row { display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; color: var(--text-secondary); }
+
 </style>
 </head>
 <body>
-<header class="hd">
-  <div class="hd-l">
-    <div class="lgi">MF</div><div class="lgt">MortgageFintechOS <span>AI Office</span></div>
-    <div class="sep"></div><span class="pill"><span class="dot"></span>Office Open</span>
-  </div>
-  <div class="hd-l"><span style="font-size:9px;color:var(--bl);font-family:var(--m)">Puter.js: 500+ LLMs</span><div class="sep"></div><span style="font-size:9px;color:var(--td);font-family:var(--m)" id="clk">—</span></div>
+
+<!-- Header -->
+<header class="header">
+    <div class="header-left">
+        <div class="header-logo">Mortgage<span>FintechOS</span></div>
+        <div class="header-subtitle">Fully Connected Autonomous AI Operating System</div>
+    </div>
+    <div class="header-right">
+        <span id="system-risk" class="status-badge healthy" title="System Risk Level">
+            <span class="status-dot"></span><span id="risk-label">low</span>
+        </span>
+        <span id="overall-status" class="status-badge healthy">
+            <span class="status-dot"></span>healthy
+        </span>
+        <span id="last-updated" class="last-updated">Loading...</span>
+    </div>
 </header>
-<nav class="nav">
-  <div class="nt on" onclick="showP('office')">Office Floor</div>
-  <div class="nt" onclick="showP('mgr')">Office Manager</div>
-  <div class="nt" onclick="showP('live')">Live Monitor</div>
-  <div class="nt" onclick="showP('ai')">AI Chat (Multi-Model)</div>
-  <div class="nt" onclick="showP('intel')">Intelligence Reports</div>
-  <div class="nt" onclick="showP('models')">Model Discovery</div>
-  <div class="nt" onclick="showP('clip')">Paperclip AI</div>
-  <div class="nt" onclick="showP('kb')">Knowledge Hub</div>
-  <div class="nt" onclick="showP('tg')">Connections</div>
+
+<!-- Navigation Tabs -->
+<nav class="tab-nav">
+    <button class="tab-btn active" data-tab="overview">Overview</button>
+    <button class="tab-btn" data-tab="action-log">Action Log</button>
+    <button class="tab-btn" data-tab="schedule">Schedule Control</button>
+    <button class="tab-btn" data-tab="ontology">Hydrospeed Ontology</button>
+    <button class="tab-btn" data-tab="telemetry">Predictive Telemetry</button>
+    <button class="tab-btn" data-tab="tips">Expert Tips</button>
+    <button class="tab-btn" data-tab="agentdb">Agent DB</button>
+    <button class="tab-btn" data-tab="features">Features Guide</button>
 </nav>
-<div class="app">
 
-<!-- OFFICE FLOOR -->
-<div id="pg-office" class="pg on">
-  <div class="gr g7" id="kpis"></div>
-  <div class="gr g1">
-    <div class="cd"><div class="ch"><span class="ct">Office Manager — Task Assignment</span><span class="cc" id="mgr-ct">AIOS Kernel</span></div>
-    <div style="padding:12px">
-      <div style="display:grid;grid-template-columns:200px 1fr 120px auto;gap:6px;align-items:end">
-        <div class="cmf"><label>Assign To</label><select id="o-ag" onchange="oSync()"></select></div>
-        <div class="cmf"><label>Task</label><select id="o-act"></select></div>
-        <div class="cmf"><label>Priority</label><select id="o-pri"><option value="HIGH">High</option><option value="MEDIUM" selected>Medium</option><option value="LOW">Low</option></select></div>
-        <button class="btn" onclick="oExec()" id="o-btn">Assign & Execute</button>
-      </div>
-      <div id="o-result" class="rbox" style="margin-top:8px"></div>
-    </div></div>
-  </div>
-  <div class="gr g2">
-    <div class="cd"><div class="ch"><span class="ct">Employees (9 Agents)</span></div>
-    <table><thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Completed</th><th>Errors</th></tr></thead><tbody id="tb-emp"></tbody></table></div>
-    <div class="cd"><div class="ch"><span class="ct">Office Activity Log</span><span class="cc" id="log-ct">0</span></div>
-    <div id="office-log" style="max-height:280px;overflow-y:auto"><div class="empty">Office opened — waiting for tasks</div></div></div>
-  </div>
-</div>
+<main class="main">
 
-<!-- OFFICE MANAGER -->
-<div id="pg-mgr" class="pg">
-  <div class="gr g1">
-    <div class="cd"><div class="ch"><span class="ct">Office Manager — AIOS Kernel</span><span class="cc">Supervises all 9 agents</span></div>
-    <div style="padding:14px">
-      <p style="font-size:11px;color:var(--t2);margin-bottom:12px">The Office Manager assigns work to employees, checks quality, routes tasks through the pipeline, and escalates issues. It prioritizes CIPHER (security) as critical, FORGE (deploys) as high, and balances the rest.</p>
-      <div class="gr g3" id="mgr-cards"></div>
-      <div class="cd" style="margin-top:10px"><div class="ch"><span class="ct">Pipeline Dependencies</span></div>
-      <div style="padding:12px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:10px;font-family:var(--m)">
-        <b>Coding:</b>
-        <span style="padding:3px 8px;background:var(--blb);border-radius:4px;color:var(--bl);font-weight:600">ATLAS writes</span><span style="color:var(--td)">→</span>
-        <span style="padding:3px 8px;background:var(--vb);border-radius:4px;color:var(--v);font-weight:600">NEXUS reviews</span><span style="color:var(--td)">→</span>
-        <span style="padding:3px 8px;background:var(--rb);border-radius:4px;color:var(--r);font-weight:600">CIPHER scans</span><span style="color:var(--td)">→</span>
-        <span style="padding:3px 8px;background:var(--gb);border-radius:4px;color:var(--g);font-weight:600">FORGE deploys</span>
-        <span style="color:var(--td);margin:0 8px">|</span>
-        <b>Mortgage Ops:</b>
-        <span style="padding:3px 8px;background:var(--a);border-radius:4px;font-weight:600">DIEGO→MARTIN→NOVA→JARVIS</span>
-      </div></div>
-    </div></div>
-  </div>
-</div>
+    <!-- ===== TAB: OVERVIEW ===== -->
+    <div class="tab-content active" id="tab-overview">
+        <section class="metrics-row">
+            <div class="metric-card">
+                <div class="metric-label">Uptime</div>
+                <div id="metric-uptime" class="metric-value">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Active Agents</div>
+                <div id="metric-agents" class="metric-value">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Queue Pending</div>
+                <div id="metric-pending" class="metric-value">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Tasks Completed</div>
+                <div id="metric-completed" class="metric-value success">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Tasks Failed</div>
+                <div id="metric-failed" class="metric-value">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">CPU</div>
+                <div id="metric-cpu" class="metric-value">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Memory</div>
+                <div id="metric-mem" class="metric-value">--</div>
+            </div>
+        </section>
 
-<!-- LIVE MONITOR — Watch Agents Working in Real-Time -->
-<div id="pg-live" class="pg">
-  <div class="gr g1">
-    <div class="cd"><div class="ch"><span class="ct">Live Agent Monitor — Real-Time Execution</span><span class="cc" id="live-status">Paused</span></div>
-    <div style="padding:14px">
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <button class="btn btn-g" onclick="liveStart()" id="live-btn">Start Auto-Run</button>
-        <button class="btn" onclick="liveStop()">Pause</button>
-        <span style="font-size:9px;font-family:var(--m);color:var(--td)">Speed:</span>
-        <select id="live-speed" style="padding:3px 8px;border:1px solid var(--b);border-radius:4px;font-size:10px;font-family:var(--m)" onchange="liveSetSpeed()">
-          <option value="2000">Normal</option>
-          <option value="1000">Fast</option>
-          <option value="500">Turbo</option>
-          <option value="4000">Slow</option>
-        </select>
-        <span style="font-size:9px;font-family:var(--m);color:var(--td);margin-left:auto" id="live-counter">0 tasks executed</span>
-      </div>
-      <!-- Agent Swim Lanes -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <!-- MORTGAGE OPS DIVISION -->
-        <div class="cd" style="border-left:3px solid var(--g)">
-          <div class="ch" style="background:var(--gb)"><span class="ct" style="color:var(--g)">Mortgage Operations</span><span class="cc">COO: DIEGO</span></div>
-          <div style="padding:0">
-            <div id="lane-DIEGO" class="swim-lane"><div class="lane-hd"><span class="an">DIEGO</span><span class="bd bd-idle" id="live-st-DIEGO">idle</span></div><div class="lane-task" id="live-task-DIEGO">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-DIEGO"></div></div></div>
-            <div id="lane-MARTIN" class="swim-lane"><div class="lane-hd"><span class="an">MARTIN</span><span class="bd bd-idle" id="live-st-MARTIN">idle</span></div><div class="lane-task" id="live-task-MARTIN">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-MARTIN"></div></div></div>
-            <div id="lane-NOVA" class="swim-lane"><div class="lane-hd"><span class="an">NOVA</span><span class="bd bd-idle" id="live-st-NOVA">idle</span></div><div class="lane-task" id="live-task-NOVA">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-NOVA"></div></div></div>
-            <div id="lane-JARVIS" class="swim-lane"><div class="lane-hd"><span class="an">JARVIS</span><span class="bd bd-idle" id="live-st-JARVIS">idle</span></div><div class="lane-task" id="live-task-JARVIS">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-JARVIS"></div></div></div>
-          </div>
+        <section class="grid-2col">
+            <div class="card">
+                <div class="card-header"><span class="card-title">AI Agents</span></div>
+                <div class="card-body">
+                    <table>
+                        <thead><tr><th>Agent</th><th>Role</th><th>Status</th><th>Tasks</th><th>Errors</th><th>Heartbeat</th></tr></thead>
+                        <tbody id="agents-tbody"><tr><td colspan="6" class="empty-state">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><span class="card-title">Recent Tasks</span></div>
+                <div class="card-body">
+                    <table>
+                        <thead><tr><th>ID</th><th>Agent</th><th>Action</th><th>Priority</th><th>Status</th></tr></thead>
+                        <tbody id="queue-tbody"><tr><td colspan="5" class="empty-state">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid-full">
+            <div class="card">
+                <div class="card-header"><span class="card-title">Alerts</span></div>
+                <div class="card-body" id="alerts-container"><div class="empty-state">Loading...</div></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ===== TAB: ACTION LOG ===== -->
+    <div class="tab-content" id="tab-action-log">
+        <section class="metrics-row">
+            <div class="metric-card">
+                <div class="metric-label">Total Actions</div>
+                <div id="al-total" class="metric-value">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Success Rate</div>
+                <div id="al-rate" class="metric-value success">0%</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Failures</div>
+                <div id="al-failures" class="metric-value">0</div>
+            </div>
+        </section>
+
+        <section class="grid-full">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Activity Timeline (24h)</span>
+                </div>
+                <div class="card-body" style="padding:16px;">
+                    <div id="al-timeline" class="timeline-chart"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid-full">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Agent Action Log</span>
+                    <div class="card-controls">
+                        <select id="al-agent-filter" class="control-select"><option value="">All Agents</option></select>
+                        <label class="control-label"><input type="checkbox" id="al-failures-only"> Failures only</label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <table>
+                        <thead><tr><th>Time</th><th>Agent</th><th>Type</th><th>Action</th><th>Duration</th><th>Status</th><th>Detail</th></tr></thead>
+                        <tbody id="al-tbody"><tr><td colspan="7" class="empty-state">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ===== TAB: SCHEDULE CONTROL ===== -->
+    <div class="tab-content" id="tab-schedule">
+        <section class="grid-2col">
+            <div class="card">
+                <div class="card-header"><span class="card-title">Scheduled Jobs</span></div>
+                <div class="card-body">
+                    <table>
+                        <thead><tr><th></th><th>Job</th><th>Time</th><th>Last Run</th><th>Actions</th></tr></thead>
+                        <tbody id="sched-tbody"><tr><td colspan="5" class="empty-state">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><span class="card-title">Schedule Recommendations</span></div>
+                <div class="card-body" id="sched-recommendations"><div class="empty-state">Loading...</div></div>
+            </div>
+        </section>
+
+        <!-- Schedule Edit Modal -->
+        <div id="sched-modal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <h3>Edit Schedule: <span id="sched-modal-name"></span></h3>
+                <div class="modal-form">
+                    <label>Hour (0-23): <input type="number" id="sched-hour" min="0" max="23" class="control-input"></label>
+                    <label>Minute (0-59): <input type="number" id="sched-minute" min="0" max="59" class="control-input"></label>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" onclick="saveSchedule()">Save</button>
+                    <button class="btn" onclick="closeModal()">Cancel</button>
+                </div>
+            </div>
         </div>
-        <!-- CODEBASE ENG DIVISION -->
-        <div class="cd" style="border-left:3px solid var(--t)">
-          <div class="ch"><span class="ct">Codebase Engineering</span><span class="cc">CTO: ATLAS</span></div>
-          <div style="padding:0">
-            <div id="lane-ATLAS" class="swim-lane"><div class="lane-hd"><span class="an">ATLAS</span><span class="bd bd-idle" id="live-st-ATLAS">idle</span></div><div class="lane-task" id="live-task-ATLAS">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-ATLAS"></div></div></div>
-            <div id="lane-NEXUS" class="swim-lane"><div class="lane-hd"><span class="an">NEXUS</span><span class="bd bd-idle" id="live-st-NEXUS">idle</span></div><div class="lane-task" id="live-task-NEXUS">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-NEXUS"></div></div></div>
-            <div id="lane-CIPHER" class="swim-lane"><div class="lane-hd"><span class="an">CIPHER</span><span class="bd bd-idle" id="live-st-CIPHER">idle</span></div><div class="lane-task" id="live-task-CIPHER">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-CIPHER"></div></div></div>
-            <div id="lane-FORGE" class="swim-lane"><div class="lane-hd"><span class="an">FORGE</span><span class="bd bd-idle" id="live-st-FORGE">idle</span></div><div class="lane-task" id="live-task-FORGE">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-FORGE"></div></div></div>
-            <div id="lane-STORM" class="swim-lane"><div class="lane-hd"><span class="an">STORM</span><span class="bd bd-idle" id="live-st-STORM">idle</span></div><div class="lane-task" id="live-task-STORM">—</div><div class="lane-bar"><div class="lane-fill" id="live-bar-STORM"></div></div></div>
-          </div>
+    </div>
+
+    <!-- ===== TAB: HYDROSPEED ONTOLOGY ===== -->
+    <div class="tab-content" id="tab-ontology">
+        <section class="metrics-row">
+            <div class="metric-card" style="border-left:4px solid var(--accent)">
+                <div class="metric-label">Hydrospeed Engine</div>
+                <div class="metric-value" style="font-size:16px;">Live Ontology</div>
+                <div class="metric-sub">Real-time agent relationship mapping</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Agents</div>
+                <div id="onto-agents" class="metric-value">13</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Integrations</div>
+                <div id="onto-integrations" class="metric-value">9</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Data Flows</div>
+                <div id="onto-flows" class="metric-value">0</div>
+            </div>
+        </section>
+
+        <section class="grid-2col">
+            <div class="card">
+                <div class="card-header"><span class="card-title">Agent Divisions</span></div>
+                <div class="card-body" id="onto-divisions"><div class="empty-state">Loading...</div></div>
+            </div>
+            <div class="card">
+                <div class="card-header"><span class="card-title">Data Flow Graph</span></div>
+                <div class="card-body" id="onto-graph"><div class="empty-state">Loading...</div></div>
+            </div>
+        </section>
+
+        <section class="grid-full">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Agent Profiles</span>
+                    <select id="onto-agent-select" class="control-select"><option value="">Select Agent...</option></select>
+                </div>
+                <div class="card-body" id="onto-profile"><div class="empty-state">Select an agent to view its ontology profile</div></div>
+            </div>
+        </section>
+
+        <section class="grid-full">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Agent Proposals</span>
+                    <button class="btn btn-sm" onclick="showProposalForm()">+ New Proposal</button>
+                </div>
+                <div class="card-body" id="onto-proposals"><div class="empty-state">No proposals yet</div></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ===== TAB: PREDICTIVE TELEMETRY ===== -->
+    <div class="tab-content" id="tab-telemetry">
+        <section class="metrics-row">
+            <div class="metric-card" style="border-left:4px solid var(--accent)">
+                <div class="metric-label">System Risk Score</div>
+                <div id="tele-score" class="metric-value">0.0</div>
+                <div id="tele-level" class="metric-sub">low</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Agents Tracked</div>
+                <div id="tele-tracked" class="metric-value">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Critical Agents</div>
+                <div id="tele-critical" class="metric-value danger">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Active Predictions</div>
+                <div id="tele-predictions" class="metric-value warning">0</div>
+            </div>
+        </section>
+
+        <section class="grid-full">
+            <div class="card">
+                <div class="card-header"><span class="card-title">Risk Formula</span></div>
+                <div class="card-body" style="padding:16px;">
+                    <div class="formula-display">
+                        R(agent) = <span class="formula-weight">0.30</span>*ErrorRate + <span class="formula-weight">0.15</span>*Latency + <span class="formula-weight">0.25</span>*DependencyHealth + <span class="formula-weight">0.15</span>*CapacityPressure + <span class="formula-weight">0.15</span>*QualityDelta
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid-full">
+            <div class="card">
+                <div class="card-header"><span class="card-title">Failure Predictions</span></div>
+                <div class="card-body" id="tele-pred-list"><div class="empty-state">No active predictions -- system is healthy</div></div>
+            </div>
+        </section>
+
+        <section class="grid-full">
+            <div class="card">
+                <div class="card-header"><span class="card-title">Per-Agent Risk Breakdown</span></div>
+                <div class="card-body">
+                    <table>
+                        <thead><tr><th>Agent</th><th>Risk Score</th><th>Level</th><th>Dominant Factor</th><th>Error Rate</th><th>Latency</th><th>Cascade</th></tr></thead>
+                        <tbody id="tele-agents-tbody"><tr><td colspan="7" class="empty-state">Collecting telemetry...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ===== TAB: EXPERT TIPS ===== -->
+    <div class="tab-content" id="tab-tips">
+        <section class="metrics-row">
+            <div class="metric-card">
+                <div class="metric-label">Total Tips</div>
+                <div id="tips-total" class="metric-value">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Critical</div>
+                <div id="tips-critical" class="metric-value danger">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Categories</div>
+                <div id="tips-categories" class="metric-value">0</div>
+            </div>
+        </section>
+
+        <section class="grid-full">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Expert Operations Tips</span>
+                    <div class="card-controls">
+                        <select id="tips-cat-filter" class="control-select">
+                            <option value="">All Categories</option>
+                            <option value="scheduling">Scheduling</option>
+                            <option value="cost_optimization">Cost Optimization</option>
+                            <option value="safety">Safety</option>
+                            <option value="monitoring">Monitoring</option>
+                            <option value="workflow">Workflow</option>
+                            <option value="scaling">Scaling</option>
+                            <option value="resilience">Resilience</option>
+                            <option value="deployment">Deployment</option>
+                            <option value="compliance">Compliance</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body" id="tips-list"><div class="empty-state">Loading...</div></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ===== TAB: AGENT DATABASE ===== -->
+    <div class="tab-content" id="tab-agentdb">
+        <section class="metrics-row">
+            <div class="metric-card" style="border-left:4px solid var(--accent)">
+                <div class="metric-label">Agent Database</div>
+                <div class="metric-value" style="font-size:16px;">Version Controlled</div>
+                <div class="metric-sub">Dolt-inspired Git-style branching</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Branches</div>
+                <div id="adb-branches-count" class="metric-value">1</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Tables</div>
+                <div id="adb-tables-count" class="metric-value">6</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Total Rows</div>
+                <div id="adb-rows-count" class="metric-value">0</div>
+            </div>
+        </section>
+
+        <section class="grid-2col">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Branches</span>
+                    <button class="btn btn-sm" onclick="showCreateBranch()">+ New Branch</button>
+                </div>
+                <div class="card-body">
+                    <table>
+                        <thead><tr><th>Branch</th><th>Parent</th><th>Commits</th><th>Rows</th><th>Last Commit</th><th>Actions</th></tr></thead>
+                        <tbody id="adb-branches-tbody"><tr><td colspan="6" class="empty-state">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Schema</span>
+                    <button class="btn btn-sm" onclick="showSchemaSQL()">View SQL</button>
+                </div>
+                <div class="card-body" id="adb-schema-view"><div class="empty-state">Loading...</div></div>
+            </div>
+        </section>
+
+        <section class="grid-full">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Table Browser</span>
+                    <div class="card-controls">
+                        <select id="adb-branch-select" class="control-select"><option value="main">main</option></select>
+                        <select id="adb-table-select" class="control-select">
+                            <option value="agent_operations">agent_operations</option>
+                            <option value="agent_state">agent_state</option>
+                            <option value="integration_events">integration_events</option>
+                            <option value="schedule_history">schedule_history</option>
+                            <option value="audit_trail">audit_trail</option>
+                            <option value="workflow_proposals">workflow_proposals</option>
+                        </select>
+                        <button class="btn btn-sm btn-primary" onclick="queryTable()">Query</button>
+                    </div>
+                </div>
+                <div class="card-body" id="adb-table-data"><div class="empty-state">Select a branch and table, then click Query</div></div>
+            </div>
+        </section>
+
+        <section class="grid-2col">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Diff Viewer</span>
+                    <div class="card-controls">
+                        <select id="adb-diff-from" class="control-select"><option value="main">main</option></select>
+                        <span style="color:var(--text-muted);padding:0 4px;">vs</span>
+                        <select id="adb-diff-to" class="control-select"><option value="">Select branch...</option></select>
+                        <button class="btn btn-sm" onclick="computeDiff()">Compute Diff</button>
+                    </div>
+                </div>
+                <div class="card-body" id="adb-diff-view"><div class="empty-state">Select two branches and compute diff</div></div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Commit Log</span>
+                    <div class="card-controls">
+                        <select id="adb-log-branch" class="control-select"><option value="main">main</option></select>
+                        <button class="btn btn-sm" onclick="loadCommitLog()">Load</button>
+                    </div>
+                </div>
+                <div class="card-body" id="adb-commit-log"><div class="empty-state">Select a branch and load commits</div></div>
+            </div>
+        </section>
+
+        <section class="grid-full">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Agent Branch Status</span>
+                    <div class="card-controls">
+                        <select id="adb-agent-select" class="control-select"><option value="">Select Agent...</option></select>
+                        <button class="btn btn-sm" onclick="loadAgentDbStatus()">View</button>
+                    </div>
+                </div>
+                <div class="card-body" id="adb-agent-status"><div class="empty-state">Select an agent to view its branch status and pending changes</div></div>
+            </div>
+        </section>
+
+        <!-- Merge/Create Branch Modal -->
+        <div id="adb-modal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <h3 id="adb-modal-title">Action</h3>
+                <div class="modal-form" id="adb-modal-body"></div>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" id="adb-modal-confirm">Confirm</button>
+                    <button class="btn" onclick="document.getElementById('adb-modal').style.display='none'">Cancel</button>
+                </div>
+            </div>
         </div>
-      </div>
-    </div></div>
-  </div>
-  <div class="gr g2">
-    <!-- LIVE EXECUTION LOG -->
-    <div class="cd"><div class="ch"><span class="ct">Execution Stream</span><span class="cc" id="live-log-ct">0</span></div>
-    <div id="live-log" style="max-height:340px;overflow-y:auto;font-size:10px"><div class="empty">Start auto-run to watch agents work in real-time</div></div></div>
-    <!-- LIVE METRICS -->
-    <div class="cd"><div class="ch"><span class="ct">Live Metrics</span></div>
-    <div style="padding:14px">
-      <div class="gr g2" style="margin-bottom:8px">
-        <div class="kpi"><div class="kl">Tasks / Min</div><div class="kv ok" id="live-tpm">0</div></div>
-        <div class="kpi"><div class="kl">Avg Latency</div><div class="kv" id="live-lat">0ms</div></div>
-      </div>
-      <div class="gr g2" style="margin-bottom:8px">
-        <div class="kpi"><div class="kl">Success Rate</div><div class="kv ok" id="live-sr">100%</div></div>
-        <div class="kpi"><div class="kl">Queue Depth</div><div class="kv" id="live-qd">0</div></div>
-      </div>
-      <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--td);font-family:var(--m);margin-bottom:4px">Division Throughput</div>
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <div style="flex:1;padding:6px;background:var(--gb);border-radius:4px;text-align:center"><div style="font-size:9px;font-family:var(--m);color:var(--g);font-weight:600">Mortgage Ops</div><div style="font-size:16px;font-weight:700;font-family:var(--m)" id="live-ops-ct">0</div></div>
-        <div style="flex:1;padding:6px;background:var(--a);border-radius:4px;text-align:center"><div style="font-size:9px;font-family:var(--m);color:var(--t);font-weight:600">Codebase Eng</div><div style="font-size:16px;font-weight:700;font-family:var(--m)" id="live-code-ct">0</div></div>
-      </div>
-      <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--td);font-family:var(--m);margin-bottom:4px">Pipeline Flow</div>
-      <div style="display:flex;gap:4px;align-items:center;font-size:9px;font-family:var(--m);flex-wrap:wrap">
-        <span style="padding:3px 6px;background:var(--gb);border-radius:3px;color:var(--g);font-weight:600">Ops: DIEGO→MARTIN→NOVA→JARVIS</span>
-        <span style="padding:3px 6px;background:var(--a);border-radius:3px;font-weight:600">Code: ATLAS→NEXUS→CIPHER→FORGE</span>
-      </div>
-    </div></div>
-  </div>
-</div>
+    </div>
 
-<!-- AI CHAT -->
-<div id="pg-ai" class="pg">
-  <div class="gr g1">
-    <div class="cd"><div class="ch"><span class="ct">Multi-Model AI Chat</span><span class="cc">Puter.js — No API Keys Needed</span></div>
-    <div style="padding:14px">
-      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-        <div class="cmf" style="min-width:200px"><label>Model</label><select id="ai-mod">
-          <optgroup label="── Frontier Models ──">
-          <option value="claude-sonnet-4-5">Claude Sonnet 4.5 (Anthropic)</option>
-          <option value="gpt-5-nano">GPT-5 Nano (OpenAI)</option>
-          <option value="google/gemini-2.5-flash-preview">Gemini 2.5 Flash (Google)</option>
-          </optgroup>
-          <optgroup label="── Open Source — No Restrictions ──">
-          <option value="deepseek/deepseek-r1">DeepSeek R1 (Reasoning, Open)</option>
-          <option value="deepseek/deepseek-v3-0324">DeepSeek V3 (General, Open)</option>
-          <option value="qwen/qwen3.5-397b-a17b">Qwen 3.5 397B (Alibaba, Open)</option>
-          <option value="qwen/qwen3-coder-next">Qwen 3 Coder Next (Code, Open)</option>
-          <option value="meta-llama/llama-4-scout">Llama 4 Scout (Meta, Open)</option>
-          <option value="mistralai/mistral-large-2512">Mistral Large 3 (Mistral, Open)</option>
-          <option value="mistralai/devstral-2512">Devstral 2 (Code Agent, Open)</option>
-          <option value="mistralai/codestral-2508">Codestral (Code, Open)</option>
-          </optgroup>
-          <optgroup label="── Uncensored / Unrestricted ──">
-          <option value="nousresearch/hermes-4-405b">Hermes 4 405B (Nous, Unrestricted)</option>
-          <option value="nousresearch/hermes-4-70b">Hermes 4 70B (Nous, Unrestricted)</option>
-          <option value="cognitivecomputations/dolphin3.0-r1-mistral-24b">Dolphin 3.0 R1 (Uncensored)</option>
-          <option value="cognitivecomputations/dolphin3.0-mistral-24b">Dolphin 3.0 24B (Uncensored)</option>
-          <option value="thedrummer/anubis-pro-105b-v1">Anubis Pro 105B (Unrestricted)</option>
-          </optgroup>
-          <optgroup label="── Specialized ──">
-          <option value="moonshotai/kimi-k2.5">Kimi K2.5 (Moonshot, Visual Agent)</option>
-          <option value="nvidia/nemotron-nano-9b-v2">Nemotron Nano 9B (NVIDIA)</option>
-          <option value="microsoft/phi-4">Phi-4 (Microsoft, Small/Fast)</option>
-          </optgroup>
-        </select></div>
-        <div class="cmf" style="flex:1"><label>Context</label><select id="ai-ctx">
-          <option value="You are a mortgage compliance expert citing FHA HB 4000.1, FNMA Selling Guide, and FHLMC Guide.">Mortgage Compliance</option>
-          <option value="You are a senior software engineer. Write clean, production-ready code.">Software Engineer</option>
-          <option value="You are an intelligence analyst producing structured reports with actionable insights.">Intelligence Analyst</option>
-          <option value="You are a helpful assistant.">General</option>
-        </select></div>
-      </div>
-      <div id="ai-chat" class="chat-box" style="margin-bottom:8px"><div class="empty">Select a model and start chatting. All 500+ models are free via Puter.js — no API keys.</div></div>
-      <div style="display:flex;gap:6px"><textarea id="ai-in" rows="2" placeholder="Type your message..." style="flex:1;padding:6px;border:1px solid var(--b);border-radius:4px;font-size:11px;outline:none;resize:none;font-family:var(--f)"></textarea>
-      <button class="btn btn-bl" onclick="aiSend()" id="ai-btn">Send</button></div>
-    </div></div>
-  </div>
-</div>
+    <!-- ===== TAB: FEATURES GUIDE ===== -->
+    <div class="tab-content" id="tab-features">
+        <section class="grid-full">
+            <div class="card" style="border-left:4px solid var(--accent)">
+                <div class="card-body" style="padding:24px;">
+                    <h2 style="margin-bottom:4px;">MortgageFintechOS v3.0.0</h2>
+                    <p style="color:var(--text-muted);margin-bottom:16px;">Fully Connected Autonomous AI Operating System</p>
+                    <p>13 AI agents across 4 divisions operating 24/7 with 9 integrations, predictive telemetry, live ontology mapping, and expert-guided operations. Built by Cory Lawson / The Lawson Group.</p>
+                </div>
+            </div>
+        </section>
+        <section class="grid-full" id="features-list">
+            <div class="empty-state">Loading features...</div>
+        </section>
+    </div>
 
-<!-- INTELLIGENCE REPORTS -->
-<div id="pg-intel" class="pg">
-  <div class="gr g1">
-    <div class="cd"><div class="ch"><span class="ct">Intelligence Report Generator</span><span class="cc">Auto-selects best model per task</span></div>
-    <div style="padding:14px">
-      <div style="display:grid;grid-template-columns:1fr 180px auto;gap:6px;align-items:end;margin-bottom:10px">
-        <div class="cmf"><label>Report Type</label><select id="rpt-type">
-          <option value="Generate a mortgage market intelligence report covering current rates, trends, FHA/FNMA guideline changes, and 30-day forecast.">Mortgage Market Intelligence</option>
-          <option value="Generate a compliance audit report covering recent FHA HB 4000.1, FNMA Selling Guide, and FHLMC Guide updates with actionable items.">Compliance Audit (FHA/FNMA)</option>
-          <option value="Generate an AI/ML technology landscape report for mortgage lending covering new models, OCR advances, and automation opportunities.">Tech Landscape — AI in Mortgage</option>
-          <option value="Generate an AI model benchmark report ranking the top 10 LLMs for coding, reasoning, and cost efficiency as of March 2026.">AI Model Benchmark Report</option>
-        </select></div>
-        <div class="cmf"><label>Model</label><select id="rpt-mod">
-          <option value="claude-sonnet-4-5">Claude 4.5 (Deep Analysis)</option>
-          <option value="deepseek/deepseek-r1">DeepSeek R1 (Reasoning)</option>
-          <option value="gpt-5-nano">GPT-5 Nano (Fast)</option>
-          <option value="qwen/qwen3.5-397b-a17b">Qwen 3.5 397B (Open)</option>
-          <option value="mistralai/mistral-large-2512">Mistral Large 3 (Open)</option>
-          <option value="nousresearch/hermes-4-405b">Hermes 4 405B (Unrestricted)</option>
-        </select></div>
-        <button class="btn btn-v" onclick="genReport()" id="rpt-btn">Generate</button>
-      </div>
-      <div id="rpt-out" class="rbox" style="max-height:450px"></div>
-    </div></div>
-  </div>
-</div>
+</main>
 
-<!-- MODEL DISCOVERY — Neural Self-Learning Auto-Discovery -->
-<div id="pg-models" class="pg">
-  <div class="gr g1">
-    <div class="cd" style="border-left:3px solid var(--g)"><div class="ch"><span class="ct">Neural Model Discovery — Auto-Ranking Engine</span><span class="cc" id="nn-status">Neural net active</span></div>
-    <div style="padding:14px">
-      <p style="font-size:10px;color:var(--t2);margin-bottom:10px">The neural discovery engine automatically finds, benchmarks, and ranks the best LLMs for each task type. It learns from execution results to improve model selection over time. Models are scored by capability (code, reasoning, speed) and cost-efficiency.</p>
-      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-        <button class="btn" onclick="fMod('all')">All</button>
-        <button class="btn btn-bl" onclick="fMod('code')">Coding</button>
-        <button class="btn btn-v" onclick="fMod('reason')">Reasoning</button>
-        <button class="btn btn-g" onclick="fMod('free')">Free/Open</button>
-        <span style="width:1px;height:18px;background:var(--b);margin:0 4px"></span>
-        <button class="btn" onclick="nnScanModels()" id="nn-scan-btn">Scan for New Models</button>
-        <button class="btn" onclick="nnBenchmark()" id="nn-bench-btn">Run Benchmark</button>
-        <span style="font-size:9px;font-family:var(--m);color:var(--td);margin-left:auto" id="nn-last-scan">Last scan: startup</span>
-      </div>
-      <!-- Neural Learning Stats -->
-      <div class="gr g3" style="margin-bottom:12px">
-        <div class="kpi"><div class="kl">Models Tracked</div><div class="kv ok" id="nn-total">15</div></div>
-        <div class="kpi"><div class="kl">Best for Code</div><div class="kv bl" id="nn-best-code" style="font-size:14px">—</div></div>
-        <div class="kpi"><div class="kl">Best for Reasoning</div><div class="kv bl" id="nn-best-reason" style="font-size:14px">—</div></div>
-      </div>
-      <!-- Auto-Recommendations -->
-      <div id="nn-recs" style="display:none;padding:8px 12px;background:var(--gb);border:1px solid var(--gbb);border-radius:4px;margin-bottom:12px;font-size:10px;font-family:var(--m)"></div>
-      <div id="mod-grid" class="gr g3"></div>
-      <!-- Neural Learning Log -->
-      <div class="cd" style="margin-top:12px"><div class="ch"><span class="ct">Neural Learning Log</span><span class="cc" id="nn-log-ct">Self-improving</span></div>
-      <div id="nn-log" style="max-height:180px;overflow-y:auto;font-size:9px;font-family:var(--m)"><div class="empty">Neural engine analyzing model performance patterns...</div></div></div>
-    </div></div>
-  </div>
-</div>
-
-<!-- PAPERCLIP AI — Enterprise Agent Orchestration -->
-<div id="pg-clip" class="pg">
-  <div class="gr g1">
-    <div class="cd"><div class="ch"><span class="ct">Paperclip AI Integration</span><span class="cc">Enterprise Agent Orchestration — Port 3100</span></div>
-    <div style="padding:14px">
-      <p style="font-size:11px;color:var(--t2);margin-bottom:10px">Connect to Paperclip AI for enterprise approval workflows, cost tracking, org charts, and unified agent governance. Paperclip runs at <b>localhost:3100</b> with embedded PostgreSQL.</p>
-      <div style="display:grid;grid-template-columns:1fr auto;gap:6px;align-items:end;margin-bottom:10px">
-        <div class="cmf"><label>Paperclip Server URL</label><input id="clip-url" value="http://localhost:3100" placeholder="http://localhost:3100"></div>
-        <button class="btn btn-bl" onclick="clipConnect()">Connect</button>
-      </div>
-      <div id="clip-status" style="padding:6px 10px;border-radius:4px;font-size:10px;font-family:var(--m);background:var(--a);border:1px solid var(--b);margin-bottom:10px">Status: Not connected — run <b>npx paperclipai</b> to start</div>
-    </div></div>
-  </div>
-  <div class="gr g2">
-    <!-- TICKETS / APPROVAL WORKFLOW -->
-    <div class="cd"><div class="ch"><span class="ct">Ticket System & Approvals</span><span class="cc" id="clip-tkt-ct">0 tickets</span></div>
-    <div style="padding:12px">
-      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:end;margin-bottom:8px">
-        <div class="cmf"><label>Assign To</label><select id="clip-assign"><option value="DIEGO">DIEGO — Pipeline</option><option value="MARTIN">MARTIN — Documents</option><option value="NOVA">NOVA — Income/DTI</option><option value="JARVIS">JARVIS — Conditions</option><option value="ATLAS">ATLAS — Full-Stack</option><option value="CIPHER">CIPHER — Security</option><option value="FORGE">FORGE — DevOps</option><option value="NEXUS">NEXUS — Code Quality</option><option value="STORM">STORM — Data Eng</option></select></div>
-        <div class="cmf"><label>Ticket Title</label><input id="clip-title" placeholder="e.g. Deploy pricing page to production"></div>
-        <button class="btn btn-sm" onclick="clipCreateTicket()">Create</button>
-      </div>
-      <table><thead><tr><th>ID</th><th>Title</th><th>Owner</th><th>Status</th><th>Action</th></tr></thead>
-      <tbody id="tb-tickets"><tr><td colspan="5" class="empty">No tickets — create one above</td></tr></tbody></table>
-    </div></div>
-    <!-- COST TRACKING -->
-    <div class="cd"><div class="ch"><span class="ct">Cost Tracking & Budgets</span></div>
-    <div style="padding:12px">
-      <table><thead><tr><th>Agent</th><th>Budget</th><th>Used</th><th>Util %</th><th>Status</th></tr></thead>
-      <tbody id="tb-budgets"></tbody></table>
-      <div style="margin-top:8px;font-size:9px;color:var(--tm);font-family:var(--m)">⚠ At 80% utilization → warning. At 100% → agent auto-pauses. Board can override.</div>
-    </div></div>
-  </div>
-  <div class="gr g2">
-    <!-- ORG CHART -->
-    <div class="cd"><div class="ch"><span class="ct">Organization Chart</span><span class="cc">The Lawson Group — AI Division</span></div>
-    <div style="padding:14px;text-align:center">
-      <div style="display:inline-block;padding:8px 16px;background:var(--t);color:#fff;border-radius:6px;font-size:11px;font-weight:700;margin-bottom:8px">BOARD: Cory Lawson</div>
-      <div style="color:var(--td);font-size:18px;margin-bottom:4px">│</div>
-      <div style="display:inline-block;padding:6px 14px;background:var(--vb);border:1px solid var(--b);border-radius:6px;font-size:10px;font-weight:700;color:var(--v);margin-bottom:8px">OFFICE MANAGER (AIOS Kernel)</div>
-      <div style="color:var(--td);font-size:14px;margin-bottom:4px">┌───────┼───────┐</div>
-      <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap">
-        <div>
-          <div style="padding:4px 10px;background:var(--blb);border-radius:4px;font-size:9px;font-weight:700;color:var(--bl);margin-bottom:4px">CTO: ATLAS</div>
-          <div style="font-size:8px;color:var(--td);font-family:var(--m)">NEXUS · CIPHER · FORGE · STORM</div>
-        </div>
-        <div>
-          <div style="padding:4px 10px;background:var(--gb);border-radius:4px;font-size:9px;font-weight:700;color:var(--g);margin-bottom:4px">COO: DIEGO</div>
-          <div style="font-size:8px;color:var(--td);font-family:var(--m)">MARTIN · NOVA · JARVIS</div>
-        </div>
-      </div>
-    </div></div>
-    <!-- AUDIT LOG -->
-    <div class="cd"><div class="ch"><span class="ct">Immutable Audit Log</span><span class="cc">Append-only</span></div>
-    <div id="clip-audit" style="max-height:240px;overflow-y:auto"><div class="empty">Audit log starts when Paperclip is connected</div></div></div>
-  </div>
-  <div class="gr g1">
-    <!-- GOVERNANCE -->
-    <div class="cd"><div class="ch"><span class="ct">Governance & Controls</span></div>
-    <div style="padding:14px">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-        <div style="padding:10px;background:var(--a);border-radius:6px">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--td);font-family:var(--m);margin-bottom:4px">Hiring Gate</div>
-          <div style="font-size:11px">New agent hires require <b>Board approval</b>. No auto-hiring.</div>
-        </div>
-        <div style="padding:10px;background:var(--a);border-radius:6px">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--td);font-family:var(--m);margin-bottom:4px">Budget Enforcement</div>
-          <div style="font-size:11px">Atomic budget checks. Agents <b>auto-pause at 100%</b>. No runaway costs.</div>
-        </div>
-        <div style="padding:10px;background:var(--a);border-radius:6px">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--td);font-family:var(--m);margin-bottom:4px">Approval Workflows</div>
-          <div style="font-size:11px">Deployments and strategy changes require <b>Board sign-off</b> before execution.</div>
-        </div>
-      </div>
-    </div></div>
-  </div>
-</div>
-
-<!-- KNOWLEDGE HUB — Open Notebook + Notion + Wispr + Google Drive -->
-<div id="pg-kb" class="pg">
-  <div class="gr g1">
-    <div class="cd"><div class="ch"><span class="ct">Open Notebook — Self-Hosted Research Backend</span><span class="cc">FastAPI :5055 + SurrealDB</span></div>
-    <div style="padding:14px">
-      <p style="font-size:11px;color:var(--t2);margin-bottom:10px">Connect to <b>Open Notebook</b> (lfnovo/open-notebook) — privacy-first NotebookLM alternative. REST API for notebooks, sources, notes, chat, and podcast generation. Runs as a Docker microservice.</p>
-      <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:end;margin-bottom:10px">
-        <div class="cmf"><label>Open Notebook API URL</label><input id="on-url" value="http://localhost:5055" placeholder="http://localhost:5055"></div>
-        <div class="cmf"><label>Password (optional)</label><input id="on-pw" type="password" placeholder="APP_PASSWORD"></div>
-        <button class="btn" onclick="onConnect()">Connect</button>
-      </div>
-      <div id="on-status" style="padding:6px 10px;border-radius:4px;font-size:10px;font-family:var(--m);background:var(--a);border:1px solid var(--b)">Not connected — run <b>docker compose up</b> to start Open Notebook</div>
-    </div></div>
-  </div>
-  <div class="gr g2">
-    <!-- NOTEBOOKS -->
-    <div class="cd"><div class="ch"><span class="ct">Notebooks</span><span class="cc" id="on-nb-ct">0</span></div>
-    <div style="padding:12px">
-      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:end;margin-bottom:8px">
-        <div class="cmf"><label>Name</label><input id="on-nb-name" placeholder="e.g. FHA Compliance Research"></div>
-        <div class="cmf"><label>Description</label><input id="on-nb-desc" placeholder="Research notes on HB 4000.1"></div>
-        <button class="btn" onclick="onCreateNotebook()">Create</button>
-      </div>
-      <table><thead><tr><th>ID</th><th>Name</th><th>Sources</th><th>Actions</th></tr></thead>
-      <tbody id="tb-notebooks"><tr><td colspan="4" class="empty">No notebooks yet</td></tr></tbody></table>
-    </div></div>
-    <!-- SOURCES & UPLOAD -->
-    <div class="cd"><div class="ch"><span class="ct">Sources & Upload</span></div>
-    <div style="padding:12px">
-      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:end;margin-bottom:8px">
-        <div class="cmf"><label>Notebook</label><select id="on-src-nb"></select></div>
-        <div class="cmf"><label>URL or PDF</label><input id="on-src-url" placeholder="https://... or upload PDF"></div>
-        <button class="btn" onclick="onAddSource()">Add Source</button>
-      </div>
-      <div style="font-size:9px;color:var(--td);font-family:var(--m);margin-bottom:6px">Supports: PDF, YouTube, Web pages, Audio, Text files</div>
-      <table><thead><tr><th>Source</th><th>Type</th><th>Status</th></tr></thead>
-      <tbody id="tb-sources"><tr><td colspan="3" class="empty">Add sources above</td></tr></tbody></table>
-    </div></div>
-  </div>
-  <div class="gr g2">
-    <!-- CHAT WITH NOTEBOOK -->
-    <div class="cd"><div class="ch"><span class="ct">Chat with Notebook (RAG)</span></div>
-    <div style="padding:12px">
-      <div class="cmf" style="margin-bottom:6px"><label>Notebook</label><select id="on-chat-nb"></select></div>
-      <div id="on-chat-box" class="chat-box" style="min-height:160px;margin-bottom:6px"><div class="empty">Ask questions about your research sources. RAG-powered via Open Notebook.</div></div>
-      <div style="display:flex;gap:6px"><input id="on-chat-q" placeholder="What are the key insights from this research?" style="flex:1;padding:5px 8px;border:1px solid var(--b);border-radius:4px;font-size:11px;outline:none">
-      <button class="btn" onclick="onChat()" id="on-chat-btn">Ask</button></div>
-    </div></div>
-    <!-- INTEGRATIONS: Notion + Wispr + Google Drive -->
-    <div class="cd"><div class="ch"><span class="ct">Connected Services</span></div>
-    <div style="padding:12px">
-      <div style="margin-bottom:10px;padding:10px;background:var(--a);border-radius:6px;border:1px solid var(--b)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b style="font-size:11px">Notion</b><span class="bd bd-idle" id="notion-st">Ready</span></div>
-        <div style="font-size:10px;color:var(--t2);margin-bottom:6px">Sync notebooks ↔ Notion pages. Push research notes as Notion blocks.</div>
-        <div class="cmf" style="margin-bottom:4px"><label>Notion API Token</label><input id="notion-tok" type="password" placeholder="secret_..."></div>
-        <div class="cmf" style="margin-bottom:4px"><label>Database ID</label><input id="notion-db" placeholder="Notion database ID"></div>
-        <button class="btn btn-sm" onclick="notionSync()">Sync to Notion</button>
-        <span id="notion-log" style="font-size:9px;color:var(--tm);font-family:var(--m);margin-left:6px"></span>
-      </div>
-      <div style="margin-bottom:10px;padding:10px;background:var(--a);border-radius:6px;border:1px solid var(--b)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b style="font-size:11px">Wispr Flow</b><span class="bd bd-idle" id="wispr-st">Ready</span></div>
-        <div style="font-size:10px;color:var(--t2);margin-bottom:6px">Voice-to-text dictation for notes. Wispr captures speech → Open Notebook stores it.</div>
-        <div class="cmf" style="margin-bottom:4px"><label>Wispr Webhook URL</label><input id="wispr-hook" placeholder="https://hooks.wispr.flow/..."></div>
-        <button class="btn btn-sm" onclick="wisprConnect()">Connect Wispr</button>
-        <span id="wispr-log" style="font-size:9px;color:var(--tm);font-family:var(--m);margin-left:6px"></span>
-      </div>
-      <div style="padding:10px;background:var(--a);border-radius:6px;border:1px solid var(--b)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b style="font-size:11px">Google Drive</b><span class="bd bd-idle" id="gdrive-st">Ready</span></div>
-        <div style="font-size:10px;color:var(--t2);margin-bottom:6px">Import docs/PDFs from Google Drive into Open Notebook as sources. Uses Drive API v3.</div>
-        <div class="cmf" style="margin-bottom:4px"><label>Drive Folder ID</label><input id="gdrive-fid" placeholder="Google Drive folder ID"></div>
-        <button class="btn btn-sm" onclick="gdriveImport()">Import from Drive</button>
-        <span id="gdrive-log" style="font-size:9px;color:var(--tm);font-family:var(--m);margin-left:6px"></span>
-      </div>
-    </div></div>
-  </div>
-  <div class="gr g1">
-    <div class="cd"><div class="ch"><span class="ct">Sync Bus — Live Activity</span><span class="cc" id="sync-ct">Bidirectional relay between all services</span></div>
-    <div id="sync-log" style="max-height:200px;overflow-y:auto"><div class="empty">Sync events appear here as services communicate. Actions in any tab trigger relays to connected services.</div></div></div>
-  </div>
-  <div class="gr g1">
-    <div class="cd"><div class="ch"><span class="ct">Sync Architecture</span></div>
-    <div style="padding:12px;font-family:var(--m);font-size:9px;line-height:1.8;color:var(--t2)">
-<b>Agent Task Completed</b> → Telegram alert + Notion page<br>
-<b>Paperclip Ticket Approved</b> → Telegram alert + Notion page<br>
-<b>Google Drive Import</b> → Open Notebook sources + Notion log + Telegram alert<br>
-<b>Notebook RAG Answer</b> → Notion research page + Telegram summary<br>
-<b>Wispr Voice Note</b> → Open Notebook note + Notion sync<br>
-<b>Intelligence Report</b> → Notion page + Telegram broadcast<br>
-Every action flows through <b>syncBus(event, source, targets, payload)</b> — credentials are read from each service's config panel.
-    </div></div>
-  </div>
-  <div class="gr g1">
-    <div class="cd"><div class="ch"><span class="ct">Docker Quick Start</span></div>
-    <div style="padding:12px;font-family:var(--m);font-size:10px;background:var(--a);border-radius:4px;line-height:1.6;white-space:pre-wrap">curl -o docker-compose.yml https://raw.githubusercontent.com/lfnovo/open-notebook/main/docker-compose.yml
-docker compose up -d
-# UI: http://localhost:8502  |  API: http://localhost:5055/docs
-# Ports: 8502 (Next.js frontend) + 5055 (FastAPI backend) + 8000 (SurrealDB)</div></div>
-  </div>
-</div>
-
-<!-- TELEGRAM / CONNECTIONS -->
-<div id="pg-tg" class="pg">
-  <div class="gr g2">
-    <!-- VERCEL AUTO-DEPLOY -->
-    <div class="cd" style="border-left:3px solid var(--g)"><div class="ch"><span class="ct">Vercel Auto-Deploy</span><span class="cc" id="vercel-st">Ready</span></div>
-    <div style="padding:14px">
-      <p style="font-size:10px;color:var(--t2);margin-bottom:8px">Push changes auto-deploy to Vercel. Use the Deploy Hook for instant one-click republish without pushing code.</p>
-      <div style="padding:8px;background:var(--gb);border:1px solid var(--gbb);border-radius:4px;margin-bottom:10px;font-size:10px;font-family:var(--m)">
-        <span style="color:var(--g);font-weight:700">LIVE</span> <a href="https://mortgage-fintech-os-i7et.vercel.app/" target="_blank" style="color:var(--t);text-decoration:underline">mortgage-fintech-os-i7et.vercel.app</a>
-      </div>
-      <div class="cmf" style="margin-bottom:8px"><label>Deploy Hook URL (Vercel Dashboard → Settings → Git → Deploy Hooks)</label><input id="vercel-hook" placeholder="https://api.vercel.com/v1/integrations/deploy/prj_..." value=""></div>
-      <div style="display:flex;gap:6px;margin-bottom:8px">
-        <button class="btn btn-g" onclick="vercelDeploy()" id="vercel-btn">Deploy Now</button>
-        <button class="btn" onclick="vercelCheck()">Check Status</button>
-      </div>
-      <div id="vercel-log" class="rbox" style="margin-top:0"></div>
-      <div style="margin-top:10px;padding:8px;background:var(--a);border-radius:4px;font-size:9px;font-family:var(--m);color:var(--tm);line-height:1.6">
-        <b style="color:var(--t)">Setup (one time):</b><br>
-        1. Go to <b>vercel.com/[your-project]/settings/git</b><br>
-        2. Scroll to "Deploy Hooks" → Create Hook (name: "MortgageFintechOS", branch: main)<br>
-        3. Copy the URL and paste above<br>
-        4. Click "Deploy Now" to trigger instant redeploy<br>
-        <b style="color:var(--t);margin-top:4px;display:block">Auto-deploy:</b> Any push to <b>main</b> branch auto-deploys to Vercel. No manual action needed.
-      </div>
-    </div></div>
-    <!-- TELEGRAM -->
-    <div class="cd"><div class="ch"><span class="ct">Telegram Bot</span></div>
-    <div style="padding:14px">
-      <div class="cmf" style="margin-bottom:8px"><label>Bot Token (@BotFather)</label><input id="tg-tok" type="password" placeholder="Enter token"></div>
-      <div class="cmf" style="margin-bottom:8px"><label>Chat ID</label><input id="tg-cid" placeholder="Your chat ID"></div>
-      <button class="btn btn-bl" onclick="tgTest()">Test Connection</button>
-      <div id="tg-log" class="rbox" style="margin-top:8px"></div>
-    </div></div>
-  </div>
-  <div class="gr g1">
-    <div class="cd"><div class="ch"><span class="ct">Connected Services</span></div>
-    <div style="padding:14px;font-size:11px;line-height:2;column-count:2;column-gap:24px">
-      <div><span class="bd bd-idle">OK</span> <b>Puter.js</b> — 500+ LLMs free (Claude, GPT, DeepSeek, Kimi K2.5)</div>
-      <div><span class="bd bd-idle">OK</span> <b>Anthropic API</b> — Claude in artifacts</div>
-      <div><span class="bd bd-idle">OK</span> <b>Kimi K2.5</b> — via OpenRouter / NVIDIA NIM (free)</div>
-      <div><span class="bd bd-idle">OK</span> <b>Google Search</b> — via web_search tool</div>
-      <div><span class="bd bd-idle">OK</span> <b>Netlify</b> — Deploy MCP connected</div>
-      <div><span class="bd bd-idle">OK</span> <b>Vercel</b> — Auto-deploy on push to main</div>
-      <div><span class="bd" style="background:var(--ab);color:var(--am)">CFG</span> <b>Telegram</b> — Configure token above</div>
-      <div><span class="bd" style="background:var(--a);color:var(--tm)">REF</span> <b>NotebookLM</b> — Reference knowledge base</div>
-    </div></div>
-  </div>
-</div>
-
-</div>
-<footer class="ft">MortgageFintechOS AI Office v1.0 · Cory Lawson / The Lawson Group · 9 Agents · Puter.js · <a href="https://github.com/CoryLawsonxMortgageAI/MortgageFintechOS-" target="_blank">GitHub</a></footer>
+<footer class="footer">
+    MortgageFintechOS v3.0.0 &mdash; Cory Lawson / The Lawson Group &mdash; Fully Connected Autonomous AI Operating System
+</footer>
 
 <script>
-const T0=new Date("2026-03-06T04:00:00Z");
-const R={DIEGO:"Pipeline Orchestration",MARTIN:"Document Intelligence",NOVA:"Income & DTI",JARVIS:"Condition Resolution",ATLAS:"Full-Stack Engineering",CIPHER:"Security Engineering",FORGE:"DevOps Engineering",NEXUS:"Code Quality",STORM:"Data Engineering"};
-const TP={DIEGO:"ops",MARTIN:"ops",NOVA:"ops",JARVIS:"ops",ATLAS:"code",CIPHER:"code",FORGE:"code",NEXUS:"code",STORM:"code"};
-let exC=0;
-const A={DIEGO:{s:"idle",e:0,c:47},MARTIN:{s:"idle",e:1,c:132},NOVA:{s:"idle",e:0,c:89},JARVIS:{s:"idle",e:2,c:64},ATLAS:{s:"idle",e:0,c:28},CIPHER:{s:"idle",e:0,c:15},FORGE:{s:"idle",e:1,c:22},NEXUS:{s:"idle",e:0,c:41},STORM:{s:"idle",e:0,c:19}};
-const log=[];
-const ACT={
-  DIEGO:["triage_loan","check_pipeline_health","get_pipeline_report","advance_stage","assign_priority"],
-  MARTIN:["classify_document","validate_ocr","detect_fraud","audit_completeness","run_document_audit"],
-  NOVA:["calculate_w2_income","analyze_schedule_c","calculate_dti","evaluate_collections","full_income_analysis"],
-  JARVIS:["draft_loe","map_conditions","lookup_citation","add_condition","get_condition_status"],
-  ATLAS:["generate_api","build_feature","run_migration","scaffold_component"],
-  CIPHER:["owasp_scan","compliance_check","encryption_audit","patch_vulnerability"],
-  FORGE:["deploy","rollback","build_pipeline","rotate_secrets"],
-  NEXUS:["review_pr","generate_tests","analyze_debt","refactor"],
-  STORM:["build_etl","optimize_query","hmda_report","uldd_export"]
+/**
+ * MortgageFintechOS Dashboard v3
+ * Fully Connected Autonomous AI Operating System
+ * Action Log, Schedule Control, Hydrospeed Ontology, Predictive Telemetry, Expert Tips
+ */
+
+const REFRESH_INTERVAL = 5000;
+
+const AGENT_DESCRIPTIONS = {
+    DIEGO: "Pipeline Orchestration",
+    MARTIN: "Document Intelligence",
+    NOVA: "Income & DTI Analysis",
+    JARVIS: "Condition Resolution",
+    ATLAS: "Full-Stack Engineering",
+    CIPHER: "Security Engineering",
+    FORGE: "DevOps Engineering",
+    NEXUS: "Code Quality",
+    STORM: "Data Engineering",
+    SENTINEL: "System Intelligence",
+    HUNTER: "Lead Generation",
+    HERALD: "Content Marketing",
+    AMBASSADOR: "Community Engagement",
 };
-const MODELS=[
-  {n:"Claude Opus 4.5",p:"Anthropic",s:87,t:["code","reason"],f:false,c:"$15/M"},
-  {n:"GPT-5.2 Codex",p:"OpenAI",s:89,t:["code","reason"],f:false,c:"$20/M"},
-  {n:"Kimi K2.5",p:"Moonshot AI",s:82,t:["code","multi","free"],f:true,c:"Free (NVIDIA)"},
-  {n:"DeepSeek V3.2",p:"DeepSeek",s:85,t:["code","reason","free"],f:true,c:"$0.27/M"},
-  {n:"Qwen 3.5 397B",p:"Alibaba",s:86,t:["code","reason","free"],f:true,c:"Free"},
-  {n:"GLM-5 Reasoning",p:"Z AI",s:84,t:["reason","free"],f:true,c:"Free"},
-  {n:"Gemini 3 Pro",p:"Google",s:86,t:["code","multi"],f:false,c:"$3.50/M"},
-  {n:"Llama 4 Scout",p:"Meta",s:80,t:["code","free"],f:true,c:"Free (Apache)"},
-  {n:"Mistral Large 3",p:"Mistral AI",s:83,t:["code","reason","free"],f:true,c:"Free (Apache)"},
-  {n:"Hermes 4 405B",p:"Nous Research",s:81,t:["code","reason","free"],f:true,c:"Free (Unrestricted)"},
-  {n:"Dolphin 3.0 R1",p:"Cognitive Comp",s:78,t:["reason","free"],f:true,c:"Free (Uncensored)"},
-  {n:"Devstral 2",p:"Mistral AI",s:82,t:["code","free"],f:true,c:"Free (Code Agent)"},
-  {n:"Codestral",p:"Mistral AI",s:84,t:["code","free"],f:true,c:"Free (Code)"},
-  {n:"Qwen 3 Coder Next",p:"Alibaba",s:85,t:["code","free"],f:true,c:"Free"},
-  {n:"Nemotron Nano 9B",p:"NVIDIA",s:76,t:["reason","free"],f:true,c:"Free (Edge)"},
-];
-function rId(){return Math.random().toString(36).substr(2,8)}
-function rI(a,b){return Math.floor(Math.random()*(b-a+1))+a}
-function pk(a){return a[Math.floor(Math.random()*a.length)]}
-function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML}
-function fmt(d){return new Date(d).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"})}
-function up(){const d=Math.floor((Date.now()-T0.getTime())/1000);return Math.floor(d/3600)+"h "+Math.floor((d%3600)/60)+"m"}
 
-// OFFICE MANAGER: Assigns work, checks results, logs everything
-function mgrLog(agent,action,result){
-  const now=new Date().toISOString();
-  const pass=!result.error&&result.risk_level!=="high"&&result.overall_pass!==false;
-  const review=pass?"✓ Approved":"⚠ Flagged for review";
-  log.unshift({ts:now,mgr:"MANAGER",msg:`Assigned ${action} to ${agent} → ${review}`});
-  if(log.length>50)log.pop();
-  if(TP[agent]==="code"){
-    const chain={ATLAS:"NEXUS",NEXUS:"CIPHER",CIPHER:"FORGE"};
-    const next=chain[agent];
-    if(next){log.unshift({ts:now,mgr:"MANAGER",msg:`Routing output to ${next} for ${next==="NEXUS"?"code review":next==="CIPHER"?"security scan":"deployment"}`});}
-  }
-  // SYNC BUS: Broadcast task result to all connected services
-  const targets=[];
-  if(document.getElementById("tg-tok")?.value)targets.push("telegram");
-  if(document.getElementById("notion-tok")?.value)targets.push("notion");
-  if(targets.length)syncBus("task_completed",agent,targets,{title:agent+" — "+action,message:agent+" completed "+action+": "+review,content:JSON.stringify(result).substring(0,500)});
+let refreshTimer = null;
+let currentTab = "overview";
+let editingJob = "";
+
+// --- Utilities ---
+
+async function fetchJSON(url) {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    return resp.json();
 }
 
-// AGENT ENGINE (mirrors full Python codebase)
-function run(ag,act){
-  const ts=new Date().toISOString();
-  if(ag==="DIEGO"){
-    if(act==="triage_loan"){const lt=pk(["FHA","VA","CONV","USDA"]),cs=rI(560,780),rules={FHA:580,VA:620,CONV:620,USDA:640},fl=[];if(cs<rules[lt])fl.push("Credit "+cs+" < "+rules[lt]);return{loan_id:"LN-"+rId(),loan_type:lt,credit_score:cs,flags:fl,recommendation:fl.length?"manual_review":"proceed"};}
-    if(act==="check_pipeline_health")return{total_loans:rI(15,45),health:"healthy",stages:{application:rI(3,10),underwriting:rI(4,12)}};
-    if(act==="get_pipeline_report")return{date:ts,active:rI(20,50),by_type:{FHA:rI(5,15),VA:rI(3,10),CONV:rI(8,20)}};
-    if(act==="advance_stage")return{loan_id:"LN-"+rId(),from:"processing",to:"underwriting"};
-    if(act==="assign_priority"){const d=rI(3,35);return{loan_id:"LN-"+rId(),priority:d<=5?"critical":d<=10?"high":"medium",lock_days:d};}
-  }
-  if(ag==="MARTIN"){
-    if(act==="classify_document")return{type:pk(["w2","paystub","bank_statement","tax_return"]),confidence:+(0.75+Math.random()*0.2).toFixed(2),needs_review:Math.random()>.7};
-    if(act==="validate_ocr")return{valid:Math.random()>.3,fields_checked:rI(3,8),issues:Math.random()>.7?["income out of range"]:[]};
-    if(act==="detect_fraud"){const s=+(Math.random()*.8).toFixed(2);return{risk_score:s,risk_level:s>.5?"high":s>.25?"medium":"low",recommendation:s>.3?"flag_for_review":"pass"};}
-    if(act==="audit_completeness")return{loan_id:"LN-"+rId(),required:4,received:rI(2,4),complete:Math.random()>.5};
-    if(act==="run_document_audit")return{audited:rI(8,25),incomplete:rI(0,5)};
-  }
-  if(ag==="NOVA"){
-    if(act==="calculate_w2_income"){const m1=rI(3500,9000),m2=rI(3200,8500);return{method_1:"$"+m1,method_2:"$"+m2,qualifying:"$"+Math.min(m1,m2),trending:m1>m2*1.1?"increasing":"stable",citation:"FHA HB 4000.1 II.A.5.b"};}
-    if(act==="analyze_schedule_c")return{monthly:"$"+rI(2000,8000),trending:pk(["stable","increasing","declining"]),citation:"FHA HB 4000.1 II.A.4.c.ii"};
-    if(act==="calculate_dti"){const fr=rI(25,42),br=rI(35,55);return{front:fr+"%",back:br+"%",overall_pass:fr<=31&&br<=43,citation:"FHA HB 4000.1 II.A.4.b"};}
-    if(act==="evaluate_collections"){const b=rI(500,6000);return{balance:"$"+b,exceeds:b>=2000,obligation:b>=2000?"$"+(b*.05).toFixed(2):"$0",citation:"FHA HB 4000.1 II.A.4.d.v"};}
-    if(act==="full_income_analysis")return{loan_id:"LN-"+rId(),risk_level:pk(["low","medium"]),analyses:["w2","dti"]};
-  }
-  if(ag==="JARVIS"){
-    const bn=pk(["James Wilson","Sarah Chen","Michael Torres"]);
-    if(act==="draft_loe")return{type:pk(["employment_gap","large_deposit"]),letter:"To Whom It May Concern,\n\nI, "+bn+", am writing to explain...\n\nSincerely,\n"+bn};
-    if(act==="map_conditions")return{conditions:rI(2,5),docs_needed:rI(3,8)};
-    if(act==="lookup_citation")return{category:pk(["income","assets","credit"]),investor:pk(["FHA","FNMA"]),citation:"FHA HB 4000.1 II.A.5"};
-    if(act==="add_condition")return{id:"COND-"+rI(1,99),status:"open"};
-    if(act==="get_condition_status")return{total:rI(2,8),open:rI(0,3),cleared:rI(1,5)};
-  }
-  if(ag==="ATLAS"){
-    if(act==="generate_api")return{endpoint:"/api/v1/"+pk(["loans","docs"])+"/"+rId(),files:rI(2,5),coverage:rI(75,95)+"%"};
-    if(act==="build_feature")return{feature:pk(["Borrower dashboard","Doc upload"]),pr:"#"+rI(50,200),lines:rI(150,800)};
-    if(act==="run_migration")return{tables:rI(1,4),status:"applied"};
-    if(act==="scaffold_component")return{component:pk(["LoanTable","BorrowerCard"]),files:rI(2,4)};
-  }
-  if(ag==="CIPHER"){
-    if(act==="owasp_scan"){const v=rI(0,3);return{vulns:v,status:v===0?"pass":"review",categories:v?["A01:Broken Access"]:[]};} 
-    if(act==="compliance_check")return{frameworks:["SOC2","PCI","GLBA"],passed:rI(8,12),failed:rI(0,2),overall:Math.random()>.3?"compliant":"action_required"};
-    if(act==="encryption_audit")return{at_rest:"AES-256",in_transit:"TLS 1.3",status:"secure"};
-    if(act==="patch_vulnerability")return{cve:"CVE-2025-"+rI(10000,99999),patched:true};
-  }
-  if(ag==="FORGE"){
-    if(act==="deploy")return{id:"deploy-"+rId(),env:"production",status:"success",duration:rI(45,180)+"s"};
-    if(act==="rollback")return{status:"rolled_back",downtime:"0s"};
-    if(act==="build_pipeline")return{stages:["lint","test","build","deploy"],status:"configured"};
-    if(act==="rotate_secrets")return{rotated:rI(2,6),next:"90 days"};
-  }
-  if(ag==="NEXUS"){
-    if(act==="review_pr")return{pr:"#"+rI(50,200),comments:rI(1,8),approval:Math.random()>.3?"approved":"changes_requested",score:rI(70,98)+"/100"};
-    if(act==="generate_tests")return{cases:rI(8,30),coverage_after:rI(75,95)+"%"};
-    if(act==="analyze_debt")return{score:rI(3,8)+"/10",hotspots:rI(2,6)};
-    if(act==="refactor")return{files:rI(2,8),complexity_reduction:rI(30,60)+"%"};
-  }
-  if(ag==="STORM"){
-    if(act==="build_etl")return{pipeline:pk(["loan_ingestion","borrower_sync"]),status:"running"};
-    if(act==="optimize_query")return{before:rI(800,3000)+"ms",after:rI(15,150)+"ms",improvement:rI(85,98)+"%"};
-    if(act==="hmda_report")return{records:rI(500,5000),format:"pipe-delimited",status:"generated"};
-    if(act==="uldd_export")return{loans:rI(10,100),investor:pk(["FNMA","FHLMC"]),status:"exported"};
-  }
-  return{status:"done"};
+function formatTime(iso) {
+    if (!iso) return "--";
+    return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
-// Execute task with Office Manager supervision
-function oExec(){
-  const ag=document.getElementById("o-ag").value;
-  const act=document.getElementById("o-act").value;
-  const pri=document.getElementById("o-pri").value;
-  const btn=document.getElementById("o-btn");
-  btn.disabled=true;btn.textContent="Working...";
-  const a=A[ag];a.s="running";render();
-  log.unshift({ts:new Date().toISOString(),mgr:"MANAGER",msg:`Assigning ${act} to ${ag} [${pri}]`});
-  setTimeout(()=>{
-    const res=run(ag,act);
-    a.s="idle";a.c++;exC++;
-    mgrLog(ag,act,res);
-    const box=document.getElementById("o-result");
-    box.classList.add("on");
-    box.innerHTML=fmt(new Date())+" "+ag+" → "+act+"\n✓ Complete\n\n"+JSON.stringify(res,null,2).replace(/(".*?")\s*:/g,'<b>$1</b>:');
-    btn.disabled=false;btn.textContent="Assign & Execute";
-    render();
-  },400+Math.random()*600);
+function formatRelative(iso) {
+    if (!iso) return "--";
+    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (diff < 60) return diff + "s ago";
+    if (diff < 3600) return Math.floor(diff / 60) + "m ago";
+    return Math.floor(diff / 3600) + "h ago";
 }
 
-function oSync(){const ag=document.getElementById("o-ag").value;const s=document.getElementById("o-act");s.innerHTML="";(ACT[ag]||[]).forEach(a=>{const o=document.createElement("option");o.value=a;o.textContent=a;s.appendChild(o);})}
-
-// AI CHAT via Puter.js
-async function aiSend(){
-  const mod=document.getElementById("ai-mod").value;
-  const ctx=document.getElementById("ai-ctx").value;
-  const inp=document.getElementById("ai-in").value.trim();
-  if(!inp)return;
-  const box=document.getElementById("ai-chat");
-  const btn=document.getElementById("ai-btn");
-  if(box.querySelector('.empty'))box.innerHTML='';
-  box.innerHTML+='<div class="msg msg-u">'+esc(inp)+'</div>';
-  document.getElementById("ai-in").value='';
-  btn.disabled=true;btn.textContent="...";
-  box.innerHTML+='<div class="msg msg-a"><div class="msg-m">'+mod+'</div><span id="ai-typing">Thinking...</span></div>';
-  box.scrollTop=box.scrollHeight;
-  try{
-    const resp=await puter.ai.chat(inp,{model:mod,system:ctx});
-    let text='';
-    if(typeof resp==='string')text=resp;
-    else if(resp?.message?.content?.[0]?.text)text=resp.message.content[0].text;
-    else if(resp?.message?.content&&typeof resp.message.content==='string')text=resp.message.content;
-    else if(resp?.text)text=resp.text;
-    else text=JSON.stringify(resp,null,2);
-    document.getElementById("ai-typing").outerHTML='<div>'+esc(text).replace(/\n/g,'<br>')+'</div>';
-  }catch(e){
-    const m=e.message||String(e);
-    document.getElementById("ai-typing").outerHTML='<span style="color:var(--r)">'+(m.includes('model')||m.includes('not found')?'Model not available via Puter.js — try another. ':'')+'Error: '+esc(m)+'</span>';
-  }
-  btn.disabled=false;btn.textContent="Send";box.scrollTop=box.scrollHeight;
+function esc(str) {
+    const d = document.createElement("div");
+    d.textContent = str;
+    return d.innerHTML;
 }
 
-// Intelligence Reports via Puter.js
-async function genReport(){
-  const prompt=document.getElementById("rpt-type").value;
-  const mod=document.getElementById("rpt-mod").value;
-  const btn=document.getElementById("rpt-btn");
-  const box=document.getElementById("rpt-out");
-  btn.disabled=true;btn.textContent="Generating...";
-  box.classList.add("on");box.textContent="Querying "+mod+"...\n";
-  try{
-    const resp=await puter.ai.chat(prompt+" Be thorough, structured with headers, and cite specific data points.",{model:mod,system:"You are an intelligence analyst for a mortgage lending company. Produce structured, actionable reports."});
-    let text='';
-    if(typeof resp==='string')text=resp;
-    else if(resp?.message?.content?.[0]?.text)text=resp.message.content[0].text;
-    else if(resp?.message?.content&&typeof resp.message.content==='string')text=resp.message.content;
-    else if(resp?.text)text=resp.text;
-    else text=JSON.stringify(resp,null,2);
-    box.textContent=text;
-    // SYNC: Push report to Notion + Telegram
-    const rptTitle=document.getElementById("rpt-type").selectedOptions[0]?.text||"Intelligence Report";
-    const tgts=[];if(document.getElementById("notion-tok")?.value)tgts.push("notion");if(document.getElementById("tg-tok")?.value)tgts.push("telegram");
-    if(tgts.length)syncBus("report_generated","IntelReports",tgts,{title:rptTitle,message:"Report generated via "+mod+": "+text.substring(0,200)+"...",content:text.substring(0,1800)});
-  }catch(e){box.textContent="Error: "+(e.message||e)+"\n\nTry a different model from the dropdown.";}
-  btn.disabled=false;btn.textContent="Generate";
+function severityClass(s) {
+    return s === "critical" ? "danger" : s === "high" ? "warning" : s === "medium" ? "warning" : "info";
 }
 
-// Model Discovery
-function fMod(filter){
-  const grid=document.getElementById("mod-grid");
-  const filtered=filter==='all'?MODELS:MODELS.filter(m=>filter==='free'?m.f:m.t.includes(filter));
-  grid.innerHTML=filtered.map(m=>'<div class="cd"><div style="padding:12px"><div style="display:flex;justify-content:space-between;align-items:start"><div><div style="font-weight:700;font-size:12px">'+esc(m.n)+'</div><div style="font-size:9px;color:var(--tm);font-family:var(--m)">'+esc(m.p)+'</div></div><div style="font-size:18px;font-weight:700;font-family:var(--m);color:var(--g)">'+m.s+'</div></div><div style="margin-top:6px">'+m.t.map(t=>'<span class="pr" style="background:var(--'+(t==='code'?'blb':t==='reason'?'vb':t==='free'?'gb':'ab')+');color:var(--'+(t==='code'?'bl':t==='reason'?'v':t==='free'?'g':'am')+');margin-right:3px">'+t+'</span>').join('')+'</div><div style="font-size:9px;color:var(--td);font-family:var(--m);margin-top:4px">'+esc(m.c)+'</div></div></div>').join('');
-}
+// --- Tab Navigation ---
 
-// ══════ SYNC BUS — Bidirectional Communication Layer ══════
-const syncLog=[];
-function getCreds(){return{
-  tg_token:document.getElementById("tg-tok")?.value||"",
-  tg_chat_id:document.getElementById("tg-cid")?.value||"",
-  notion_token:document.getElementById("notion-tok")?.value||"",
-  notion_db:document.getElementById("notion-db")?.value||"",
-  on_url:document.getElementById("on-url")?.value||"http://localhost:5055",
-  on_password:document.getElementById("on-pw")?.value||"",
-  gdrive_fid:document.getElementById("gdrive-fid")?.value||""
-};}
-async function syncBus(event,source,targets,payload){
-  const ts=new Date().toISOString();
-  syncLog.unshift({ts,event,source,targets,status:"sending"});
-  renderSyncLog();
-  const creds=getCreds();
-  const results={};
-  // Direct client-side relay to each target (works without serverless backend too)
-  for(const t of targets){
-    try{
-      if(t==="telegram"&&creds.tg_token&&creds.tg_chat_id){
-        const msg=payload.message||payload.title||JSON.stringify(payload).substring(0,300);
-        const r=await fetch("https://api.telegram.org/bot"+creds.tg_token+"/sendMessage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:creds.tg_chat_id,text:"🔄 ["+source+"] "+event+"\n\n"+msg})});
-        const d=await r.json();results.telegram=d.ok?"✓ sent":"✗ "+d.description;
-      }
-      if(t==="notion"&&creds.notion_token&&creds.notion_db){
-        const title=(payload.title||event)+" — "+new Date().toLocaleTimeString();
-        const content=payload.content||payload.message||JSON.stringify(payload).substring(0,1500);
-        const r=await fetch("https://api.notion.com/v1/pages",{method:"POST",headers:{"Authorization":"Bearer "+creds.notion_token,"Content-Type":"application/json","Notion-Version":"2022-06-28"},body:JSON.stringify({parent:{database_id:creds.notion_db},properties:{Name:{title:[{text:{content:title}}]}},children:[{object:"block",type:"paragraph",paragraph:{rich_text:[{text:{content:content.substring(0,2000)}}]}}]})});
-        const d=await r.json();results.notion=d.id?"✓ page:"+d.id.substring(0,8):"✗ error";
-      }
-      if(t==="open_notebook"&&creds.on_url){
-        const h={"Content-Type":"application/json"};if(creds.on_password)h["Authorization"]="Bearer "+creds.on_password;
-        if(payload.action==="add_source"){
-          try{await fetch(creds.on_url+"/sources",{method:"POST",headers:h,body:JSON.stringify({type:"url",url:payload.url,notebook_id:payload.notebook_id}),signal:AbortSignal.timeout(5000)});results.open_notebook="✓ source added";}catch(e){results.open_notebook="sim: source queued";}
-        }else if(payload.action==="create_note"){
-          results.open_notebook="✓ note synced";
-        }else{results.open_notebook="✓ received";}
-      }
-      if(t==="wispr"){results.wispr="✓ webhook triggered";}
-      if(t==="google_drive"){results.google_drive="✓ queued for Drive sync";}
-    }catch(e){results[t]="✗ "+e.message;}
-  }
-  syncLog[0].status="done";syncLog[0].results=results;
-  renderSyncLog();return results;
-}
-function renderSyncLog(){
-  const el=document.getElementById("sync-log");
-  if(!el)return;
-  el.innerHTML=syncLog.slice(0,15).map(s=>{
-    const res=s.results?Object.entries(s.results).map(([k,v])=>k+":"+v).join(" | "):"pending...";
-    return '<div class="office-log"><span class="ol-time">'+fmt(s.ts)+'</span><span class="ol-mgr" style="width:60px">'+s.source+'</span><span class="ol-msg"><b>'+esc(s.event)+'</b> → '+s.targets.join(",")+' — <span style="color:'+(s.status==="done"?"var(--g)":"var(--am)")+'">'+esc(res)+'</span></span></div>';
-  }).join('');
-}
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+            document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+            btn.classList.add("active");
+            const tab = btn.dataset.tab;
+            document.getElementById("tab-" + tab).classList.add("active");
+            currentTab = tab;
+            refreshTab(tab);
+        });
+    });
+    refresh();
+    refreshTimer = setInterval(refresh, REFRESH_INTERVAL);
+});
 
-// Telegram test
-async function tgTest(){
-  const tok=document.getElementById("tg-tok").value;
-  const cid=document.getElementById("tg-cid").value;
-  const box=document.getElementById("tg-log");
-  box.classList.add("on");
-  if(!tok||!cid){box.textContent="Enter token and chat ID first";return;}
-  box.textContent="Testing connection...";
-  try{
-    const r=await fetch("https://api.telegram.org/bot"+tok+"/sendMessage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:cid,text:"✅ MortgageFintechOS AI Office connected\n9 agents operational\nUptime: "+up()})});
-    const d=await r.json();
-    box.textContent=d.ok?"✓ Message sent successfully!":"✗ Error: "+JSON.stringify(d);
-  }catch(e){box.textContent="✗ "+e.message;}
-}
+// --- Main Refresh ---
 
-// ══════ PAPERCLIP AI INTEGRATION ══════
-const clipTickets=[];
-const clipAudit=[];
-const clipBudgets={
-  DIEGO:{budget:500,used:127},MARTIN:{budget:500,used:312},NOVA:{budget:400,used:198},JARVIS:{budget:400,used:89},
-  ATLAS:{budget:800,used:445},CIPHER:{budget:600,used:201},FORGE:{budget:700,used:388},NEXUS:{budget:500,used:267},STORM:{budget:300,used:45}
-};
-let clipConnected=false;
+async function refresh() {
+    try {
+        const [status, health, agents, queue, schedule, alerts] = await Promise.all([
+            fetchJSON("/api/status"), fetchJSON("/api/health"),
+            fetchJSON("/api/agents"), fetchJSON("/api/queue"),
+            fetchJSON("/api/schedule"), fetchJSON("/api/alerts"),
+        ]);
 
-async function clipConnect(){
-  const url=document.getElementById("clip-url").value;
-  const st=document.getElementById("clip-status");
-  st.innerHTML="Connecting to "+esc(url)+"...";
-  try{
-    const r=await fetch(url+"/api/health",{signal:AbortSignal.timeout(3000)});
-    if(r.ok){clipConnected=true;st.innerHTML='<span style="color:var(--g)">✓ Connected to Paperclip at '+esc(url)+'</span>';st.style.background="var(--gb)";st.style.borderColor="#bbf7d0";
-      clipAuditLog("system","Connected to Paperclip AI at "+url);renderClip();return;}
-  }catch(e){}
-  // Simulate connection for demo when server not running
-  clipConnected=true;
-  st.innerHTML='<span style="color:var(--g)">✓ Connected (simulation mode) — run <b>npx paperclipai</b> for live data</span>';
-  st.style.background="var(--gb)";st.style.borderColor="#bbf7d0";
-  clipAuditLog("system","Paperclip AI connected in simulation mode");
-  renderClip();
-}
+        renderMetrics(status, health);
+        renderAgents(agents);
+        renderQueue(queue);
+        renderAlerts(alerts);
 
-function clipCreateTicket(){
-  const owner=document.getElementById("clip-assign").value;
-  const title=document.getElementById("clip-title").value.trim();
-  if(!title)return;
-  const id="TKT-"+String(clipTickets.length+1).padStart(3,"0");
-  const ticket={id,title,owner,status:"open",created:new Date().toISOString(),approved:false};
-  clipTickets.unshift(ticket);
-  document.getElementById("clip-title").value="";
-  clipAuditLog("ticket",`Created ${id}: "${title}" → assigned to ${owner}`);
-  clipAuditLog("governance",`${id} requires Board approval before execution`);
-  // Auto-deduct estimated cost
-  const cost=rI(5,40);
-  if(clipBudgets[owner])clipBudgets[owner].used+=cost;
-  renderClip();
-}
+        document.getElementById("last-updated").textContent = "Updated " + new Date().toLocaleTimeString();
 
-function clipApprove(id){
-  const t=clipTickets.find(t=>t.id===id);
-  if(!t)return;
-  t.status="approved";t.approved=true;
-  clipAuditLog("approval",`Board APPROVED ${id}: "${t.title}"`);
-  // SYNC: Broadcast approval to Notion + Telegram
-  const tgts=[];if(document.getElementById("tg-tok")?.value)tgts.push("telegram");if(document.getElementById("notion-tok")?.value)tgts.push("notion");
-  if(tgts.length)syncBus("ticket_approved","Paperclip",tgts,{title:"Approved: "+t.title,message:"Board approved "+id+" assigned to "+t.owner,content:"Ticket "+id+": "+t.title+" → "+t.owner});
-  setTimeout(()=>{
-    t.status="in_progress";
-    clipAuditLog("execution",`${t.owner} started work on ${id}`);
-    renderClip();
-    setTimeout(()=>{
-      t.status="completed";
-      A[t.owner].c++;
-      clipAuditLog("completion",`${t.owner} completed ${id}: "${t.title}"`);
-      mgrLog(t.owner,t.title,{status:"completed"});
-      renderClip();
-    },1500+Math.random()*2000);
-  },500);
-  renderClip();
-}
+        // Refresh active tab
+        refreshTab(currentTab);
 
-function clipReject(id){
-  const t=clipTickets.find(t=>t.id===id);
-  if(!t)return;
-  t.status="rejected";
-  clipAuditLog("rejection",`Board REJECTED ${id}: "${t.title}"`);
-  renderClip();
-}
-
-function clipAuditLog(type,msg){
-  clipAudit.unshift({ts:new Date().toISOString(),type,msg});
-  if(clipAudit.length>50)clipAudit.pop();
-}
-
-function renderClip(){
-  // Tickets
-  const ttb=document.getElementById("tb-tickets");
-  document.getElementById("clip-tkt-ct").textContent=clipTickets.length+" tickets";
-  if(!clipTickets.length){ttb.innerHTML='<tr><td colspan="5" class="empty">No tickets — create one above</td></tr>';}
-  else{ttb.innerHTML=clipTickets.slice(0,15).map(t=>{
-    const stClass=t.status==="completed"?"bd-completed":t.status==="approved"||t.status==="in_progress"?"bd-running":t.status==="rejected"?"bd-error":"bd-idle";
-    const actions=t.status==="open"?`<button class="btn btn-sm btn-g" onclick="clipApprove('${t.id}')" style="margin-right:3px">✓ Approve</button><button class="btn btn-sm" onclick="clipReject('${t.id}')" style="background:var(--r)">✗</button>`:
-      t.status==="in_progress"?'<span style="font-size:9px;color:var(--bl)">Working...</span>':'—';
-    return`<tr><td class="an">${t.id}</td><td style="font-size:10px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.title)}</td><td class="an">${t.owner}</td><td><span class="bd ${stClass}">${t.status}</span></td><td>${actions}</td></tr>`;
-  }).join("");}
-  // Budgets
-  document.getElementById("tb-budgets").innerHTML=Object.entries(clipBudgets).map(([n,b])=>{
-    const pct=Math.round(b.used/b.budget*100);
-    const warn=pct>=100?"bd-error":pct>=80?"bd-reviewing":"bd-idle";
-    const st=pct>=100?"PAUSED":pct>=80?"WARNING":"ACTIVE";
-    return`<tr><td class="an">${n}</td><td style="font-family:var(--m);font-size:10px">$${b.budget}/mo</td><td style="font-family:var(--m);font-size:10px">$${b.used}</td><td style="font-family:var(--m);font-size:10px">${pct}%</td><td><span class="bd ${warn}">${st}</span></td></tr>`;
-  }).join("");
-  // Audit
-  const ab=document.getElementById("clip-audit");
-  if(clipAudit.length){ab.innerHTML=clipAudit.slice(0,20).map(a=>{
-    const color=a.type==="approval"?"var(--g)":a.type==="rejection"?"var(--r)":a.type==="governance"?"var(--v)":"var(--bl)";
-    return`<div class="office-log"><span class="ol-time">${fmt(a.ts)}</span><span class="ol-mgr" style="color:${color}">${a.type}</span><span class="ol-msg">${esc(a.msg)}</span></div>`;
-  }).join("");}
-}
-
-// ══════ OPEN NOTEBOOK + NOTION + WISPR + GDRIVE ══════
-const onNotebooks=[];const onSources=[];let onConnected=false;
-function onHeaders(){const h={"Content-Type":"application/json"};const pw=document.getElementById("on-pw").value;if(pw)h["Authorization"]="Bearer "+pw;return h;}
-async function onConnect(){
-  const url=document.getElementById("on-url").value;
-  const st=document.getElementById("on-status");
-  st.textContent="Connecting to "+url+"...";
-  try{const r=await fetch(url+"/health",{signal:AbortSignal.timeout(3000)});if(r.ok){onConnected=true;st.innerHTML='<span style="color:var(--g)">✓ Connected to Open Notebook at '+esc(url)+'</span>';st.style.background="var(--gb)";st.style.borderColor="var(--gbb)";await onFetchNotebooks();return;}}catch(e){}
-  onConnected=true;
-  st.innerHTML='<span style="color:var(--g)">✓ Connected (simulation) — run docker compose up for live</span>';st.style.background="var(--gb)";st.style.borderColor="var(--gbb)";
-  onNotebooks.push({id:"notebook:demo1",name:"FHA Compliance Research",desc:"HB 4000.1 deep dive",sources:3},{id:"notebook:demo2",name:"Mortgage AI Tech Stack",desc:"NightVault + MortgageFintechOS",sources:5});
-  onSources.push({name:"FHA HB 4000.1",type:"pdf",status:"indexed"},{name:"FNMA Selling Guide",type:"pdf",status:"indexed"},{name:"youtube.com/watch?v=...",type:"video",status:"processing"});
-  renderKB();
-}
-async function onFetchNotebooks(){
-  try{const url=document.getElementById("on-url").value;const r=await fetch(url+"/api/notebooks",{headers:onHeaders()});if(r.ok){const d=await r.json();onNotebooks.length=0;d.forEach(n=>onNotebooks.push({id:n.id,name:n.name,desc:n.description||"",sources:0}));renderKB();}}catch(e){}
-}
-function onCreateNotebook(){
-  const name=document.getElementById("on-nb-name").value.trim();
-  const desc=document.getElementById("on-nb-desc").value.trim();
-  if(!name)return;
-  const id="notebook:"+rId();
-  onNotebooks.unshift({id,name,desc,sources:0});
-  document.getElementById("on-nb-name").value="";document.getElementById("on-nb-desc").value="";
-  if(onConnected){const url=document.getElementById("on-url").value;fetch(url+"/api/notebooks",{method:"POST",headers:onHeaders(),body:JSON.stringify({name,description:desc})}).catch(()=>{});}
-  renderKB();
-}
-function onAddSource(){
-  const src=document.getElementById("on-src-url").value.trim();
-  if(!src)return;
-  const type=src.includes("youtube")||src.includes("youtu.be")?"video":src.endsWith(".pdf")?"pdf":"web";
-  onSources.unshift({name:src.length>40?src.substring(0,40)+"...":src,type,status:"processing"});
-  document.getElementById("on-src-url").value="";
-  setTimeout(()=>{onSources[0].status="indexed";renderKB();},2000+Math.random()*3000);
-  if(onConnected&&onNotebooks.length){const nb=document.getElementById("on-src-nb").value;const url=document.getElementById("on-url").value;fetch(url+"/sources",{method:"POST",headers:{"Content-Type":"application/json",...(document.getElementById("on-pw").value?{"Authorization":"Bearer "+document.getElementById("on-pw").value}:{})},body:JSON.stringify({type:"url",url:src,notebook_id:nb})}).catch(()=>{});}
-  renderKB();
-}
-async function onChat(){
-  const q=document.getElementById("on-chat-q").value.trim();if(!q)return;
-  const box=document.getElementById("on-chat-box");const btn=document.getElementById("on-chat-btn");
-  if(box.querySelector('.empty'))box.innerHTML='';
-  box.innerHTML+='<div class="msg msg-u">'+esc(q)+'</div>';
-  document.getElementById("on-chat-q").value='';btn.disabled=true;btn.textContent="...";
-  box.innerHTML+='<div class="msg msg-a"><div class="msg-m">Open Notebook RAG</div><span id="on-typing">Searching sources...</span></div>';
-  box.scrollTop=box.scrollHeight;
-  if(onConnected){
-    try{const url=document.getElementById("on-url").value;const nb=document.getElementById("on-chat-nb").value||"";
-      const r=await fetch(url+"/ask",{method:"POST",headers:onHeaders(),body:JSON.stringify({question:q,notebook_id:nb})});
-      if(r.ok){const d=await r.text();document.getElementById("on-typing").outerHTML='<div>'+esc(d).replace(/\n/g,'<br>')+'</div>';btn.disabled=false;btn.textContent="Ask";box.scrollTop=box.scrollHeight;return;}}catch(e){}
-  }
-  // Simulation fallback
-  setTimeout(()=>{
-    const answers=["Based on the indexed sources, FHA HB 4000.1 Section II.A.5.b requires the W-2 dual-method for income calculation. The lower of Method 1 (YTD annualized) and Method 2 (2-year average) is used as qualifying income.","According to your research materials, the FNMA Selling Guide B3-3.1 covers employment and income verification requirements. Key points include VOE within 10 days of closing and paystub within 30 days.","The sources indicate that mortgage document intelligence platforms like NightVault use OCR + NLP pipelines to classify documents (W-2, paystub, bank statement) with 92%+ confidence scores."];
-    const answer=answers[Math.floor(Math.random()*answers.length)];
-    document.getElementById("on-typing").outerHTML='<div>'+esc(answer)+'</div>';
-    btn.disabled=false;btn.textContent="Ask";box.scrollTop=box.scrollHeight;
-    // SYNC: Push RAG answer to Notion + Telegram
-    const tgts=[];if(document.getElementById("notion-tok")?.value)tgts.push("notion");if(document.getElementById("tg-tok")?.value)tgts.push("telegram");
-    if(tgts.length)syncBus("rag_answer","OpenNotebook",tgts,{title:"Research: "+q.substring(0,50),message:"Q: "+q+"\nA: "+answer.substring(0,300),content:answer});
-  },800+Math.random()*1500);
-}
-async function notionSync(){
-  const tok=document.getElementById("notion-tok").value;const db=document.getElementById("notion-db").value;
-  const log=document.getElementById("notion-log");
-  if(!tok||!db){log.textContent="Enter token + database ID";return;}
-  log.textContent="Syncing...";
-  try{
-    const r=await fetch("https://api.notion.com/v1/pages",{method:"POST",headers:{"Authorization":"Bearer "+tok,"Content-Type":"application/json","Notion-Version":"2022-06-28"},
-    body:JSON.stringify({parent:{database_id:db},properties:{Name:{title:[{text:{content:"MortgageFintechOS Research — "+new Date().toLocaleDateString()}}]}}})});
-    const d=await r.json();log.textContent=d.id?"✓ Page created: "+d.id.substring(0,8):"✗ "+JSON.stringify(d).substring(0,60);
-    document.getElementById("notion-st").textContent="Connected";document.getElementById("notion-st").className="bd bd-idle";
-  }catch(e){log.textContent="✗ "+e.message;}
-}
-function wisprConnect(){
-  const hook=document.getElementById("wispr-hook").value;
-  const log=document.getElementById("wispr-log");
-  if(!hook){log.textContent="Enter webhook URL";return;}
-  document.getElementById("wispr-st").textContent="Connected";document.getElementById("wispr-st").className="bd bd-idle";
-  log.textContent="✓ Wispr Flow webhook registered — voice notes will sync to Open Notebook";
-  // SYNC: Wispr → Open Notebook + Notion
-  const tgts=["open_notebook"];if(document.getElementById("notion-tok")?.value)tgts.push("notion");
-  syncBus("wispr_connected","Wispr",tgts,{title:"Wispr Flow Connected",message:"Voice-to-text pipeline active. Dictated notes will auto-sync to Open Notebook and Notion.",action:"create_note"});
-}
-function gdriveImport(){
-  const fid=document.getElementById("gdrive-fid").value;
-  const log=document.getElementById("gdrive-log");
-  if(!fid){log.textContent="Enter folder ID";return;}
-  log.textContent="Importing files from Drive folder...";
-  setTimeout(()=>{
-    const files=["FHA_HB_4000.1_Update.pdf","FNMA_Selling_Guide_2026.pdf","Borrower_Income_Analysis.docx"];
-    files.forEach((f,i)=>{setTimeout(()=>{onSources.unshift({name:f,type:"pdf",status:i<2?"indexed":"processing"});renderKB();},i*600);});
-    log.textContent="✓ Imported "+files.length+" files from Google Drive";
-    // SYNC: Drive files → Open Notebook + notify Notion + Telegram
-    const tgts=["open_notebook"];if(document.getElementById("notion-tok")?.value)tgts.push("notion");if(document.getElementById("tg-tok")?.value)tgts.push("telegram");
-    syncBus("drive_import","GoogleDrive",tgts,{title:"Google Drive Import: "+files.length+" files",message:"Imported: "+files.join(", "),content:"Files imported from Google Drive and added as Open Notebook sources",action:"add_source"});
-    document.getElementById("gdrive-st").textContent="Connected";document.getElementById("gdrive-st").className="bd bd-idle";
-  },1500);
-}
-function renderKB(){
-  document.getElementById("on-nb-ct").textContent=onNotebooks.length;
-  const selects=["on-src-nb","on-chat-nb"];
-  selects.forEach(id=>{const s=document.getElementById(id);s.innerHTML=onNotebooks.map(n=>'<option value="'+n.id+'">'+esc(n.name)+'</option>').join('');});
-  document.getElementById("tb-notebooks").innerHTML=onNotebooks.length?onNotebooks.map(n=>'<tr><td class="an" style="font-size:9px">'+esc(n.id.substring(0,16))+'</td><td style="font-size:11px"><b>'+esc(n.name)+'</b><br><span style="font-size:9px;color:var(--tm)">'+esc(n.desc)+'</span></td><td style="font-family:var(--m);font-size:10px">'+n.sources+'</td><td><button class="btn btn-sm" onclick="onChat()" style="font-size:8px">Chat</button></td></tr>').join(''):'<tr><td colspan="4" class="empty">No notebooks</td></tr>';
-  document.getElementById("tb-sources").innerHTML=onSources.length?onSources.slice(0,10).map(s=>'<tr><td style="font-size:10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(s.name)+'</td><td style="font-family:var(--m);font-size:9px">'+s.type+'</td><td><span class="bd bd-'+(s.status==="indexed"?"idle":"running")+'">'+s.status+'</span></td></tr>').join(''):'<tr><td colspan="3" class="empty">Add sources above</td></tr>';
-}
-
-// Page nav
-function showP(id){document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.nt').forEach(t=>t.classList.remove('on'));document.getElementById('pg-'+id).classList.add('on');event.target.classList.add('on');}
-
-// Render everything
-function render(){
-  document.getElementById("clk").textContent=new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"});
-  const tc=Object.values(A).reduce((s,a)=>s+a.c,0);
-  document.getElementById("kpis").innerHTML=`
-    <div class="kpi"><div class="kl">Uptime</div><div class="kv">${up()}</div></div>
-    <div class="kpi"><div class="kl">Employees</div><div class="kv">9</div></div>
-    <div class="kpi"><div class="kl">Tasks Done</div><div class="kv ok">${tc}</div></div>
-    <div class="kpi"><div class="kl">Errors</div><div class="kv${Object.values(A).reduce((s,a)=>s+a.e,0)>0?' er':''}">${Object.values(A).reduce((s,a)=>s+a.e,0)}</div></div>
-    <div class="kpi"><div class="kl">LLM Models</div><div class="kv bl">500+</div></div>
-    <div class="kpi"><div class="kl">CPU</div><div class="kv">${(15+Math.random()*10).toFixed(1)}%</div></div>
-    <div class="kpi"><div class="kl">Memory</div><div class="kv">${(42+Math.random()*8).toFixed(1)}%</div></div>`;
-  document.getElementById("tb-emp").innerHTML=Object.entries(A).map(([n,a])=>`<tr><td><span class="an">${n}</span></td><td style="font-size:10px;color:var(--tm)">${R[n]}</td><td><span class="bd bd-${a.s}">${a.s}</span></td><td style="font-family:var(--m);font-size:10px">${a.c}</td><td style="font-family:var(--m);font-size:10px;${a.e>0?'color:var(--r);font-weight:700':''}">${a.e}</td></tr>`).join("");
-  document.getElementById("log-ct").textContent=log.length;
-  const logBox=document.getElementById("office-log");
-  if(log.length)logBox.innerHTML=log.slice(0,20).map(l=>`<div class="office-log"><span class="ol-time">${fmt(l.ts)}</span><span class="ol-mgr">${l.mgr}</span><span class="ol-msg">${esc(l.msg)}</span></div>`).join("");
-  document.getElementById("mgr-cards").innerHTML=Object.entries(A).map(([n,a])=>{
-    const pri={CIPHER:"CRITICAL",FORGE:"HIGH",ATLAS:"NORMAL",NEXUS:"NORMAL",STORM:"LOW",DIEGO:"NORMAL",MARTIN:"NORMAL",NOVA:"NORMAL",JARVIS:"NORMAL"};
-    const pct=Math.round((a.c/(a.c+10))*100);
-    return`<div class="cd"><div class="ch"><span class="an">${n}</span><span class="bd bd-${a.s}">${a.s}</span></div><div style="padding:8px 12px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px"><span class="td">Priority</span><span style="font-family:var(--m)">${pri[n]}</span></div><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px"><span class="td">Tasks</span><span style="font-family:var(--m)">${a.c}</span></div><div style="height:4px;background:var(--a);border-radius:2px"><div style="height:100%;width:${pct}%;background:${pct>80?'var(--r)':pct>50?'var(--am)':'var(--g)'};border-radius:2px"></div></div></div></div>`;
-  }).join("");
-  document.getElementById("tb-models").innerHTML=MODELS.slice(0,6).map(m=>`<tr><td><b style="font-size:11px">${esc(m.n)}</b><br><span style="font-size:9px;color:var(--tm)">${esc(m.p)}</span></td><td style="font-family:var(--m);font-weight:700;color:var(--g)">${m.s}</td><td style="font-size:10px">${m.t.slice(0,2).join(", ")}</td><td style="font-size:10px;font-family:var(--m)">${esc(m.c)}</td></tr>`).join("");
-}
-
-// ══════ VERCEL AUTO-DEPLOY ══════
-async function vercelDeploy(){
-  const hook=document.getElementById("vercel-hook").value.trim();
-  const box=document.getElementById("vercel-log");
-  const btn=document.getElementById("vercel-btn");
-  const st=document.getElementById("vercel-st");
-  box.classList.add("on");
-  if(!hook){box.textContent="Paste your Vercel Deploy Hook URL above first.\n\nGet it from: Vercel Dashboard → Settings → Git → Deploy Hooks";return;}
-  btn.disabled=true;btn.textContent="Deploying...";
-  st.textContent="Deploying...";st.style.background="var(--ab)";st.style.color="var(--am)";
-  box.textContent="Triggering Vercel deploy...\n";
-  try{
-    const r=await fetch(hook,{method:"POST"});
-    if(r.ok){
-      const d=await r.json().catch(()=>({}));
-      box.textContent="Deploy triggered successfully!\n\nJob ID: "+(d.job?.id||"created")+"\nCreated: "+(d.job?.createdAt||new Date().toISOString())+"\n\nYour site will be live in ~30-60 seconds at:\nhttps://mortgage-fintech-os-i7et.vercel.app/";
-      st.textContent="Deploying";st.style.background="var(--gb)";st.style.color="var(--g)";
-      // Auto-check status after delay
-      setTimeout(()=>{st.textContent="Live";box.textContent+="\n\n✓ Deploy complete — site is live!";},35000);
-      // Sync to Telegram/Notion
-      const tgts=[];if(document.getElementById("tg-tok")?.value)tgts.push("telegram");if(document.getElementById("notion-tok")?.value)tgts.push("notion");
-      if(tgts.length)syncBus("vercel_deploy","Vercel",tgts,{title:"Vercel Deploy Triggered",message:"MortgageFintechOS dashboard redeployed to production"});
-    }else{
-      box.textContent="Deploy failed: HTTP "+r.status+"\n"+await r.text();
-      st.textContent="Failed";st.style.background="var(--rb)";st.style.color="var(--r)";
+    } catch (err) {
+        console.error("Refresh failed:", err);
+        document.getElementById("last-updated").textContent = "Connection error";
     }
-  }catch(e){
-    box.textContent="Error: "+e.message+"\n\nMake sure the deploy hook URL is correct.";
-    st.textContent="Error";st.style.background="var(--rb)";st.style.color="var(--r)";
-  }
-  btn.disabled=false;btn.textContent="Deploy Now";
-}
-function vercelCheck(){
-  const box=document.getElementById("vercel-log");
-  box.classList.add("on");
-  box.textContent="Site Status: LIVE\nURL: https://mortgage-fintech-os-i7et.vercel.app/\nPlatform: Vercel\nFramework: Static\nBranch: main\n\nVercel auto-deploys on every push to main.\nUse the Deploy Hook button for instant redeploy without pushing.";
 }
 
-// ══════ LIVE AGENT MONITOR ══════
-let liveRunning=false;
-let liveTimer=null;
-let liveSpeed=2000;
-let liveCount=0;
-let liveOpsCount=0;
-let liveCodeCount=0;
-const liveLog=[];
-const liveTimes=[];
-const OPS_AGENTS=["DIEGO","MARTIN","NOVA","JARVIS"];
-const CODE_AGENTS=["ATLAS","NEXUS","CIPHER","FORGE","STORM"];
-
-function liveStart(){
-  if(liveRunning)return;
-  liveRunning=true;
-  document.getElementById("live-status").textContent="Running";
-  document.getElementById("live-status").style.background="var(--gb)";document.getElementById("live-status").style.color="var(--g)";
-  document.getElementById("live-btn").disabled=true;
-  liveLoop();
+async function refreshTab(tab) {
+    try {
+        if (tab === "action-log") await refreshActionLog();
+        if (tab === "schedule") await refreshSchedule();
+        if (tab === "ontology") await refreshOntology();
+        if (tab === "telemetry") await refreshTelemetry();
+        if (tab === "tips") await refreshTips();
+        if (tab === "agentdb") await refreshAgentDB();
+        if (tab === "features") await refreshFeatures();
+    } catch (e) { console.error("Tab refresh failed:", tab, e); }
 }
-function liveStop(){
-  liveRunning=false;
-  if(liveTimer)clearTimeout(liveTimer);
-  document.getElementById("live-status").textContent="Paused";
-  document.getElementById("live-status").style.background="";document.getElementById("live-status").style.color="";
-  document.getElementById("live-btn").disabled=false;
+
+// --- Overview Renderers ---
+
+function renderMetrics(status, health) {
+    const q = status.queue || {};
+    const s = health.system || {};
+    document.getElementById("metric-uptime").textContent = status.uptime || "--";
+    document.getElementById("metric-agents").textContent = Object.keys(status.agents || {}).length;
+    document.getElementById("metric-pending").textContent = q.pending || 0;
+    document.getElementById("metric-completed").textContent = q.completed || 0;
+    const failEl = document.getElementById("metric-failed");
+    failEl.textContent = q.failed || 0;
+    failEl.className = "metric-value" + ((q.failed || 0) > 0 ? " danger" : "");
+    document.getElementById("metric-cpu").textContent = s.cpu_percent !== undefined ? s.cpu_percent.toFixed(1) + "%" : "--";
+    document.getElementById("metric-mem").textContent = s.memory_percent !== undefined ? s.memory_percent.toFixed(1) + "%" : "--";
+
+    const badge = document.getElementById("overall-status");
+    const overall = health.overall || "unknown";
+    badge.className = "status-badge " + overall;
+    badge.innerHTML = `<span class="status-dot"></span>${overall}`;
 }
-function liveSetSpeed(){liveSpeed=parseInt(document.getElementById("live-speed").value);}
 
-function liveLoop(){
-  if(!liveRunning)return;
-  // Pick a random agent
-  const allAg=[...OPS_AGENTS,...CODE_AGENTS];
-  const ag=pk(allAg);
-  const act=pk(ACT[ag]);
-  const isOps=OPS_AGENTS.includes(ag);
-  const division=isOps?"ops":"code";
+function renderAgents(agents) {
+    const tbody = document.getElementById("agents-tbody");
+    if (!agents || !agents.length) { tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No agents</td></tr>`; return; }
+    tbody.innerHTML = agents.map(a => `<tr>
+        <td><span class="agent-name">${esc(a.name)}</span></td>
+        <td>${esc(AGENT_DESCRIPTIONS[a.name] || "--")}</td>
+        <td><span class="agent-badge ${a.status}">${a.status}</span></td>
+        <td style="font-family:var(--font-mono)">${a.tasks_completed}</td>
+        <td style="font-family:var(--font-mono);${a.error_count > 0 ? "color:var(--danger);font-weight:700" : ""}">${a.error_count}</td>
+        <td style="font-size:12px;color:var(--text-muted)">${formatRelative(a.last_heartbeat)}</td>
+    </tr>`).join("");
+}
 
-  // Set agent to running state
-  const stEl=document.getElementById("live-st-"+ag);
-  const taskEl=document.getElementById("live-task-"+ag);
-  const barEl=document.getElementById("live-bar-"+ag);
-  const laneEl=document.getElementById("lane-"+ag);
+function renderQueue(queueData) {
+    const tbody = document.getElementById("queue-tbody");
+    const tasks = (queueData.recent_tasks || []).reverse().slice(0, 20);
+    if (!tasks.length) { tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No recent tasks</td></tr>`; return; }
+    tbody.innerHTML = tasks.map(t => `<tr>
+        <td style="font-family:var(--font-mono);font-size:12px">${esc(t.id)}</td>
+        <td><span class="agent-name">${esc(t.agent)}</span></td>
+        <td>${esc(t.action)}</td>
+        <td><span class="priority-badge ${t.priority}">${t.priority}</span></td>
+        <td><span class="agent-badge ${t.status}">${t.status}</span></td>
+    </tr>`).join("");
+}
 
-  stEl.className="bd bd-running";stEl.textContent="running";
-  taskEl.textContent=act;taskEl.className="lane-task working";
-  barEl.style.width="0";barEl.className="lane-fill running"+(isOps?"":" code");
-  laneEl.classList.add("active");
+function renderAlerts(alerts) {
+    const c = document.getElementById("alerts-container");
+    if (!alerts || !alerts.length) { c.innerHTML = `<div class="empty-state">No recent alerts</div>`; return; }
+    c.innerHTML = alerts.reverse().slice(0, 20).map(a => `<div class="alert-row">
+        <span class="alert-severity ${a.severity}">${a.severity}</span>
+        <span class="alert-message">${esc(a.message)}</span>
+        <span class="alert-time">${formatTime(a.timestamp)}</span>
+    </div>`).join("");
+}
 
-  // Animate progress bar
-  requestAnimationFrame(()=>{barEl.style.width="100%";});
-  const latency=300+Math.random()*800;
+// --- Action Log ---
 
-  setTimeout(()=>{
-    // Execute task
-    const result=run(ag,act);
-    const success=!result.error;
-    A[ag].c++;exC++;liveCount++;
-    if(isOps)liveOpsCount++;else liveCodeCount++;
+async function refreshActionLog() {
+    const [stats, timeline, entries] = await Promise.all([
+        fetchJSON("/api/action-log/stats"),
+        fetchJSON("/api/action-log/timeline?hours=24"),
+        fetchJSON("/api/action-log?limit=50" +
+            (document.getElementById("al-agent-filter")?.value ? "&agent=" + document.getElementById("al-agent-filter").value : "") +
+            (document.getElementById("al-failures-only")?.checked ? "&failures=1" : "")),
+    ]);
 
-    // Update lane
-    stEl.className="bd bd-"+(success?"completed":"error");
-    stEl.textContent=success?"done":"error";
-    taskEl.textContent=act+" → "+(success?"OK":"ERR");
-    taskEl.className="lane-task";
-    barEl.className="lane-fill"+(success?"":" err");
-    barEl.style.width="100%";
+    document.getElementById("al-total").textContent = stats.total_entries || 0;
+    document.getElementById("al-rate").textContent = (stats.success_rate || 0) + "%";
+    const rateEl = document.getElementById("al-rate");
+    rateEl.className = "metric-value " + (stats.success_rate >= 95 ? "success" : stats.success_rate >= 80 ? "warning" : "danger");
+    document.getElementById("al-failures").textContent = stats.failures || 0;
+    const failEl = document.getElementById("al-failures");
+    failEl.className = "metric-value" + ((stats.failures || 0) > 0 ? " danger" : "");
 
-    // Log
-    const ts=new Date().toISOString();
-    const preview=JSON.stringify(result).substring(0,80);
-    liveLog.unshift({ts,ag,act,division,success,latency:Math.round(latency),preview});
-    if(liveLog.length>100)liveLog.pop();
-    liveTimes.push(Date.now());
-    if(liveTimes.length>60)liveTimes.shift();
-
-    // Update manager log too
-    mgrLog(ag,act,result);
-
-    // Render live UI
-    renderLive();
-    render();
-
-    // Reset lane after brief display
-    setTimeout(()=>{
-      stEl.className="bd bd-idle";stEl.textContent="idle";
-      taskEl.textContent="—";taskEl.className="lane-task";
-      barEl.style.width="0";barEl.className="lane-fill"+(isOps?"":" code");
-      laneEl.classList.remove("active");
-    },liveSpeed*0.6);
-
-    // Chain pipeline if applicable
-    if(isOps){
-      const chain={DIEGO:"MARTIN",MARTIN:"NOVA",NOVA:"JARVIS"};
-      if(chain[ag]&&Math.random()>0.5){
-        setTimeout(()=>{if(liveRunning)liveChain(chain[ag],isOps);},liveSpeed*0.3);
-      }
-    }else{
-      const chain={ATLAS:"NEXUS",NEXUS:"CIPHER",CIPHER:"FORGE"};
-      if(chain[ag]&&Math.random()>0.5){
-        setTimeout(()=>{if(liveRunning)liveChain(chain[ag],isOps);},liveSpeed*0.3);
-      }
+    // Populate agent filter
+    const select = document.getElementById("al-agent-filter");
+    if (select && select.options.length <= 1 && stats.agent_breakdown) {
+        Object.keys(stats.agent_breakdown).sort().forEach(name => {
+            const opt = document.createElement("option");
+            opt.value = name;
+            opt.textContent = name;
+            select.appendChild(opt);
+        });
     }
 
-    // Schedule next
-    liveTimer=setTimeout(liveLoop,liveSpeed*0.4+Math.random()*liveSpeed*0.6);
-  },latency);
-}
-
-function liveChain(ag,isOps){
-  const act=pk(ACT[ag]);
-  const stEl=document.getElementById("live-st-"+ag);
-  const taskEl=document.getElementById("live-task-"+ag);
-  const barEl=document.getElementById("live-bar-"+ag);
-  const laneEl=document.getElementById("lane-"+ag);
-  stEl.className="bd bd-running";stEl.textContent="running";
-  taskEl.textContent="[chain] "+act;taskEl.className="lane-task working";
-  barEl.style.width="0";barEl.className="lane-fill running"+(isOps?"":" code");
-  laneEl.classList.add("active");
-  requestAnimationFrame(()=>{barEl.style.width="100%";});
-  setTimeout(()=>{
-    const result=run(ag,act);A[ag].c++;exC++;liveCount++;
-    if(isOps)liveOpsCount++;else liveCodeCount++;
-    stEl.className="bd bd-completed";stEl.textContent="done";
-    taskEl.textContent=act+" → OK";taskEl.className="lane-task";
-    barEl.className="lane-fill";barEl.style.width="100%";
-    liveLog.unshift({ts:new Date().toISOString(),ag,act,division:isOps?"ops":"code",success:true,latency:rI(200,600),preview:JSON.stringify(result).substring(0,80)});
-    liveTimes.push(Date.now());
-    mgrLog(ag,act,result);renderLive();render();
-    setTimeout(()=>{stEl.className="bd bd-idle";stEl.textContent="idle";taskEl.textContent="—";barEl.style.width="0";laneEl.classList.remove("active");},liveSpeed*0.5);
-  },400+Math.random()*400);
-}
-
-function renderLive(){
-  document.getElementById("live-counter").textContent=liveCount+" tasks executed";
-  document.getElementById("live-log-ct").textContent=liveLog.length;
-  document.getElementById("live-ops-ct").textContent=liveOpsCount;
-  document.getElementById("live-code-ct").textContent=liveCodeCount;
-  // Tasks per minute
-  const now=Date.now();
-  const recent=liveTimes.filter(t=>now-t<60000);
-  document.getElementById("live-tpm").textContent=recent.length;
-  // Avg latency
-  if(liveLog.length){const avg=Math.round(liveLog.slice(0,20).reduce((s,l)=>s+l.latency,0)/Math.min(20,liveLog.length));document.getElementById("live-lat").textContent=avg+"ms";}
-  // Success rate
-  if(liveLog.length){const ok=liveLog.filter(l=>l.success).length;document.getElementById("live-sr").textContent=Math.round(ok/liveLog.length*100)+"%";}
-  // Queue depth (simulated)
-  document.getElementById("live-qd").textContent=rI(0,3);
-  // Log
-  const logEl=document.getElementById("live-log");
-  if(liveLog.length){
-    logEl.innerHTML=liveLog.slice(0,30).map(l=>{
-      const divColor=l.division==="ops"?"var(--g)":"var(--t)";
-      const stColor=l.success?"var(--g)":"var(--r)";
-      return'<div class="office-log"><span class="ol-time">'+fmt(l.ts)+'</span><span style="font-weight:700;font-family:var(--m);font-size:9px;color:'+divColor+';width:50px;flex-shrink:0">'+l.ag+'</span><span class="ol-msg"><span style="color:var(--tm)">'+l.act+'</span> <span style="color:'+stColor+';font-weight:600">'+(l.success?"OK":"ERR")+'</span> <span style="color:var(--td)">'+l.latency+'ms</span> <span style="color:var(--td);font-size:8px">'+esc(l.preview)+'</span></span></div>';
+    // Timeline
+    const tlData = timeline.timeline || [];
+    const maxVal = Math.max(...tlData.map(b => b.total), 1);
+    document.getElementById("al-timeline").innerHTML = tlData.reverse().map(b => {
+        const h = Math.max((b.total / maxVal) * 100, 2);
+        const cls = b.failed > 0 ? "has-failures" : "";
+        return `<div class="timeline-bar ${cls}" style="height:${h}%" title="${b.total} actions (${b.failed} failed) - ${b.hour}h ago"></div>`;
     }).join("");
-  }
+
+    // Table
+    const tbody = document.getElementById("al-tbody");
+    const rows = entries.entries || [];
+    if (!rows.length) { tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No actions recorded</td></tr>`; return; }
+    tbody.innerHTML = rows.map(e => `<tr>
+        <td style="font-size:12px;font-family:var(--font-mono)">${formatTime(e.timestamp)}</td>
+        <td><span class="agent-name">${esc(e.agent)}</span></td>
+        <td><span class="agent-badge ${e.action_type.includes('failed') ? 'error' : e.action_type.includes('completed') ? 'idle' : 'running'}">${esc(e.action_type)}</span></td>
+        <td>${esc(e.action)}</td>
+        <td style="font-family:var(--font-mono);font-size:12px">${e.duration_ms ? e.duration_ms + "ms" : "--"}</td>
+        <td>${e.success ? '<span style="color:var(--success)">OK</span>' : '<span style="color:var(--danger)">FAIL</span>'}</td>
+        <td style="font-size:12px;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.detail || "")}</td>
+    </tr>`).join("");
 }
 
-// ══════ NEURAL MODEL DISCOVERY ENGINE ══════
-const nnLog=[];
-const nnPerformance={};// model → {code_score, reason_score, speed_score, uses, successes}
+// Wire up action log filters
+document.addEventListener("DOMContentLoaded", () => {
+    const agentFilter = document.getElementById("al-agent-filter");
+    const failFilter = document.getElementById("al-failures-only");
+    if (agentFilter) agentFilter.addEventListener("change", () => refreshTab("action-log"));
+    if (failFilter) failFilter.addEventListener("change", () => refreshTab("action-log"));
+});
 
-function nnInit(){
-  // Initialize neural learning state from static data
-  MODELS.forEach(m=>{
-    nnPerformance[m.n]={
-      code_score:m.t.includes("code")?m.s+rI(-3,3):m.s-10+rI(-3,3),
-      reason_score:m.t.includes("reason")?m.s+rI(-2,2):m.s-8+rI(-3,3),
-      speed_score:m.f?75+rI(0,15):60+rI(0,20),
-      cost_efficiency:m.f?95+rI(0,5):50+rI(0,30),
-      uses:rI(5,80),successes:0,trend:"stable"
-    };
-    nnPerformance[m.n].successes=Math.round(nnPerformance[m.n].uses*(0.85+Math.random()*0.14));
-  });
-  nnUpdateBests();
-  nnAddLog("system","Neural discovery engine initialized with "+MODELS.length+" models tracked");
-  nnAddLog("learning","Performance baselines established from Puter.js model catalog");
-  nnAddLog("discovery","Auto-scan scheduled — monitors OpenRouter, HuggingFace, and AI leaderboards");
-}
+// --- Schedule Control ---
 
-function nnUpdateBests(){
-  let bestCode=null,bestCodeScore=0,bestReason=null,bestReasonScore=0;
-  Object.entries(nnPerformance).forEach(([name,p])=>{
-    if(p.code_score>bestCodeScore){bestCode=name;bestCodeScore=p.code_score;}
-    if(p.reason_score>bestReasonScore){bestReason=name;bestReasonScore=p.reason_score;}
-  });
-  document.getElementById("nn-best-code").textContent=bestCode||"—";
-  document.getElementById("nn-best-reason").textContent=bestReason||"—";
-  document.getElementById("nn-total").textContent=Object.keys(nnPerformance).length;
-}
+async function refreshSchedule() {
+    const [schedule, recs] = await Promise.all([
+        fetchJSON("/api/schedule"),
+        fetchJSON("/api/hydrospeed/schedule-recommendations"),
+    ]);
 
-function nnAddLog(type,msg){
-  nnLog.unshift({ts:new Date().toISOString(),type,msg});
-  if(nnLog.length>50)nnLog.pop();
-  const el=document.getElementById("nn-log");
-  if(el&&nnLog.length){
-    el.innerHTML=nnLog.slice(0,15).map(l=>{
-      const color=l.type==="discovery"?"var(--g)":l.type==="learning"?"var(--bl)":l.type==="benchmark"?"var(--am)":"var(--tm)";
-      return'<div class="office-log"><span class="ol-time">'+fmt(l.ts)+'</span><span style="font-weight:700;font-family:var(--m);font-size:9px;color:'+color+';width:70px;flex-shrink:0">'+l.type+'</span><span class="ol-msg">'+esc(l.msg)+'</span></div>';
+    const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const tbody = document.getElementById("sched-tbody");
+    if (!schedule || !schedule.length) { tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No jobs</td></tr>`; return; }
+
+    tbody.innerHTML = schedule.map(j => {
+        let sched = "";
+        if (j.interval_minutes) sched = `Every ${j.interval_minutes}m`;
+        else if (j.day_of_week !== null && j.day_of_week !== undefined) sched = `${DAYS[j.day_of_week]} ${j.run_time || ""}`;
+        else sched = `Daily ${j.run_time || ""}`;
+        const dot = j.enabled ? '<span class="schedule-enabled"></span>' : '<span class="schedule-disabled"></span>';
+        return `<tr>
+            <td>${dot}</td>
+            <td>${esc(j.name)}</td>
+            <td class="schedule-time">${sched}</td>
+            <td style="font-size:12px;color:var(--text-muted)">${j.last_run ? formatRelative(j.last_run) : "Never"}</td>
+            <td>
+                <button class="btn btn-sm" onclick="editSchedule('${esc(j.name)}','${j.run_time || "00:00:00"}')">Edit</button>
+                <button class="btn btn-sm ${j.enabled ? 'btn-danger' : 'btn-primary'}" onclick="toggleJob('${esc(j.name)}',${!j.enabled})">${j.enabled ? "Disable" : "Enable"}</button>
+            </td>
+        </tr>`;
     }).join("");
-  }
+
+    // Recommendations
+    const recsDiv = document.getElementById("sched-recommendations");
+    const recommendations = recs.recommendations || [];
+    if (!recommendations.length) { recsDiv.innerHTML = '<div class="empty-state">No recommendations</div>'; return; }
+    recsDiv.innerHTML = recommendations.map(r => `<div class="tip-card">
+        <div class="tip-header">
+            <span class="alert-severity ${r.severity}">${r.severity}</span>
+            <span class="tip-title">${esc(r.type)}</span>
+        </div>
+        <div class="tip-body">${esc(r.message)}</div>
+        ${r.fix ? `<div class="tip-agents">Fix: ${esc(r.fix)}</div>` : ""}
+    </div>`).join("");
 }
 
-async function nnScanModels(){
-  const btn=document.getElementById("nn-scan-btn");
-  btn.disabled=true;btn.textContent="Scanning...";
-  nnAddLog("discovery","Scanning Puter.js model registry for new models...");
+function editSchedule(name, currentTime) {
+    editingJob = name;
+    document.getElementById("sched-modal-name").textContent = name;
+    const parts = currentTime.split(":");
+    document.getElementById("sched-hour").value = parseInt(parts[0]) || 0;
+    document.getElementById("sched-minute").value = parseInt(parts[1]) || 0;
+    document.getElementById("sched-modal").style.display = "flex";
+}
 
-  // Use Puter.js to discover available models
-  try{
-    const models=await puter.ai.models();
-    if(models&&models.length){
-      let newFound=0;
-      const existingNames=MODELS.map(m=>m.n.toLowerCase());
-      models.slice(0,50).forEach(m=>{
-        const name=m.name||m.id||"unknown";
-        const provider=m.provider||name.split("/")[0]||"unknown";
-        const isNew=!existingNames.some(e=>name.toLowerCase().includes(e.split(" ")[0].toLowerCase()));
-        if(isNew&&name.length>3){
-          newFound++;
-          const score=70+rI(0,20);
-          const tags=[];
-          if(name.toLowerCase().includes("code")||name.toLowerCase().includes("coder"))tags.push("code");
-          if(name.toLowerCase().includes("reason")||name.toLowerCase().includes("think"))tags.push("reason");
-          if(tags.length===0)tags.push(Math.random()>0.5?"code":"reason");
-          tags.push("free");
-          MODELS.push({n:name.substring(0,30),p:provider.substring(0,20),s:score,t:tags,f:true,c:"Free (Puter.js)"});
-          nnPerformance[name.substring(0,30)]={code_score:score+rI(-5,5),reason_score:score+rI(-5,5),speed_score:70+rI(0,20),cost_efficiency:90+rI(0,10),uses:0,successes:0,trend:"new"};
+function closeModal() { document.getElementById("sched-modal").style.display = "none"; }
+
+async function saveSchedule() {
+    const hour = parseInt(document.getElementById("sched-hour").value);
+    const minute = parseInt(document.getElementById("sched-minute").value);
+    await fetch(`/api/schedule/${editingJob}/update`, {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ hour, minute }),
+    });
+    closeModal();
+    refreshTab("schedule");
+}
+
+async function toggleJob(name, enabled) {
+    await fetch(`/api/schedule/${name}/toggle`, {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ enabled }),
+    });
+    refreshTab("schedule");
+}
+
+// --- Hydrospeed Ontology ---
+
+async function refreshOntology() {
+    const [ontology, divisions, flows, proposals] = await Promise.all([
+        fetchJSON("/api/hydrospeed/ontology"),
+        fetchJSON("/api/hydrospeed/divisions"),
+        fetchJSON("/api/hydrospeed/data-flows"),
+        fetchJSON("/api/hydrospeed/proposals"),
+    ]);
+
+    const agents = (ontology.nodes || []).filter(n => n.type === "agent");
+    const integrations = (ontology.nodes || []).filter(n => n.type === "integration");
+    document.getElementById("onto-agents").textContent = agents.length;
+    document.getElementById("onto-integrations").textContent = integrations.length;
+    document.getElementById("onto-flows").textContent = (ontology.edges || []).length;
+
+    // Populate agent select
+    const select = document.getElementById("onto-agent-select");
+    if (select && select.options.length <= 1) {
+        agents.forEach(a => {
+            const opt = document.createElement("option");
+            opt.value = a.id;
+            opt.textContent = `${a.id} - ${a.role}`;
+            select.appendChild(opt);
+        });
+        select.addEventListener("change", () => loadAgentProfile(select.value));
+    }
+
+    // Divisions
+    const divDiv = document.getElementById("onto-divisions");
+    const divNames = { mortgage_ops: "Mortgage Operations", engineering: "Engineering", intelligence: "Intelligence", growth_ops: "Growth Ops" };
+    divDiv.innerHTML = Object.entries(divisions).map(([key, agents]) => `<div class="division-section">
+        <div class="division-name">${divNames[key] || key}</div>
+        <div class="division-agents">
+            ${agents.map(a => `<div class="division-agent" onclick="loadAgentProfile('${a.id}')" title="${a.role}">${a.id}</div>`).join("")}
+        </div>
+    </div>`).join("");
+
+    // Data flow graph
+    const graphDiv = document.getElementById("onto-graph");
+    const flowEdges = flows.flows || [];
+    if (!flowEdges.length) { graphDiv.innerHTML = '<div class="empty-state">No data flows</div>'; return; }
+    graphDiv.innerHTML = flowEdges.map(e => `<div class="flow-edge">
+        <span class="flow-node">${esc(e.from)}</span>
+        <span class="flow-arrow">--&gt;</span>
+        <span class="flow-node">${esc(e.to)}</span>
+        <span class="flow-label">${esc(e.label)}</span>
+    </div>`).join("");
+
+    // Proposals
+    const propDiv = document.getElementById("onto-proposals");
+    const props = proposals.proposals || [];
+    if (!props.length) { propDiv.innerHTML = '<div class="empty-state">No proposals yet. Create one to define new agent workflows.</div>'; return; }
+    propDiv.innerHTML = props.map(p => `<div class="tip-card">
+        <div class="tip-header">
+            <span class="alert-severity ${p.priority}">${p.priority}</span>
+            <span class="tip-title">${esc(p.title)}</span>
+            <span style="font-size:11px;color:var(--text-muted)">${p.id}</span>
+        </div>
+        <div class="tip-body">${esc(p.description)}</div>
+        <div class="tip-agents">Agents: ${p.agents.join(", ")} | Steps: ${p.workflow_steps.length} | Status: ${p.status}</div>
+    </div>`).join("");
+}
+
+async function loadAgentProfile(name) {
+    if (!name) return;
+    const profile = await fetchJSON(`/api/hydrospeed/agent/${name}`);
+    const div = document.getElementById("onto-profile");
+    if (profile.error) { div.innerHTML = `<div class="empty-state">${esc(profile.error)}</div>`; return; }
+
+    const p = profile.profile || {};
+    div.innerHTML = `<div class="profile-section">
+        <div class="profile-label">Agent</div>
+        <div class="profile-value"><span class="agent-name">${esc(p.id)}</span> -- ${esc(p.role)} (${esc(p.division || "")})</div>
+
+        <div class="profile-label">Capabilities</div>
+        <div class="profile-tags">${(p.capabilities || []).map(c => `<span class="profile-tag">${esc(c)}</span>`).join("")}</div>
+
+        <div class="profile-label">Inputs</div>
+        <div class="profile-tags">${(p.inputs || []).map(i => `<span class="profile-tag">${esc(i)}</span>`).join("")}</div>
+
+        <div class="profile-label">Outputs</div>
+        <div class="profile-tags">${(p.outputs || []).map(o => `<span class="profile-tag">${esc(o)}</span>`).join("")}</div>
+
+        <div class="profile-label">Dependencies (upstream)</div>
+        <div class="profile-value">${(profile.dependencies || []).join(", ") || "None"}</div>
+
+        <div class="profile-label">Dependents (downstream)</div>
+        <div class="profile-value">${(profile.dependents || []).join(", ") || "None"}</div>
+
+        <div class="profile-label">Expert Tips for ${esc(p.id)}</div>
+        ${(profile.tips || []).map(t => `<div class="tip-card" style="padding:8px 0">
+            <div class="tip-header"><span class="alert-severity ${t.severity}">${t.severity}</span><span class="tip-title">${esc(t.title)}</span></div>
+            <div class="tip-body">${esc(t.tip)}</div>
+        </div>`).join("")}
+    </div>`;
+
+    document.getElementById("onto-agent-select").value = name;
+}
+
+function showProposalForm() {
+    const title = prompt("Proposal title:");
+    if (!title) return;
+    const description = prompt("Description:");
+    const agents = prompt("Agents (comma-separated, e.g. ATLAS,NEXUS,FORGE):");
+    const steps = prompt("Workflow steps (comma-separated):");
+    if (!agents || !steps) return;
+
+    fetch("/api/hydrospeed/proposals", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            title, description: description || "",
+            agents: agents.split(",").map(s => s.trim()),
+            workflow_steps: steps.split(",").map(s => s.trim()),
+        }),
+    }).then(() => refreshTab("ontology"));
+}
+
+// --- Predictive Telemetry ---
+
+async function refreshTelemetry() {
+    const [risks, predictions] = await Promise.all([
+        fetchJSON("/api/telemetry/risks"),
+        fetchJSON("/api/telemetry/predictions"),
+    ]);
+
+    document.getElementById("tele-score").textContent = risks.system_risk || "0.0";
+    const level = risks.system_level || "low";
+    document.getElementById("tele-level").textContent = level;
+    document.getElementById("tele-tracked").textContent = risks.total_tracked || 0;
+    document.getElementById("tele-critical").textContent = (risks.critical_agents || []).length;
+    document.getElementById("tele-predictions").textContent = (predictions.predictions || []).length;
+
+    // System risk badge in header
+    const riskBadge = document.getElementById("system-risk");
+    riskBadge.className = "status-badge " + level;
+    document.getElementById("risk-label").textContent = "risk: " + level;
+
+    // Predictions
+    const predDiv = document.getElementById("tele-pred-list");
+    const preds = predictions.predictions || [];
+    if (!preds.length) { predDiv.innerHTML = '<div class="empty-state">No active predictions -- system is healthy</div>'; return; }
+    predDiv.innerHTML = preds.map(p => `<div class="prediction-card ${p.level === 'critical' ? 'critical' : ''}">
+        <div class="prediction-header">
+            <div><span class="agent-name">${esc(p.agent)}</span> <span class="alert-severity ${p.level}">${p.level}</span></div>
+            <span style="font-size:12px;color:var(--text-muted)">Confidence: ${(p.confidence * 100).toFixed(0)}%</span>
+        </div>
+        <div class="prediction-text">${esc(p.prediction)}</div>
+        <div class="prediction-solutions">
+            ${(p.solutions || []).map(s => `<div style="margin-top:4px">- [${s.severity}] ${esc(s.action)}</div>`).join("")}
+        </div>
+    </div>`).join("");
+
+    // Per-agent risk table
+    const tbody = document.getElementById("tele-agents-tbody");
+    const agentRisks = risks.agents || {};
+    const entries = Object.entries(agentRisks);
+    if (!entries.length) { tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Collecting telemetry...</td></tr>`; return; }
+    tbody.innerHTML = entries.sort((a, b) => b[1].risk_score - a[1].risk_score).map(([name, r]) => {
+        const f = r.factors || {};
+        return `<tr>
+            <td><span class="agent-name">${esc(name)}</span></td>
+            <td style="font-family:var(--font-mono)">${r.risk_score.toFixed(3)} <div class="risk-bar"><div class="risk-fill ${r.level}" style="width:${r.risk_score * 100}%"></div></div></td>
+            <td><span class="alert-severity ${r.level}">${r.level}</span></td>
+            <td>${esc(r.dominant_factor || "--")}</td>
+            <td style="font-family:var(--font-mono);font-size:12px">${((f.error_rate||{}).value||0).toFixed(2)}</td>
+            <td style="font-family:var(--font-mono);font-size:12px">${((r.telemetry||{}).avg_latency_ms||0).toFixed(0)}ms</td>
+            <td style="font-family:var(--font-mono);font-size:12px">${((f.dependency||{}).value||0).toFixed(2)}</td>
+        </tr>`;
+    }).join("");
+}
+
+// --- Expert Tips ---
+
+async function refreshTips() {
+    const cat = document.getElementById("tips-cat-filter")?.value || "";
+    const data = await fetchJSON("/api/hydrospeed/tips" + (cat ? "?category=" + cat : ""));
+    const tips = data.tips || [];
+
+    document.getElementById("tips-total").textContent = tips.length;
+    document.getElementById("tips-critical").textContent = tips.filter(t => t.severity === "critical").length;
+    const categories = new Set(tips.map(t => t.category));
+    document.getElementById("tips-categories").textContent = categories.size;
+
+    const div = document.getElementById("tips-list");
+    if (!tips.length) { div.innerHTML = '<div class="empty-state">No tips match this filter</div>'; return; }
+    div.innerHTML = tips.map(t => `<div class="tip-card">
+        <div class="tip-header">
+            <span class="alert-severity ${t.severity}">${t.severity}</span>
+            <span class="priority-badge MEDIUM">${esc(t.category)}</span>
+            <span class="tip-title">${esc(t.title)}</span>
+        </div>
+        <div class="tip-body">${esc(t.tip)}</div>
+        <div class="tip-agents">Applies to: ${(t.applies_to || []).join(", ")}</div>
+    </div>`).join("");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const catFilter = document.getElementById("tips-cat-filter");
+    if (catFilter) catFilter.addEventListener("change", () => refreshTab("tips"));
+});
+
+// --- Features Guide ---
+
+async function refreshFeatures() {
+    const data = await fetchJSON("/api/features");
+    const div = document.getElementById("features-list");
+    const sections = data.sections || [];
+    if (!sections.length) { div.innerHTML = '<div class="empty-state">No features</div>'; return; }
+
+    div.innerHTML = sections.map(s => `<div class="feature-card">
+        <div class="feature-title">${esc(s.title)}</div>
+        <div class="feature-desc">${esc(s.description)}</div>
+        <div class="feature-meta">
+            <div>
+                <div class="feature-meta-label">Technology</div>
+                <div class="feature-meta-value">${esc(s.tech)}</div>
+            </div>
+            <div>
+                <div class="feature-meta-label">How to Use</div>
+                <div class="feature-meta-value">${esc(s.how_to_use)}</div>
+            </div>
+        </div>
+        ${s.agents ? `<div style="margin-top:12px">
+            <div class="feature-meta-label">Agents</div>
+            <div class="profile-tags">${s.agents.map(a => `<span class="profile-tag" title="${a.division}: ${a.actions.join(', ')}">${a.name}</span>`).join("")}</div>
+        </div>` : ""}
+    </div>`).join("");
+}
+
+// --- Agent Database (Dolt-style version control) ---
+
+let adbBranchesLoaded = false;
+
+async function refreshAgentDB() {
+    const [branches, tables] = await Promise.all([
+        fetchJSON("/api/agentdb/branches"),
+        fetchJSON("/api/agentdb/tables?branch=main"),
+    ]);
+
+    const branchList = branches.branches || [];
+    document.getElementById("adb-branches-count").textContent = branchList.length;
+    document.getElementById("adb-tables-count").textContent = Object.keys((tables.tables || {})).length;
+    const totalRows = Object.values(tables.tables || {}).reduce((sum, t) => sum + (t.row_count || 0), 0);
+    document.getElementById("adb-rows-count").textContent = totalRows;
+
+    // Branches table
+    const tbody = document.getElementById("adb-branches-tbody");
+    tbody.innerHTML = branchList.map(b => {
+        const lastMsg = b.last_commit ? esc(b.last_commit.message).slice(0, 40) : "--";
+        const lastTime = b.last_commit ? formatRelative(b.last_commit.timestamp) : "--";
+        const actions = b.name === "main"
+            ? '<span style="color:var(--text-muted);font-size:12px">protected</span>'
+            : `<button class="btn btn-sm" onclick="mergeBranch('${esc(b.name)}')">Merge</button>
+               <button class="btn btn-sm" onclick="diffBranch('${esc(b.name)}')">Diff</button>`;
+        return `<tr>
+            <td><span class="agent-name">${esc(b.name)}</span></td>
+            <td style="font-size:12px;color:var(--text-muted)">${esc(b.parent || "--")}</td>
+            <td style="font-family:var(--font-mono)">${b.commits}</td>
+            <td style="font-family:var(--font-mono)">${b.total_rows}</td>
+            <td style="font-size:12px" title="${lastMsg}">${lastTime}</td>
+            <td>${actions}</td>
+        </tr>`;
+    }).join("");
+
+    // Schema view
+    const schemaDiv = document.getElementById("adb-schema-view");
+    const tblStats = tables.tables || {};
+    schemaDiv.innerHTML = Object.entries(tblStats).map(([name, info]) => `<div class="schema-table">
+        <div class="schema-table-name">${esc(name)}</div>
+        <div class="schema-columns">${(info.columns || []).map(c => `<span class="schema-col">${esc(c)}</span>`).join("")}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${info.row_count} rows</div>
+    </div>`).join("");
+
+    // Populate branch selects
+    if (!adbBranchesLoaded) {
+        const selects = ["adb-branch-select", "adb-diff-from", "adb-diff-to", "adb-log-branch"];
+        selects.forEach(id => {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            sel.innerHTML = "";
+            if (id === "adb-diff-to") {
+                sel.innerHTML = '<option value="">Select branch...</option>';
+            }
+            branchList.forEach(b => {
+                const opt = document.createElement("option");
+                opt.value = b.name;
+                opt.textContent = b.name;
+                sel.appendChild(opt);
+            });
+        });
+
+        // Agent select
+        const agentSel = document.getElementById("adb-agent-select");
+        if (agentSel && agentSel.options.length <= 1) {
+            Object.keys(AGENT_DESCRIPTIONS).forEach(name => {
+                const opt = document.createElement("option");
+                opt.value = name;
+                opt.textContent = name + " - " + AGENT_DESCRIPTIONS[name];
+                agentSel.appendChild(opt);
+            });
         }
-      });
-      if(newFound>0){
-        nnAddLog("discovery","Found "+newFound+" new models from Puter.js registry");
-        nnAddLog("learning","Neural network updating model rankings...");
-      }else{
-        nnAddLog("discovery","Registry scan complete — all "+models.length+" models already tracked");
-      }
-      document.getElementById("nn-last-scan").textContent="Last scan: "+new Date().toLocaleTimeString();
+        adbBranchesLoaded = true;
     }
-  }catch(e){
-    nnAddLog("discovery","Puter.js scan: "+e.message+" — using cached model data");
-  }
-
-  // Show recommendations
-  nnShowRecs();
-  nnUpdateBests();
-  fMod("all");
-  btn.disabled=false;btn.textContent="Scan for New Models";
 }
 
-async function nnBenchmark(){
-  const btn=document.getElementById("nn-bench-btn");
-  btn.disabled=true;btn.textContent="Benchmarking...";
-  nnAddLog("benchmark","Starting multi-model benchmark across code, reasoning, and speed...");
+async function queryTable() {
+    const branch = document.getElementById("adb-branch-select").value;
+    const table = document.getElementById("adb-table-select").value;
+    const data = await fetchJSON(`/api/agentdb/query/${table}?branch=${branch}&limit=50`);
+    const div = document.getElementById("adb-table-data");
 
-  const testModels=["claude-sonnet-4-5","deepseek/deepseek-r1","gpt-5-nano","qwen/qwen3.5-397b-a17b"];
-  const prompt="Write a function to check if a number is prime. Return only the code.";
-  let completed=0;
+    if (data.error) { div.innerHTML = `<div class="empty-state">${esc(data.error)}</div>`; return; }
+    const rows = data.rows || [];
+    if (!rows.length) { div.innerHTML = `<div class="empty-state">No rows in ${table} on branch ${branch}</div>`; return; }
 
-  for(const mod of testModels){
-    const modelName=MODELS.find(m=>mod.includes(m.n.split(" ")[0].toLowerCase()))?.n||mod;
-    nnAddLog("benchmark","Testing "+modelName+"...");
-    const start=Date.now();
-    try{
-      const resp=await puter.ai.chat(prompt,{model:mod});
-      const elapsed=Date.now()-start;
-      const text=typeof resp==="string"?resp:resp?.message?.content?.[0]?.text||resp?.message?.content||"";
-      const hasCode=text.includes("function")||text.includes("def ")||text.includes("=>");
-      const quality=hasCode?85+rI(0,10):50+rI(0,20);
+    const cols = Object.keys(rows[0]);
+    div.innerHTML = `<div style="overflow-x:auto"><table>
+        <thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead>
+        <tbody>${rows.map(r => `<tr>${cols.map(c => {
+            let val = r[c];
+            if (typeof val === "object" && val !== null) val = JSON.stringify(val).slice(0, 80);
+            return `<td style="font-size:12px;font-family:var(--font-mono);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(String(val ?? ""))}</td>`;
+        }).join("")}</tr>`).join("")}
+        </tbody>
+    </table></div>
+    <div style="font-size:12px;color:var(--text-muted);padding:8px">Showing ${rows.length} of ${data.total} rows on <b>${esc(branch)}</b></div>`;
+}
 
-      if(nnPerformance[modelName]){
-        nnPerformance[modelName].code_score=Math.round((nnPerformance[modelName].code_score+quality)/2);
-        nnPerformance[modelName].speed_score=Math.max(0,100-Math.round(elapsed/100));
-        nnPerformance[modelName].uses++;
-        if(hasCode)nnPerformance[modelName].successes++;
-        nnPerformance[modelName].trend=quality>80?"improving":"stable";
-      }
-      nnAddLog("benchmark",modelName+": "+elapsed+"ms, quality="+quality+(hasCode?" (code OK)":" (no code)"));
-      completed++;
-    }catch(e){
-      nnAddLog("benchmark",modelName+": failed — "+e.message);
-      if(nnPerformance[modelName])nnPerformance[modelName].trend="declining";
+async function computeDiff() {
+    const from = document.getElementById("adb-diff-from").value;
+    const to = document.getElementById("adb-diff-to").value;
+    if (!to) { alert("Select a target branch"); return; }
+
+    const data = await fetchJSON(`/api/agentdb/diff?from=${from}&to=${to}`);
+    const div = document.getElementById("adb-diff-view");
+    const diffs = data.diffs || [];
+
+    if (!diffs.length) {
+        div.innerHTML = `<div class="empty-state">No differences between ${esc(from)} and ${esc(to)}</div>`;
+        return;
     }
-  }
 
-  nnAddLog("learning","Benchmark complete: "+completed+"/"+testModels.length+" models tested. Rankings updated.");
-  nnUpdateBests();nnShowRecs();fMod("all");
-  btn.disabled=false;btn.textContent="Run Benchmark";
+    div.innerHTML = `<div style="font-size:12px;color:var(--text-muted);padding:8px 0">${diffs.length} change(s)</div>` +
+        diffs.map(d => {
+            const typeClass = d.diff_type === "added" ? "diff-added" : d.diff_type === "removed" ? "diff-removed" : "diff-modified";
+            const icon = d.diff_type === "added" ? "+" : d.diff_type === "removed" ? "-" : "~";
+            const detail = d.diff_type === "added"
+                ? JSON.stringify(d.to_row || {}).slice(0, 120)
+                : d.diff_type === "removed"
+                ? JSON.stringify(d.from_row || {}).slice(0, 120)
+                : `FROM: ${JSON.stringify(d.from_row || {}).slice(0, 60)} TO: ${JSON.stringify(d.to_row || {}).slice(0, 60)}`;
+            return `<div class="diff-entry ${typeClass}">
+                <span class="diff-icon">${icon}</span>
+                <span class="diff-table">${esc(d.table)}</span>
+                <span class="diff-id">${esc((d.row_id || "").slice(0, 8))}</span>
+                <span class="diff-detail">${esc(detail)}</span>
+            </div>`;
+        }).join("");
 }
 
-function nnShowRecs(){
-  const el=document.getElementById("nn-recs");
-  // Find top recommendations by category
-  const sorted=Object.entries(nnPerformance).sort((a,b)=>b[1].code_score-a[1].code_score);
-  const topCode=sorted[0];
-  const topReason=Object.entries(nnPerformance).sort((a,b)=>b[1].reason_score-a[1].reason_score)[0];
-  const topFree=Object.entries(nnPerformance).filter(([n,p])=>MODELS.find(m=>m.n===n)?.f).sort((a,b)=>((b[1].code_score+b[1].reason_score)/2)-((a[1].code_score+a[1].reason_score)/2))[0];
-
-  if(topCode){
-    el.style.display="block";
-    el.innerHTML='<b style="color:var(--g)">Neural Recommendations:</b> '+
-      'Code → <b>'+topCode[0]+'</b> (score: '+topCode[1].code_score+') · '+
-      'Reasoning → <b>'+topReason[0]+'</b> (score: '+topReason[1].reason_score+') · '+
-      'Best Free → <b>'+(topFree?topFree[0]:"—")+'</b>'+
-      ' · <span style="color:var(--td)">Rankings auto-update as agents execute tasks</span>';
-  }
+function diffBranch(branch) {
+    document.getElementById("adb-diff-from").value = "main";
+    document.getElementById("adb-diff-to").value = branch;
+    computeDiff();
 }
 
-// Neural learning: update model scores after every agent task execution
-const _origRun=run;
-function run(ag,act){
-  const result=_origRun(ag,act);
-  // Neural self-learning: track which model context works best
-  const isCode=CODE_AGENTS.includes(ag);
-  const category=isCode?"code":"mortgage";
-  // Reinforce best models based on task outcomes
-  if(Math.random()>0.85){// Periodically learn
-    const bestModel=isCode?
-      Object.entries(nnPerformance).sort((a,b)=>b[1].code_score-a[1].code_score)[0]:
-      Object.entries(nnPerformance).sort((a,b)=>b[1].reason_score-a[1].reason_score)[0];
-    if(bestModel){
-      bestModel[1].uses++;bestModel[1].successes++;
-      bestModel[1][isCode?"code_score":"reason_score"]=Math.min(99,bestModel[1][isCode?"code_score":"reason_score"]+0.1);
+async function mergeBranch(source) {
+    if (!confirm(`Merge '${source}' into 'main'? This will apply all changes atomically.`)) return;
+    const resp = await fetch("/api/agentdb/merge", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ source, target: "main", author: "DASHBOARD" }),
+    });
+    const result = await resp.json();
+    if (result.error) { alert("Merge error: " + result.error); return; }
+    alert(`Merged! Added: ${result.added}, Modified: ${result.modified}, Removed: ${result.removed}`);
+    adbBranchesLoaded = false;
+    refreshTab("agentdb");
+}
+
+async function loadCommitLog() {
+    const branch = document.getElementById("adb-log-branch").value;
+    const data = await fetchJSON(`/api/agentdb/log/${branch}?limit=20`);
+    const div = document.getElementById("adb-commit-log");
+    const commits = data.commits || [];
+
+    if (!commits.length || commits[0]?.error) {
+        div.innerHTML = `<div class="empty-state">No commits on ${esc(branch)}</div>`;
+        return;
     }
-  }
-  return result;
+
+    div.innerHTML = commits.map(c => `<div class="commit-entry">
+        <div class="commit-header">
+            <span class="commit-id">${esc((c.id || "").slice(0, 8))}</span>
+            <span class="commit-author">${esc(c.author)}</span>
+            <span class="commit-time">${formatRelative(c.timestamp)}</span>
+        </div>
+        <div class="commit-message">${esc(c.message)}</div>
+    </div>`).join("");
 }
 
-// Init
-(function(){
-  const s=document.getElementById("o-ag");
-  Object.keys(ACT).forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n+" — "+R[n];s.appendChild(o);});
-  oSync();render();fMod('all');renderClip();renderKB();
-  nnInit();nnShowRecs();
-  setInterval(render,5000);
-  // Periodic neural scan (every 5 minutes)
-  setInterval(()=>{nnAddLog("learning","Periodic model performance reassessment...");nnUpdateBests();nnShowRecs();},300000);
-  document.getElementById("ai-in").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();aiSend();}});
-})();
+async function loadAgentDbStatus() {
+    const name = document.getElementById("adb-agent-select").value;
+    if (!name) return;
+    const data = await fetchJSON(`/api/agentdb/agent/${name}`);
+    const div = document.getElementById("adb-agent-status");
+
+    if (data.error) {
+        div.innerHTML = `<div class="empty-state">${esc(data.error)}</div>`;
+        return;
+    }
+
+    const state = data.state || {};
+    const ops = data.recent_operations || [];
+    const diffs = data.diffs || [];
+    const commits = data.recent_commits || [];
+
+    div.innerHTML = `
+        <div class="agent-db-status">
+            <div class="adb-stat-section">
+                <div class="adb-stat-title">Branch: <span class="agent-name">${esc(data.branch)}</span></div>
+                <div class="adb-stat-row">
+                    <span>Pending changes: <b>${data.pending_changes}</b></span>
+                    <span>Status: <span class="agent-badge ${state.status || 'idle'}">${state.status || "unknown"}</span></span>
+                    <span>Tasks: ${state.tasks_completed || 0} completed, ${state.tasks_failed || 0} failed</span>
+                    <span>Health: ${(state.health_score || 1.0).toFixed(2)}</span>
+                </div>
+            </div>
+
+            ${diffs.length ? `<div class="adb-stat-section">
+                <div class="adb-stat-title">Pending Diffs (${diffs.length})</div>
+                ${diffs.slice(0, 10).map(d => {
+                    const tc = d.diff_type === "added" ? "diff-added" : d.diff_type === "removed" ? "diff-removed" : "diff-modified";
+                    return `<div class="diff-entry ${tc}">
+                        <span class="diff-icon">${d.diff_type === "added" ? "+" : d.diff_type === "removed" ? "-" : "~"}</span>
+                        <span class="diff-table">${esc(d.table)}</span>
+                        <span class="diff-id">${esc((d.row_id || "").slice(0, 8))}</span>
+                    </div>`;
+                }).join("")}
+                ${diffs.length > 10 ? `<div style="font-size:12px;color:var(--text-muted)">...and ${diffs.length - 10} more</div>` : ""}
+                <button class="btn btn-sm btn-primary" style="margin-top:8px" onclick="mergeBranch('${esc(data.branch)}')">Merge to main</button>
+            </div>` : ""}
+
+            ${ops.length ? `<div class="adb-stat-section">
+                <div class="adb-stat-title">Recent Operations</div>
+                <table><thead><tr><th>Action</th><th>Status</th><th>Duration</th><th>Time</th></tr></thead>
+                <tbody>${ops.map(o => `<tr>
+                    <td>${esc(o.action)}</td>
+                    <td><span class="agent-badge ${o.status === 'completed' ? 'idle' : 'error'}">${o.status}</span></td>
+                    <td style="font-family:var(--font-mono);font-size:12px">${o.duration_ms ? o.duration_ms + "ms" : "--"}</td>
+                    <td style="font-size:12px;color:var(--text-muted)">${formatRelative(o.created_at)}</td>
+                </tr>`).join("")}</tbody></table>
+            </div>` : ""}
+
+            ${commits.length ? `<div class="adb-stat-section">
+                <div class="adb-stat-title">Recent Commits</div>
+                ${commits.slice(0, 5).map(c => `<div class="commit-entry">
+                    <span class="commit-id">${esc((c.id || "").slice(0, 8))}</span>
+                    <span class="commit-message">${esc(c.message)}</span>
+                    <span class="commit-time">${formatRelative(c.timestamp)}</span>
+                </div>`).join("")}
+            </div>` : ""}
+        </div>`;
+}
+
+function showCreateBranch() {
+    const modal = document.getElementById("adb-modal");
+    document.getElementById("adb-modal-title").textContent = "Create Branch";
+    document.getElementById("adb-modal-body").innerHTML = `
+        <label>Branch name: <input type="text" id="adb-new-branch-name" class="control-input" placeholder="feature/my-branch"></label>
+        <label>From branch:
+            <select id="adb-new-branch-from" class="control-select">
+                ${(document.getElementById("adb-branch-select")?.innerHTML || '<option value="main">main</option>')}
+            </select>
+        </label>`;
+    document.getElementById("adb-modal-confirm").onclick = async () => {
+        const name = document.getElementById("adb-new-branch-name").value.trim();
+        const from = document.getElementById("adb-new-branch-from").value;
+        if (!name) { alert("Branch name required"); return; }
+        const resp = await fetch("/api/agentdb/branches", {
+            method: "POST", headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ name, from }),
+        });
+        const result = await resp.json();
+        if (result.error) { alert(result.error); return; }
+        modal.style.display = "none";
+        adbBranchesLoaded = false;
+        refreshTab("agentdb");
+    };
+    modal.style.display = "flex";
+}
+
+async function showSchemaSQL() {
+    const resp = await fetch("/api/agentdb/schema/sql");
+    const sql = await resp.text();
+    const modal = document.getElementById("adb-modal");
+    document.getElementById("adb-modal-title").textContent = "Database Schema (SQL)";
+    document.getElementById("adb-modal-body").innerHTML = `<pre class="schema-sql">${esc(sql)}</pre>`;
+    document.getElementById("adb-modal-confirm").onclick = () => { modal.style.display = "none"; };
+    document.getElementById("adb-modal-confirm").textContent = "Close";
+    modal.style.display = "flex";
+}
+
 </script>
 </body>
 </html>
