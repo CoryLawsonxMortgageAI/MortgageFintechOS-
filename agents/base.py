@@ -96,6 +96,34 @@ class BaseAgent(ABC):
     def _update_heartbeat(self) -> None:
         self.last_heartbeat = datetime.now(timezone.utc)
 
+    # --- Safety guardrails ---
+
+    # GitHub operations that agents are NEVER allowed to perform.
+    # This is an immutable architectural constraint — no override exists.
+    BLOCKED_GITHUB_METHODS = frozenset({
+        "delete_branch", "delete_file", "delete_repo", "delete_ref",
+    })
+
+    async def safe_github(self, method_name: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        """Call a GitHub client method with deletion guard.
+
+        All agents MUST use this wrapper for GitHub operations.
+        Any method containing 'delete' is permanently blocked.
+        """
+        if "delete" in method_name.lower() or method_name in self.BLOCKED_GITHUB_METHODS:
+            self._log.warning("agent_delete_blocked", agent=self.name, method=method_name,
+                              reason="AI agents can NEVER delete repository content")
+            return {
+                "error": f"BLOCKED: {self.name} attempted {method_name} — deletion is permanently disabled.",
+                "blocked": True,
+            }
+        if not self._github:
+            return {"error": "GitHub client not available"}
+        method = getattr(self._github, method_name, None)
+        if not method or not callable(method):
+            return {"error": f"Unknown GitHub method: {method_name}"}
+        return await method(*args, **kwargs)
+
     # --- Integration hooks ---
 
     def set_integrations(

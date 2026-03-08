@@ -109,6 +109,9 @@ class DashboardServer:
         self._app.router.add_post("/api/growth/ambassador/engage", self._handle_ambassador_engage)
         self._app.router.add_get("/api/growth/ambassador/stats", self._handle_ambassador_stats)
 
+        # Safety Audit
+        self._app.router.add_get("/api/safety/blocked", self._handle_safety_blocked)
+
         # Static files
         self._app.router.add_static("/static", STATIC_DIR, show_index=False)
 
@@ -448,6 +451,19 @@ class DashboardServer:
         data = await self.orchestrator.pentagi_list_vulnerabilities(severity=request.query.get("severity", ""))
         return web.json_response(data, dumps=_json_dumps)
 
+
+    # --- Safety Audit handlers ---
+
+    async def _handle_safety_blocked(self, request: web.Request) -> web.Response:
+        """Return audit log of all blocked deletion attempts."""
+        if not self.orchestrator._github:
+            return web.json_response({"blocked_attempts": [], "note": "GitHub not configured"})
+        attempts = self.orchestrator._github.get_blocked_attempts()
+        return web.json_response({
+            "blocked_attempts": attempts,
+            "total": len(attempts),
+            "guardrail": "AI agents can NEVER delete repository content",
+        }, dumps=_json_dumps)
 
     # --- Growth Ops handlers ---
 
