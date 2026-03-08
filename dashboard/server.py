@@ -131,6 +131,9 @@ class DashboardServer:
         self._app.router.add_post("/api/hydrospeed/proposals", self._handle_create_proposal)
         self._app.router.add_get("/api/hydrospeed/proposals", self._handle_list_proposals)
 
+        # Ontology-Telemetry Sync (enriched ontology with live health data)
+        self._app.router.add_get("/api/ontology-telemetry-sync", self._handle_ontology_telemetry_sync)
+
         # Predictive Telemetry
         self._app.router.add_get("/api/telemetry/risks", self._handle_telemetry_risks)
         self._app.router.add_get("/api/telemetry/risks/{agent_name}", self._handle_telemetry_agent_risk)
@@ -610,6 +613,24 @@ class DashboardServer:
         return web.json_response(result, dumps=_json_dumps)
 
     # --- Hydrospeed Ontology handlers ---
+
+    async def _handle_ontology_telemetry_sync(self, request: web.Request) -> web.Response:
+        """Return ontology graph enriched with live telemetry health data."""
+        integration_status = {
+            "github": bool(self.orchestrator._github),
+            "notion": bool(self.orchestrator._notion),
+            "gdrive": bool(self.orchestrator._gdrive),
+            "wispr": bool(self.orchestrator._wispr),
+            "llm": bool(self.orchestrator._llm),
+            "ghost": bool(self.orchestrator._ghost),
+            "pentagi": bool(self.orchestrator._pentagi),
+            "paperclip": bool(self.orchestrator._paperclip),
+            "browser": bool(self.orchestrator._browser),
+        }
+        enriched = self.orchestrator._hydrospeed.get_telemetry_enriched_ontology(
+            self.orchestrator._telemetry, integration_status
+        )
+        return web.json_response(enriched, dumps=_json_dumps)
 
     async def _handle_ontology(self, request: web.Request) -> web.Response:
         return web.json_response(self.orchestrator._hydrospeed.get_ontology(), dumps=_json_dumps)
