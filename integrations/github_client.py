@@ -19,7 +19,20 @@ GITHUB_API = "https://api.github.com"
 
 
 class GitHubClient:
-    """Async GitHub API client for MortgageFintechOS operations."""
+    """Async GitHub API client for MortgageFintechOS operations.
+
+    SAFETY: Deletion operations are permanently disabled. AI agents can
+    read, create, and update code but can NEVER delete files, branches,
+    or any repository content. This is an immutable architectural constraint.
+    """
+
+    # Operations that are ALWAYS blocked — no override, no flag, no exception
+    BLOCKED_OPERATIONS = frozenset({
+        "delete_branch",
+        "delete_file",
+        "delete_repo",
+        "delete_ref",
+    })
 
     def __init__(self, token: str, repo: str):
         self._token = token
@@ -29,6 +42,7 @@ class GitHubClient:
             "Authorization": f"token {token}",
             "Accept": "application/vnd.github.v3+json",
         }
+        self._blocked_attempts: list[dict[str, str]] = []
 
     # ═══════════════════════════════════════════════════════
     # ISSUE TRACKING
@@ -177,7 +191,13 @@ class GitHubClient:
         branch: str = "main",
         sha: str = "",
     ) -> dict[str, Any]:
-        """Create or update a file in the repository."""
+        """Create or update a file in the repository.
+
+        SAFETY: This method only creates or updates. Empty content is rejected
+        to prevent agents from effectively deleting file contents.
+        """
+        if content is None:
+            return {"error": "Content cannot be None — agents cannot clear files", "blocked": True}
         url = f"{GITHUB_API}/repos/{self._repo}/contents/{path}"
         encoded = base64.b64encode(content.encode()).decode()
         payload: dict[str, Any] = {
@@ -240,16 +260,42 @@ class GitHubClient:
                     return {"error": error[:200], "status": resp.status}
 
     async def delete_branch(self, branch_name: str) -> dict[str, Any]:
-        """Delete a branch."""
-        url = f"{GITHUB_API}/repos/{self._repo}/git/refs/heads/{branch_name}"
-        async with aiohttp.ClientSession(headers=self._headers) as session:
-            async with session.delete(url) as resp:
-                if resp.status == 204:
-                    self._log.info("branch_deleted", branch=branch_name)
-                    return {"deleted": branch_name}
-                else:
-                    error = await resp.text()
-                    return {"error": error[:200], "status": resp.status}
+        """BLOCKED: Deletion is permanently disabled. Agents can NEVER delete branches."""
+        self._log.warning("delete_blocked", operation="delete_branch", target=branch_name,
+                          reason="AI agents are prohibited from deleting any repository content")
+        self._blocked_attempts.append({
+            "operation": "delete_branch",
+            "target": branch_name,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        })
+        return {
+            "error": "BLOCKED: Deletion operations are permanently disabled. "
+                     "AI agents can read, create, and update code but can NEVER delete.",
+            "operation": "delete_branch",
+            "target": branch_name,
+            "blocked": True,
+        }
+
+    async def delete_file(self, path: str, message: str = "", branch: str = "main", sha: str = "") -> dict[str, Any]:
+        """BLOCKED: Deletion is permanently disabled. Agents can NEVER delete files."""
+        self._log.warning("delete_blocked", operation="delete_file", target=path,
+                          reason="AI agents are prohibited from deleting any repository content")
+        self._blocked_attempts.append({
+            "operation": "delete_file",
+            "target": path,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        })
+        return {
+            "error": "BLOCKED: Deletion operations are permanently disabled. "
+                     "AI agents can read, create, and update code but can NEVER delete.",
+            "operation": "delete_file",
+            "target": path,
+            "blocked": True,
+        }
+
+    def get_blocked_attempts(self) -> list[dict[str, str]]:
+        """Return audit log of blocked deletion attempts."""
+        return list(self._blocked_attempts)
 
     # ═══════════════════════════════════════════════════════
     # PULL REQUEST OPERATIONS (for NEXUS)

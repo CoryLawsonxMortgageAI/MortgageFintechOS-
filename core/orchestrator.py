@@ -40,7 +40,11 @@ from integrations.ghost_client import GhostClient
 from integrations.pentagi_client import PentAGIClient
 from integrations.browser_client import BrowserClient
 from monitoring.health_monitor import HealthMonitor
+from monitoring.action_log import ActionLog, ActionType
+from monitoring.telemetry import PredictiveTelemetry
+from monitoring.hydrospeed import HydrospeedEngine
 from persistence.state_store import StateStore
+from persistence.agent_database import AgentDatabase
 from schedulers.daily_scheduler import DailyScheduler, ScheduledJob
 
 logger = structlog.get_logger()
@@ -71,6 +75,10 @@ class Orchestrator:
         self._pentagi: PentAGIClient | None = None
         self._browser: BrowserClient | None = None
         self._dashboard: DashboardServer | None = None
+        self._action_log = ActionLog()
+        self._telemetry = PredictiveTelemetry()
+        self._hydrospeed = HydrospeedEngine()
+        self._agent_db = AgentDatabase()
         self._running = False
         self._start_time: datetime | None = None
         self._log = logger.bind(component="orchestrator")
@@ -313,7 +321,18 @@ class Orchestrator:
         self._scheduler.set_state_store(self._state_store)
         self._health_monitor.set_task_queue(self._task_queue)
 
-        # 5. Start dashboard
+        # 5. Restore action log and agent database
+        action_log_data = await self._state_store.load("action_log")
+        if action_log_data:
+            self._action_log.restore_from_dict(action_log_data)
+            self._log.info("action_log_restored")
+
+        agent_db_data = await self._state_store.load("agent_database")
+        if agent_db_data:
+            self._agent_db.restore_from_dict(agent_db_data)
+            self._log.info("agent_database_restored")
+
+        # 6. Start dashboard
         self._dashboard = DashboardServer(self, host=dashboard_host, port=dashboard_port)
         await self._dashboard.start()
 
@@ -346,6 +365,8 @@ class Orchestrator:
             await agent.save_state()
 
         await self._state_store.save("task_queue", self._task_queue.to_dict())
+        await self._state_store.save("action_log", self._action_log.to_dict())
+        await self._state_store.save("agent_database", self._agent_db.to_dict())
         if self._paperclip:
             await self._state_store.save("paperclip", self._paperclip.to_dict())
         self._scheduler.stop()
@@ -418,25 +439,39 @@ class Orchestrator:
                 continue
 
             try:
+                t_start = datetime.now(timezone.utc)
+                self._action_log.record(agent.name, ActionType.TASK_STARTED, task.action, detail=f"task_id={task.id}")
+
                 result = await agent.run_task(task)
+
+                duration_ms = int((datetime.now(timezone.utc) - t_start).total_seconds() * 1000)
                 self._task_queue.complete(task, result)
                 self._health_monitor.record_task(success=True)
+                self._action_log.record(agent.name, ActionType.TASK_COMPLETED, task.action, duration_ms=duration_ms, detail=f"task_id={task.id}")
+                self._telemetry.record(agent.name, task.action, duration_ms, success=True, queue_depth=self._task_queue.get_stats().get("pending", 0))
+                self._agent_db.record_operation(agent.name, task.action, "completed", payload=task.payload, result=result, duration_ms=duration_ms)
 
                 # Auto-create GitHub issue for high-priority tasks
                 if self._github and task.priority <= TaskPriority.HIGH:
                     await self._github.create_agent_task_issue(agent_name=agent.name, task_action=task.action, result=result)
+                    self._action_log.record(agent.name, ActionType.INTEGRATION_CALL, "github_issue", detail="auto-created for HIGH/CRITICAL task")
 
                 # Auto-sync completed tasks to Notion
                 if self._notion and task.priority <= TaskPriority.HIGH:
                     try:
                         await self._notion.sync_agent_result(agent_name=agent.name, action=task.action, result=result)
+                        self._action_log.record(agent.name, ActionType.INTEGRATION_CALL, "notion_sync", detail="auto-synced")
                     except Exception as e:
                         self._log.warning("notion_sync_failed", error=str(e))
 
             except Exception as e:
+                duration_ms = int((datetime.now(timezone.utc) - t_start).total_seconds() * 1000)
                 self._log.error("task_dispatch_failed", task_id=task.id, error=str(e))
                 self._task_queue.fail(task, str(e))
                 self._health_monitor.record_task(success=False)
+                self._action_log.record(agent.name, ActionType.TASK_FAILED, task.action, duration_ms=duration_ms, success=False, detail=str(e)[:200])
+                self._telemetry.record(agent.name, task.action, duration_ms, success=False, error_msg=str(e)[:200], queue_depth=self._task_queue.get_stats().get("pending", 0))
+                self._agent_db.record_operation(agent.name, task.action, "failed", payload=task.payload, error=str(e)[:200], duration_ms=duration_ms)
                 if task.status == TaskStatus.RETRYING:
                     await self._task_queue.enqueue(task)
 
@@ -630,6 +665,30 @@ class Orchestrator:
         ambassador_id = await self.submit_task("AMBASSADOR", "daily_engagement", priority=TaskPriority.LOW)
         results["ambassador_task"] = ambassador_id
         return results
+
+    # --- Schedule Management ---
+
+    def update_schedule(self, job_name: str, hour: int, minute: int) -> dict[str, Any]:
+        """Update a scheduled job's run time at runtime."""
+        for job in self._scheduler._jobs:
+            if job.name == job_name:
+                old_time = str(job.run_time)
+                job.run_time = time(hour, minute)
+                self._action_log.record("SYSTEM", ActionType.SCHEDULE_FIRED, "schedule_updated",
+                                       detail=f"{job_name}: {old_time} -> {hour:02d}:{minute:02d}")
+                self._log.info("schedule_updated", job=job_name, new_time=f"{hour:02d}:{minute:02d}")
+                return {"job": job_name, "old_time": old_time, "new_time": f"{hour:02d}:{minute:02d}"}
+        return {"error": f"Job '{job_name}' not found"}
+
+    def toggle_schedule(self, job_name: str, enabled: bool) -> dict[str, Any]:
+        """Enable or disable a scheduled job."""
+        for job in self._scheduler._jobs:
+            if job.name == job_name:
+                job.enabled = enabled
+                self._action_log.record("SYSTEM", ActionType.SCHEDULE_FIRED, "schedule_toggled",
+                                       detail=f"{job_name}: {'enabled' if enabled else 'disabled'}")
+                return {"job": job_name, "enabled": enabled}
+        return {"error": f"Job '{job_name}' not found"}
 
     # --- Status ---
 
