@@ -3,18 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MortgageFintechOS — Domain Ontology</title>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>Mortgage/Coding OS — Domain Ontology</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⬡</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=SF+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0a0a;--s:#111;--s2:#161616;--b:#222;--b2:#2a2a2a;--t:#e4e4e7;--t2:#a1a1aa;--t3:#71717a;--t4:#52525b;--ok:#22c55e;--f:'Instrument Sans',sans-serif;--m:'IBM Plex Mono',monospace}
+:root{--bg:#0d1117;--s:#161b22;--s2:#1c2333;--b:#30363d;--b2:#21262d;--t:#e6edf3;--t2:#8b949e;--t3:#484f58;--t4:#6e7681;--accent:#2f81f7;--accent-bright:#58a6ff;--ok:#3fb950;--f:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;--m:'SF Mono','Cascadia Code','Fira Code',Consolas,monospace}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--f);background:var(--bg);color:var(--t);overflow-x:hidden}
+body{font-family:var(--f);background:var(--bg);color:var(--t);overflow-x:hidden;-webkit-font-smoothing:antialiased}
 .hdr{background:var(--s);border-bottom:1px solid var(--b);padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
-.hdr h1{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.hdr h1{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;letter-spacing:-0.3px}
+.hdr h1 span{color:var(--accent-bright)}
 .hdr h1 em{font-style:normal;font-weight:400;color:var(--t3)}
 .links{display:flex;gap:8px}
-.links a{font-size:10px;color:var(--t3);text-decoration:none;font-family:var(--m);padding:4px 10px;border:1px solid var(--b);border-radius:4px;transition:.15s}
-.links a:hover{color:var(--t);border-color:var(--t4)}
+.links a{font-size:10px;color:var(--t2);text-decoration:none;font-family:var(--m);padding:4px 10px;border:1px solid var(--b);border-radius:4px;transition:.15s}
+.links a:hover{color:var(--t);border-color:var(--accent)}
 .canvas{padding:20px 24px;max-width:1500px;margin:0 auto}
 
 /* Ontology graph container */
@@ -24,26 +26,26 @@ body{font-family:var(--f);background:var(--bg);color:var(--t);overflow-x:hidden}
 
 /* Class cards on graph */
 .onode{position:absolute;border-radius:6px;cursor:pointer;transition:box-shadow .2s,border-color .2s;padding:0;overflow:hidden;min-width:120px;font-size:10px}
-.onode:hover{box-shadow:0 0 24px rgba(255,255,255,.06);z-index:10}
+.onode:hover{box-shadow:0 0 24px rgba(47,129,247,.15);z-index:10}
 .onode-h{padding:6px 10px;font-weight:700;font-size:10px;font-family:var(--m);display:flex;align-items:center;gap:5px;letter-spacing:-.1px}
 .onode-b{padding:5px 10px;font-size:9px;color:var(--t2);line-height:1.4}
 .onode-prop{font-family:var(--m);font-size:8px;color:var(--t3);padding:2px 10px 4px}
 
 /* Category colors */
-.cat-core .onode-h{background:#16a34a;color:#fff}
-.cat-core{border:1px solid #16a34a;background:var(--s2)}
-.cat-agent .onode-h{background:var(--t);color:var(--bg)}
-.cat-agent{border:1px solid var(--t4);background:var(--s2)}
-.cat-domain .onode-h{background:#92400e;color:#fff}
-.cat-domain{border:1px solid #92400e;background:var(--s2)}
-.cat-integration .onode-h{background:#7c3aed;color:#fff}
-.cat-integration{border:1px solid #7c3aed;background:var(--s2)}
-.cat-data .onode-h{background:var(--t4);color:var(--t)}
-.cat-data{border:1px solid var(--b2);background:var(--s2)}
-.cat-llm .onode-h{background:#0891b2;color:#fff}
-.cat-llm{border:1px solid #0891b2;background:var(--s2)}
-.cat-compliance .onode-h{background:#dc2626;color:#fff}
-.cat-compliance{border:1px solid #dc2626;background:var(--s2)}
+.cat-core .onode-h{background:var(--ok);color:#fff}
+.cat-core{border:1px solid var(--ok);background:var(--s2)}
+.cat-agent .onode-h{background:var(--accent);color:#fff}
+.cat-agent{border:1px solid var(--accent);background:var(--s2)}
+.cat-domain .onode-h{background:#d29922;color:#0d1117}
+.cat-domain{border:1px solid #d29922;background:var(--s2)}
+.cat-integration .onode-h{background:#8b5cf6;color:#fff}
+.cat-integration{border:1px solid #8b5cf6;background:var(--s2)}
+.cat-data .onode-h{background:var(--t3);color:var(--t)}
+.cat-data{border:1px solid var(--b);background:var(--s2)}
+.cat-llm .onode-h{background:#06b6d4;color:#fff}
+.cat-llm{border:1px solid #06b6d4;background:var(--s2)}
+.cat-compliance .onode-h{background:#f85149;color:#fff}
+.cat-compliance{border:1px solid #f85149;background:var(--s2)}
 
 /* Legend */
 .legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px;padding:10px 14px;background:var(--s);border:1px solid var(--b);border-radius:6px}
@@ -51,35 +53,41 @@ body{font-family:var(--f);background:var(--bg);color:var(--t);overflow-x:hidden}
 .lg-dot{width:10px;height:10px;border-radius:2px}
 
 /* Relationship types */
-.rel-label{position:absolute;font-size:7px;font-family:var(--m);color:var(--t4);background:var(--s);padding:1px 4px;border-radius:2px;pointer-events:none;white-space:nowrap;letter-spacing:.3px;text-transform:uppercase}
+.rel-label{position:absolute;font-size:7px;font-family:var(--m);color:var(--t3);background:var(--s);padding:1px 4px;border-radius:2px;pointer-events:none;white-space:nowrap;letter-spacing:.3px;text-transform:uppercase}
 
 /* Panels */
 .sidebar{position:fixed;right:0;top:48px;width:340px;height:calc(100vh - 48px);background:var(--s);border-left:1px solid var(--b);overflow-y:auto;transform:translateX(100%);transition:transform .25s ease;z-index:99;padding:16px}
 .sidebar.open{transform:translateX(0)}
-.sb-close{position:absolute;top:10px;right:10px;background:none;border:1px solid var(--b);color:var(--t3);width:22px;height:22px;border-radius:3px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center}
-.sb-close:hover{color:var(--t);border-color:var(--t4)}
-.sb-title{font-size:14px;font-weight:700;margin-bottom:2px}
+.sb-close{position:absolute;top:10px;right:10px;background:none;border:1px solid var(--b);color:var(--t2);width:22px;height:22px;border-radius:3px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center}
+.sb-close:hover{color:var(--t);border-color:var(--accent)}
+.sb-title{font-size:14px;font-weight:700;margin-bottom:2px;color:var(--t)}
 .sb-type{font-size:9px;font-family:var(--m);color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
-.sb-sec{font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--t4);font-family:var(--m);margin-top:14px;margin-bottom:6px;padding-top:10px;border-top:1px solid var(--b)}
+.sb-sec{font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--t3);font-family:var(--m);margin-top:14px;margin-bottom:6px;padding-top:10px;border-top:1px solid var(--b)}
 .sb-row{font-size:10px;color:var(--t2);margin-bottom:4px;padding:3px 0}
 .sb-row b{color:var(--t);font-weight:600}
 .sb-tag{display:inline-flex;padding:1px 5px;border-radius:2px;font-size:8px;font-family:var(--m);font-weight:600;margin:1px}
 
 /* Relationship table */
 .rel-tbl{margin-top:16px;background:var(--s);border:1px solid var(--b);border-radius:8px;overflow:hidden}
-.rel-tbl-h{padding:10px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--b)}
+.rel-tbl-h{padding:10px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--b);color:var(--t)}
 table{width:100%;border-collapse:collapse}
-table th{text-align:left;padding:7px 12px;font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);font-family:var(--m);background:var(--s2);border-bottom:1px solid var(--b)}
-table td{padding:6px 12px;font-size:10px;color:var(--t2);border-bottom:1px solid rgba(255,255,255,.03)}
-table tr:hover td{background:rgba(255,255,255,.015)}
+table th{text-align:left;padding:7px 12px;font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);font-family:var(--m);background:var(--s2);border-bottom:1px solid var(--b)}
+table td{padding:6px 12px;font-size:10px;color:var(--t2);border-bottom:1px solid var(--b2)}
+table tr:hover td{background:rgba(47,129,247,.04)}
 
-.footer{text-align:center;padding:20px;font-size:9px;color:var(--t4);font-family:var(--m);margin-top:16px}
-.footer a{color:var(--t3);text-decoration:none}
+.footer{text-align:center;padding:20px;font-size:9px;color:var(--t3);font-family:var(--m);margin-top:16px}
+.footer a{color:var(--t2);text-decoration:none}
+.footer a:hover{color:var(--accent-bright)}
+
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--b);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--t3)}
 </style>
 </head>
 <body>
 <header class="hdr">
-  <h1>⬡ MortgageFintechOS <em>Domain Ontology</em></h1>
+  <h1>Mortgage/<span>Coding OS</span> <em>Domain Ontology</em></h1>
   <div class="links">
     <a href="/">Dashboard</a>
     <a href="/orchestration.html">Orchestration</a>
@@ -87,14 +95,14 @@ table tr:hover td{background:rgba(255,255,255,.015)}
 </header>
 <div class="canvas">
   <div class="legend">
-    <div class="lg"><div class="lg-dot" style="background:#16a34a"></div>Core System</div>
-    <div class="lg"><div class="lg-dot" style="background:var(--t)"></div>Agent (Employee)</div>
-    <div class="lg"><div class="lg-dot" style="background:#92400e"></div>Mortgage Domain</div>
-    <div class="lg"><div class="lg-dot" style="background:#dc2626"></div>Compliance</div>
-    <div class="lg"><div class="lg-dot" style="background:#7c3aed"></div>Integration</div>
-    <div class="lg"><div class="lg-dot" style="background:#0891b2"></div>AI / LLM</div>
-    <div class="lg"><div class="lg-dot" style="background:var(--t4)"></div>Data Entity</div>
-    <div class="lg" style="margin-left:auto"><span style="color:var(--t4)">Click any class for properties & relationships</span></div>
+    <div class="lg"><div class="lg-dot" style="background:var(--ok)"></div>Core System</div>
+    <div class="lg"><div class="lg-dot" style="background:var(--accent)"></div>Agent (Employee)</div>
+    <div class="lg"><div class="lg-dot" style="background:#d29922"></div>Mortgage Domain</div>
+    <div class="lg"><div class="lg-dot" style="background:#f85149"></div>Compliance</div>
+    <div class="lg"><div class="lg-dot" style="background:#8b5cf6"></div>Integration</div>
+    <div class="lg"><div class="lg-dot" style="background:#06b6d4"></div>AI / LLM</div>
+    <div class="lg"><div class="lg-dot" style="background:var(--t3)"></div>Data Entity</div>
+    <div class="lg" style="margin-left:auto"><span style="color:var(--t3)">Click any class for properties & relationships</span></div>
   </div>
   <div id="graph">
     <svg id="edges"></svg>
@@ -120,17 +128,14 @@ table tr:hover td{background:rgba(255,255,255,.015)}
 </div>
 
 <div id="sidebar" class="sidebar">
-  <button class="sb-close" onclick="closeSB()">×</button>
+  <button class="sb-close" onclick="closeSB()">x</button>
   <div id="sb-content"></div>
 </div>
 
-<footer class="footer">MortgageFintechOS Ontology v1.0 · Cory Lawson / The Lawson Group · <a href="https://github.com/CoryLawsonxMortgageAI/MortgageFintechOS-">GitHub</a></footer>
+<footer class="footer">Mortgage/Coding OS Ontology v1.0 &middot; Cory Lawson / The Lawson Group &middot; <a href="https://github.com/CoryLawsonxMortgageAI/MortgageFintechOS-">GitHub</a></footer>
 
 <script>
-// ═══════════════════════════════════════════
-// ONTOLOGY MODEL — Classes, Properties, Relationships
-// ═══════════════════════════════════════════
-
+// ONTOLOGY MODEL
 const CLASSES = [
   // CORE SYSTEM
   {id:"AIOSKernel",label:"AIOS Kernel",cat:"core",x:42,y:3,
@@ -267,9 +272,7 @@ const CLASSES = [
    isa:"owl:Thing",instances:["Claude 4.5","GPT-5","DeepSeek R1","Qwen 3.5","Mistral Large 3","Kimi K2.5","Hermes 4 405B","Dolphin 3.0"]},
 ];
 
-// ONTOLOGY RELATIONSHIPS (Subject → Predicate → Object)
 const RELS = [
-  // Core system
   {s:"AIOSKernel",p:"dispatches",o:"Task",card:"1:N",dom:"Core"},
   {s:"AIOSKernel",p:"manages",o:"BaseAgent",card:"1:9",dom:"Core"},
   {s:"AIOSKernel",p:"owns",o:"TaskQueue",card:"1:1",dom:"Core"},
@@ -278,17 +281,15 @@ const RELS = [
   {s:"TaskQueue",p:"contains",o:"Task",card:"1:N",dom:"Core"},
   {s:"Scheduler",p:"triggers",o:"Task",card:"1:N",dom:"Core"},
   {s:"HealthMonitor",p:"monitors",o:"BaseAgent",card:"1:N",dom:"Core"},
-  // Agent inheritance
-  {s:"DIEGO",p:"rdfs:subClassOf",o:"BaseAgent",card:"—",dom:"Agent"},
-  {s:"MARTIN",p:"rdfs:subClassOf",o:"BaseAgent",card:"—",dom:"Agent"},
-  {s:"NOVA",p:"rdfs:subClassOf",o:"BaseAgent",card:"—",dom:"Agent"},
-  {s:"JARVIS",p:"rdfs:subClassOf",o:"BaseAgent",card:"—",dom:"Agent"},
-  {s:"ATLAS",p:"rdfs:subClassOf",o:"BaseAgent",card:"—",dom:"Agent"},
-  {s:"NEXUS",p:"rdfs:subClassOf",o:"BaseAgent",card:"—",dom:"Agent"},
-  {s:"CIPHER",p:"rdfs:subClassOf",o:"BaseAgent",card:"—",dom:"Agent"},
-  {s:"FORGE",p:"rdfs:subClassOf",o:"BaseAgent",card:"—",dom:"Agent"},
-  {s:"STORM",p:"rdfs:subClassOf",o:"BaseAgent",card:"—",dom:"Agent"},
-  // Agent → Domain
+  {s:"DIEGO",p:"rdfs:subClassOf",o:"BaseAgent",card:"--",dom:"Agent"},
+  {s:"MARTIN",p:"rdfs:subClassOf",o:"BaseAgent",card:"--",dom:"Agent"},
+  {s:"NOVA",p:"rdfs:subClassOf",o:"BaseAgent",card:"--",dom:"Agent"},
+  {s:"JARVIS",p:"rdfs:subClassOf",o:"BaseAgent",card:"--",dom:"Agent"},
+  {s:"ATLAS",p:"rdfs:subClassOf",o:"BaseAgent",card:"--",dom:"Agent"},
+  {s:"NEXUS",p:"rdfs:subClassOf",o:"BaseAgent",card:"--",dom:"Agent"},
+  {s:"CIPHER",p:"rdfs:subClassOf",o:"BaseAgent",card:"--",dom:"Agent"},
+  {s:"FORGE",p:"rdfs:subClassOf",o:"BaseAgent",card:"--",dom:"Agent"},
+  {s:"STORM",p:"rdfs:subClassOf",o:"BaseAgent",card:"--",dom:"Agent"},
   {s:"DIEGO",p:"triages",o:"LoanFile",card:"1:N",dom:"Mortgage"},
   {s:"DIEGO",p:"tracks",o:"LoanFile",card:"1:N",dom:"Mortgage"},
   {s:"MARTIN",p:"classifies",o:"Document",card:"1:N",dom:"Mortgage"},
@@ -299,12 +300,10 @@ const RELS = [
   {s:"JARVIS",p:"resolves",o:"Condition",card:"1:N",dom:"Mortgage"},
   {s:"JARVIS",p:"cites",o:"FNMAGuide",card:"N:N",dom:"Compliance"},
   {s:"JARVIS",p:"cites",o:"FHLMCGuide",card:"N:N",dom:"Compliance"},
-  // Coding chain
   {s:"ATLAS",p:"produces_code_for",o:"NEXUS",card:"1:1",dom:"Coding"},
   {s:"NEXUS",p:"reviews_code_for",o:"CIPHER",card:"1:1",dom:"Coding"},
   {s:"CIPHER",p:"clears_for_deploy",o:"FORGE",card:"1:1",dom:"Coding"},
   {s:"FORGE",p:"deploys_to",o:"GitHub",card:"1:N",dom:"Coding"},
-  // Domain relationships
   {s:"LoanFile",p:"has",o:"Borrower",card:"1:1",dom:"Mortgage"},
   {s:"LoanFile",p:"requires",o:"Document",card:"1:N",dom:"Mortgage"},
   {s:"LoanFile",p:"has",o:"Condition",card:"1:N",dom:"Mortgage"},
@@ -313,7 +312,6 @@ const RELS = [
   {s:"Document",p:"belongs_to",o:"LoanFile",card:"N:1",dom:"Mortgage"},
   {s:"Condition",p:"maps_to",o:"Document",card:"1:N",dom:"Mortgage"},
   {s:"IncomeCalc",p:"determines",o:"DTITier",card:"1:1",dom:"Compliance"},
-  // Integration relationships
   {s:"AIOSKernel",p:"calls",o:"PuterJS",card:"1:1",dom:"Integration"},
   {s:"AIOSKernel",p:"syncs_with",o:"PaperclipAI",card:"1:1",dom:"Integration"},
   {s:"MARTIN",p:"queries",o:"OpenNotebook",card:"1:N",dom:"Integration"},
@@ -323,10 +321,9 @@ const RELS = [
   {s:"LLMModel",p:"powers",o:"IncomeCalc",card:"N:1",dom:"AI"},
 ];
 
-// TAXONOMY (class hierarchy)
 const TAX = [
   {cls:"System",parent:"owl:Thing",props:"running, start_time",inst:"Kernel, Queue, Scheduler, Monitor"},
-  {cls:"BaseAgent",parent:"owl:Thing",props:"name, status, heartbeat, errors, tasks",inst:"—"},
+  {cls:"BaseAgent",parent:"owl:Thing",props:"name, status, heartbeat, errors, tasks",inst:"--"},
   {cls:"DIEGO",parent:"BaseAgent",props:"+pipeline: dict",inst:"diego_001"},
   {cls:"MARTIN",parent:"BaseAgent",props:"+document_store: dict",inst:"martin_001"},
   {cls:"NOVA",parent:"BaseAgent",props:"+dti_grid, +comp_factors",inst:"nova_001"},
@@ -337,43 +334,41 @@ const TAX = [
   {cls:"FORGE",parent:"BaseAgent",props:"+deploy_history, +active_env",inst:"forge_001"},
   {cls:"STORM",parent:"BaseAgent",props:"+pipelines, +schedules",inst:"storm_001"},
   {cls:"LoanFile",parent:"owl:Thing",props:"loan_id, type, stage, priority, borrower",inst:"LN-*"},
-  {cls:"Borrower",parent:"owl:Thing",props:"name, ssn, income, employer",inst:"—"},
-  {cls:"Document",parent:"owl:Thing",props:"type, filename, confidence",inst:"—"},
+  {cls:"Borrower",parent:"owl:Thing",props:"name, ssn, income, employer",inst:"--"},
+  {cls:"Document",parent:"owl:Thing",props:"type, filename, confidence",inst:"--"},
   {cls:"Condition",parent:"owl:Thing",props:"id, type, status, required_docs",inst:"COND-*"},
-  {cls:"Task",parent:"owl:Thing",props:"id, priority, agent, action, status",inst:"—"},
-  {cls:"IncomeCalc",parent:"owl:Thing",props:"method_1, method_2, qualifying, trending",inst:"—"},
-  {cls:"RegulatoryFramework",parent:"owl:Thing",props:"section, title",inst:"—"},
+  {cls:"Task",parent:"owl:Thing",props:"id, priority, agent, action, status",inst:"--"},
+  {cls:"IncomeCalc",parent:"owl:Thing",props:"method_1, method_2, qualifying, trending",inst:"--"},
+  {cls:"RegulatoryFramework",parent:"owl:Thing",props:"section, title",inst:"--"},
   {cls:"FHA HB 4000.1",parent:"RegulatoryFramework",props:"+effective_date",inst:"II.A.5.b, II.A.4.b"},
   {cls:"FNMA Guide",parent:"RegulatoryFramework",props:"+chapter",inst:"B3-3.1, B3-4.1"},
   {cls:"FHLMC Guide",parent:"RegulatoryFramework",props:"+section",inst:"5301.1, 5401.1"},
   {cls:"DTI Tier",parent:"ComplianceRule",props:"front_limit, back_limit",inst:"standard, comp_max"},
-  {cls:"ExternalService",parent:"owl:Thing",props:"port, protocol, auth",inst:"—"},
+  {cls:"ExternalService",parent:"owl:Thing",props:"port, protocol, auth",inst:"--"},
   {cls:"LLM Model",parent:"owl:Thing",props:"provider, score, context_window, cost",inst:"Claude, GPT, DeepSeek..."},
 ];
 
 function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML}
 
-// Render nodes
 function renderGraph(){
   const g=document.getElementById("graph");
   CLASSES.forEach(c=>{
     const el=document.createElement("div");
     el.className=`onode cat-${c.cat}`;
     el.style.cssText=`left:${c.x}%;top:${c.y}%;`;
-    el.innerHTML=`<div class="onode-h">${c.label}</div><div class="onode-b">${c.desc.substring(0,60)}${c.desc.length>60?"…":""}</div>${c.props?`<div class="onode-prop">${c.props.slice(0,2).join(" · ")}</div>`:""}`;
+    el.innerHTML=`<div class="onode-h">${c.label}</div><div class="onode-b">${c.desc.substring(0,60)}${c.desc.length>60?"...":""}</div>${c.props?`<div class="onode-prop">${c.props.slice(0,2).join(" · ")}</div>`:""}`;
     el.onclick=()=>showDetail(c);
     g.appendChild(el);
     c._el=el;
   });
 }
 
-// Render SVG edges
 function renderEdges(){
   const svg=document.getElementById("edges");
   const g=document.getElementById("graph");
   const rect=g.getBoundingClientRect();
   svg.setAttribute("viewBox",`0 0 ${rect.width} ${rect.height}`);
-  const colors={Core:"#16a34a",Agent:"#71717a",Mortgage:"#92400e",Compliance:"#dc2626",Coding:"#a1a1aa",Integration:"#7c3aed",AI:"#0891b2"};
+  const colors={Core:"#3fb950",Agent:"#484f58",Mortgage:"#d29922",Compliance:"#f85149",Coding:"#8b949e",Integration:"#8b5cf6",AI:"#06b6d4"};
   RELS.forEach(r=>{
     const from=CLASSES.find(c=>c.id===r.s);
     const to=CLASSES.find(c=>c.id===r.o);
@@ -385,7 +380,7 @@ function renderEdges(){
     const mx=(fx+tx)/2;
     const path=document.createElementNS("http://www.w3.org/2000/svg","path");
     path.setAttribute("d",`M${fx},${fy} C${mx},${fy} ${mx},${ty} ${tx},${ty}`);
-    path.setAttribute("stroke",colors[r.dom]||"#333");
+    path.setAttribute("stroke",colors[r.dom]||"#30363d");
     path.setAttribute("stroke-width","0.8");
     path.setAttribute("fill","none");
     path.setAttribute("opacity","0.3");
@@ -393,16 +388,15 @@ function renderEdges(){
   });
 }
 
-// Detail sidebar
 function showDetail(c){
   const sb=document.getElementById("sidebar");
   const ct=document.getElementById("sb-content");
   const catNames={core:"Core System",agent:"Agent (Employee)",domain:"Mortgage Domain",compliance:"Compliance",integration:"Integration",llm:"AI / LLM",data:"Data Entity"};
-  const catColors={core:"#16a34a",agent:"var(--t)",domain:"#92400e",compliance:"#dc2626",integration:"#7c3aed",llm:"#0891b2",data:"var(--t4)"};
+  const catColors={core:"#3fb950",agent:"#2f81f7",domain:"#d29922",compliance:"#f85149",integration:"#8b5cf6",llm:"#06b6d4",data:"#484f58"};
   let h=`<div class="sb-title">${c.label}</div>`;
   h+=`<div class="sb-type" style="color:${catColors[c.cat]}">${catNames[c.cat]||c.cat}</div>`;
   h+=`<div style="font-size:11px;color:var(--t2);line-height:1.5;margin-bottom:8px">${c.desc}</div>`;
-  if(c.isa)h+=`<div class="sb-row"><b>rdfs:subClassOf</b> → ${c.isa}</div>`;
+  if(c.isa)h+=`<div class="sb-row"><b>rdfs:subClassOf</b> -> ${c.isa}</div>`;
   if(c.props&&c.props.length){
     h+=`<div class="sb-sec">Properties (owl:DatatypeProperty)</div>`;
     c.props.forEach(p=>h+=`<div class="sb-row" style="font-family:var(--m);font-size:9px">${p}</div>`);
@@ -411,11 +405,11 @@ function showDetail(c){
   const inRels=RELS.filter(r=>r.o===c.id);
   if(outRels.length){
     h+=`<div class="sb-sec">Outgoing Relations (${outRels.length})</div>`;
-    outRels.forEach(r=>h+=`<div class="sb-row">→ <b>${r.p}</b> → ${r.o} <span style="font-size:8px;color:var(--t4)">[${r.card}]</span></div>`);
+    outRels.forEach(r=>h+=`<div class="sb-row">-> <b>${r.p}</b> -> ${r.o} <span style="font-size:8px;color:var(--t3)">[${r.card}]</span></div>`);
   }
   if(inRels.length){
     h+=`<div class="sb-sec">Incoming Relations (${inRels.length})</div>`;
-    inRels.forEach(r=>h+=`<div class="sb-row">← ${r.s} <b>${r.p}</b> ← <span style="font-size:8px;color:var(--t4)">[${r.card}]</span></div>`);
+    inRels.forEach(r=>h+=`<div class="sb-row"><- ${r.s} <b>${r.p}</b> <- <span style="font-size:8px;color:var(--t3)">[${r.card}]</span></div>`);
   }
   if(c.instances&&c.instances.length){
     h+=`<div class="sb-sec">Instances</div>`;
@@ -426,12 +420,11 @@ function showDetail(c){
 }
 function closeSB(){document.getElementById("sidebar").classList.remove("open")}
 
-// Render tables
 function renderRelTable(){
-  document.getElementById("rel-body").innerHTML=RELS.map(r=>`<tr><td style="font-family:var(--m);font-weight:600;color:var(--t)">${r.s}</td><td style="font-family:var(--m);color:#7c3aed">${r.p}</td><td style="font-family:var(--m);font-weight:600;color:var(--t)">${r.o}</td><td style="font-family:var(--m);color:var(--t4)">${r.card}</td><td>${r.dom}</td></tr>`).join("");
+  document.getElementById("rel-body").innerHTML=RELS.map(r=>`<tr><td style="font-family:var(--m);font-weight:600;color:var(--t)">${r.s}</td><td style="font-family:var(--m);color:#8b5cf6">${r.p}</td><td style="font-family:var(--m);font-weight:600;color:var(--t)">${r.o}</td><td style="font-family:var(--m);color:var(--t3)">${r.card}</td><td>${r.dom}</td></tr>`).join("");
 }
 function renderTaxTable(){
-  document.getElementById("tax-body").innerHTML=TAX.map(t=>`<tr><td style="font-family:var(--m);font-weight:600;color:var(--t)">${t.cls}</td><td style="font-family:var(--m);color:var(--t3)">${t.parent}</td><td style="font-size:9px;color:var(--t3)">${t.props}</td><td style="font-family:var(--m);font-size:9px;color:var(--t4)">${t.inst}</td></tr>`).join("");
+  document.getElementById("tax-body").innerHTML=TAX.map(t=>`<tr><td style="font-family:var(--m);font-weight:600;color:var(--t)">${t.cls}</td><td style="font-family:var(--m);color:var(--t2)">${t.parent}</td><td style="font-size:9px;color:var(--t2)">${t.props}</td><td style="font-family:var(--m);font-size:9px;color:var(--t3)">${t.inst}</td></tr>`).join("");
 }
 
 renderGraph();renderRelTable();renderTaxTable();

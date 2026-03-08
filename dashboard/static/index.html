@@ -1,472 +1,930 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MortgageFintechOS — Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Automatous Intelligence — Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-<!-- Header -->
-<header class="header">
-    <div class="header-left">
-        <div class="header-logo">Mortgage<span>FintechOS</span></div>
-        <div class="header-subtitle">Fully Connected Autonomous AI Operating System</div>
+<!-- ==================== SIDEBAR ==================== -->
+<div class="sidebar">
+  <div class="sidebar-brand">Automatous Intelligence</div>
+  <div class="sidebar-subtitle">Enterprise AI Operations Platform</div>
+
+  <nav class="sidebar-nav">
+    <a class="nav-item active" data-page="home">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Platform Home
+    </a>
+    <a class="nav-item" data-page="command-center">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Command Center
+    </a>
+    <a class="nav-item" data-page="action-log">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Action Log
+    </a>
+    <a class="nav-item" data-page="schedule">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Schedule
+    </a>
+    <a class="nav-item" data-page="ontology">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="5" cy="5" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="7" y1="7" x2="10" y2="10"/><line x1="14" y1="10" x2="17" y2="7"/><line x1="7" y1="17" x2="10" y2="14"/><line x1="14" y1="14" x2="17" y2="17"/></svg>
+      Ontology
+    </a>
+    <a class="nav-item" data-page="telemetry">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Telemetry
+    </a>
+    <a class="nav-item" data-page="tips">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
+      Expert Tips
+    </a>
+    <a class="nav-item" data-page="agentdb">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+      Agent DB
+    </a>
+    <a class="nav-item" data-page="skills">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Agent Skills
+    </a>
+    <a class="nav-item" data-page="features">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+      Features
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="status-badge healthy">
+      <span class="status-dot"></span> System Operational
     </div>
-    <div class="header-right">
-        <span id="system-risk" class="status-badge healthy" title="System Risk Level">
-            <span class="status-dot"></span><span id="risk-label">low</span>
-        </span>
-        <span id="overall-status" class="status-badge healthy">
-            <span class="status-dot"></span>healthy
-        </span>
-        <span id="last-updated" class="last-updated">Loading...</span>
+    <div class="status-badge info" style="margin-top:6px;">
+      <span class="status-dot"></span> Risk Level: Low
     </div>
-</header>
+  </div>
+</div>
 
-<!-- Navigation Tabs -->
-<nav class="tab-nav">
-    <button class="tab-btn active" data-tab="overview">Overview</button>
-    <button class="tab-btn" data-tab="action-log">Action Log</button>
-    <button class="tab-btn" data-tab="schedule">Schedule Control</button>
-    <button class="tab-btn" data-tab="ontology">Hydrospeed Ontology</button>
-    <button class="tab-btn" data-tab="telemetry">Predictive Telemetry</button>
-    <button class="tab-btn" data-tab="tips">Expert Tips</button>
-    <button class="tab-btn" data-tab="agentdb">Agent DB</button>
-    <button class="tab-btn" data-tab="features">Features Guide</button>
-</nav>
+<!-- ==================== MAIN CONTENT ==================== -->
+<div class="main-content">
 
-<main class="main">
-
-    <!-- ===== TAB: OVERVIEW ===== -->
-    <div class="tab-content active" id="tab-overview">
-        <section class="metrics-row">
-            <div class="metric-card">
-                <div class="metric-label">Uptime</div>
-                <div id="metric-uptime" class="metric-value">--</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Active Agents</div>
-                <div id="metric-agents" class="metric-value">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Queue Pending</div>
-                <div id="metric-pending" class="metric-value">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Tasks Completed</div>
-                <div id="metric-completed" class="metric-value success">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Tasks Failed</div>
-                <div id="metric-failed" class="metric-value">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">CPU</div>
-                <div id="metric-cpu" class="metric-value">--</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Memory</div>
-                <div id="metric-mem" class="metric-value">--</div>
-            </div>
-        </section>
-
-        <section class="grid-2col">
-            <div class="card">
-                <div class="card-header"><span class="card-title">AI Agents</span></div>
-                <div class="card-body">
-                    <table>
-                        <thead><tr><th>Agent</th><th>Role</th><th>Status</th><th>Tasks</th><th>Errors</th><th>Heartbeat</th></tr></thead>
-                        <tbody id="agents-tbody"><tr><td colspan="6" class="empty-state">Loading...</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header"><span class="card-title">Recent Tasks</span></div>
-                <div class="card-body">
-                    <table>
-                        <thead><tr><th>ID</th><th>Agent</th><th>Action</th><th>Priority</th><th>Status</th></tr></thead>
-                        <tbody id="queue-tbody"><tr><td colspan="5" class="empty-state">Loading...</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header"><span class="card-title">Alerts</span></div>
-                <div class="card-body" id="alerts-container"><div class="empty-state">Loading...</div></div>
-            </div>
-        </section>
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <span>Last updated: <strong id="last-updated">—</strong></span>
+    <div>
+      <span class="status-badge healthy"><span class="status-dot"></span> All Systems Nominal</span>
+      <span class="status-badge info" style="margin-left:8px;"><span class="status-dot"></span> <span id="topbar-agent-count">13</span> Agents Online</span>
     </div>
+  </div>
 
-    <!-- ===== TAB: ACTION LOG ===== -->
-    <div class="tab-content" id="tab-action-log">
-        <section class="metrics-row">
-            <div class="metric-card">
-                <div class="metric-label">Total Actions</div>
-                <div id="al-total" class="metric-value">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Success Rate</div>
-                <div id="al-rate" class="metric-value success">0%</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Failures</div>
-                <div id="al-failures" class="metric-value">0</div>
-            </div>
-        </section>
+  <!-- ============================================================ -->
+  <!-- PAGE: PLATFORM HOME                                          -->
+  <!-- ============================================================ -->
+  <div id="page-home" class="page active">
 
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Activity Timeline (24h)</span>
-                </div>
-                <div class="card-body" style="padding:16px;">
-                    <div id="al-timeline" class="timeline-chart"></div>
-                </div>
-            </div>
-        </section>
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <h1 class="hero-title">Automatous Intelligence Platform</h1>
+      <p class="hero-subtitle">13 AI Agents &bull; 9 Integrations &bull; 24/7 Operations</p>
 
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Agent Action Log</span>
-                    <div class="card-controls">
-                        <select id="al-agent-filter" class="control-select"><option value="">All Agents</option></select>
-                        <label class="control-label"><input type="checkbox" id="al-failures-only"> Failures only</label>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <table>
-                        <thead><tr><th>Time</th><th>Agent</th><th>Type</th><th>Action</th><th>Duration</th><th>Status</th><th>Detail</th></tr></thead>
-                        <tbody id="al-tbody"><tr><td colspan="7" class="empty-state">Loading...</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <!-- ===== TAB: SCHEDULE CONTROL ===== -->
-    <div class="tab-content" id="tab-schedule">
-        <section class="grid-2col">
-            <div class="card">
-                <div class="card-header"><span class="card-title">Scheduled Jobs</span></div>
-                <div class="card-body">
-                    <table>
-                        <thead><tr><th></th><th>Job</th><th>Time</th><th>Last Run</th><th>Actions</th></tr></thead>
-                        <tbody id="sched-tbody"><tr><td colspan="5" class="empty-state">Loading...</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header"><span class="card-title">Schedule Recommendations</span></div>
-                <div class="card-body" id="sched-recommendations"><div class="empty-state">Loading...</div></div>
-            </div>
-        </section>
-
-        <!-- Schedule Edit Modal -->
-        <div id="sched-modal" class="modal" style="display:none;">
-            <div class="modal-content">
-                <h3>Edit Schedule: <span id="sched-modal-name"></span></h3>
-                <div class="modal-form">
-                    <label>Hour (0-23): <input type="number" id="sched-hour" min="0" max="23" class="control-input"></label>
-                    <label>Minute (0-59): <input type="number" id="sched-minute" min="0" max="59" class="control-input"></label>
-                </div>
-                <div class="modal-actions">
-                    <button class="btn btn-primary" onclick="saveSchedule()">Save</button>
-                    <button class="btn" onclick="closeModal()">Cancel</button>
-                </div>
-            </div>
+      <div class="hero-metrics">
+        <div class="metric-card" id="hero-agents">
+          <div class="metric-label">Agents Active</div>
+          <div class="metric-value">13</div>
         </div>
-    </div>
-
-    <!-- ===== TAB: HYDROSPEED ONTOLOGY ===== -->
-    <div class="tab-content" id="tab-ontology">
-        <section class="metrics-row">
-            <div class="metric-card" style="border-left:4px solid var(--accent)">
-                <div class="metric-label">Hydrospeed Engine</div>
-                <div class="metric-value" style="font-size:16px;">Live Ontology</div>
-                <div class="metric-sub">Real-time agent relationship mapping</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Agents</div>
-                <div id="onto-agents" class="metric-value">13</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Integrations</div>
-                <div id="onto-integrations" class="metric-value">9</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Data Flows</div>
-                <div id="onto-flows" class="metric-value">0</div>
-            </div>
-        </section>
-
-        <section class="grid-2col">
-            <div class="card">
-                <div class="card-header"><span class="card-title">Agent Divisions</span></div>
-                <div class="card-body" id="onto-divisions"><div class="empty-state">Loading...</div></div>
-            </div>
-            <div class="card">
-                <div class="card-header"><span class="card-title">Data Flow Graph</span></div>
-                <div class="card-body" id="onto-graph"><div class="empty-state">Loading...</div></div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Agent Profiles</span>
-                    <select id="onto-agent-select" class="control-select"><option value="">Select Agent...</option></select>
-                </div>
-                <div class="card-body" id="onto-profile"><div class="empty-state">Select an agent to view its ontology profile</div></div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Agent Proposals</span>
-                    <button class="btn btn-sm" onclick="showProposalForm()">+ New Proposal</button>
-                </div>
-                <div class="card-body" id="onto-proposals"><div class="empty-state">No proposals yet</div></div>
-            </div>
-        </section>
-    </div>
-
-    <!-- ===== TAB: PREDICTIVE TELEMETRY ===== -->
-    <div class="tab-content" id="tab-telemetry">
-        <section class="metrics-row">
-            <div class="metric-card" style="border-left:4px solid var(--accent)">
-                <div class="metric-label">System Risk Score</div>
-                <div id="tele-score" class="metric-value">0.0</div>
-                <div id="tele-level" class="metric-sub">low</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Agents Tracked</div>
-                <div id="tele-tracked" class="metric-value">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Critical Agents</div>
-                <div id="tele-critical" class="metric-value danger">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Active Predictions</div>
-                <div id="tele-predictions" class="metric-value warning">0</div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header"><span class="card-title">Risk Formula</span></div>
-                <div class="card-body" style="padding:16px;">
-                    <div class="formula-display">
-                        R(agent) = <span class="formula-weight">0.30</span>*ErrorRate + <span class="formula-weight">0.15</span>*Latency + <span class="formula-weight">0.25</span>*DependencyHealth + <span class="formula-weight">0.15</span>*CapacityPressure + <span class="formula-weight">0.15</span>*QualityDelta
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header"><span class="card-title">Failure Predictions</span></div>
-                <div class="card-body" id="tele-pred-list"><div class="empty-state">No active predictions -- system is healthy</div></div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header"><span class="card-title">Per-Agent Risk Breakdown</span></div>
-                <div class="card-body">
-                    <table>
-                        <thead><tr><th>Agent</th><th>Risk Score</th><th>Level</th><th>Dominant Factor</th><th>Error Rate</th><th>Latency</th><th>Cascade</th></tr></thead>
-                        <tbody id="tele-agents-tbody"><tr><td colspan="7" class="empty-state">Collecting telemetry...</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <!-- ===== TAB: EXPERT TIPS ===== -->
-    <div class="tab-content" id="tab-tips">
-        <section class="metrics-row">
-            <div class="metric-card">
-                <div class="metric-label">Total Tips</div>
-                <div id="tips-total" class="metric-value">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Critical</div>
-                <div id="tips-critical" class="metric-value danger">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Categories</div>
-                <div id="tips-categories" class="metric-value">0</div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Expert Operations Tips</span>
-                    <div class="card-controls">
-                        <select id="tips-cat-filter" class="control-select">
-                            <option value="">All Categories</option>
-                            <option value="scheduling">Scheduling</option>
-                            <option value="cost_optimization">Cost Optimization</option>
-                            <option value="safety">Safety</option>
-                            <option value="monitoring">Monitoring</option>
-                            <option value="workflow">Workflow</option>
-                            <option value="scaling">Scaling</option>
-                            <option value="resilience">Resilience</option>
-                            <option value="deployment">Deployment</option>
-                            <option value="compliance">Compliance</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="card-body" id="tips-list"><div class="empty-state">Loading...</div></div>
-            </div>
-        </section>
-    </div>
-
-    <!-- ===== TAB: AGENT DATABASE ===== -->
-    <div class="tab-content" id="tab-agentdb">
-        <section class="metrics-row">
-            <div class="metric-card" style="border-left:4px solid var(--accent)">
-                <div class="metric-label">Agent Database</div>
-                <div class="metric-value" style="font-size:16px;">Version Controlled</div>
-                <div class="metric-sub">Dolt-inspired Git-style branching</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Branches</div>
-                <div id="adb-branches-count" class="metric-value">1</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Tables</div>
-                <div id="adb-tables-count" class="metric-value">6</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Total Rows</div>
-                <div id="adb-rows-count" class="metric-value">0</div>
-            </div>
-        </section>
-
-        <section class="grid-2col">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Branches</span>
-                    <button class="btn btn-sm" onclick="showCreateBranch()">+ New Branch</button>
-                </div>
-                <div class="card-body">
-                    <table>
-                        <thead><tr><th>Branch</th><th>Parent</th><th>Commits</th><th>Rows</th><th>Last Commit</th><th>Actions</th></tr></thead>
-                        <tbody id="adb-branches-tbody"><tr><td colspan="6" class="empty-state">Loading...</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Schema</span>
-                    <button class="btn btn-sm" onclick="showSchemaSQL()">View SQL</button>
-                </div>
-                <div class="card-body" id="adb-schema-view"><div class="empty-state">Loading...</div></div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Table Browser</span>
-                    <div class="card-controls">
-                        <select id="adb-branch-select" class="control-select"><option value="main">main</option></select>
-                        <select id="adb-table-select" class="control-select">
-                            <option value="agent_operations">agent_operations</option>
-                            <option value="agent_state">agent_state</option>
-                            <option value="integration_events">integration_events</option>
-                            <option value="schedule_history">schedule_history</option>
-                            <option value="audit_trail">audit_trail</option>
-                            <option value="workflow_proposals">workflow_proposals</option>
-                        </select>
-                        <button class="btn btn-sm btn-primary" onclick="queryTable()">Query</button>
-                    </div>
-                </div>
-                <div class="card-body" id="adb-table-data"><div class="empty-state">Select a branch and table, then click Query</div></div>
-            </div>
-        </section>
-
-        <section class="grid-2col">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Diff Viewer</span>
-                    <div class="card-controls">
-                        <select id="adb-diff-from" class="control-select"><option value="main">main</option></select>
-                        <span style="color:var(--text-muted);padding:0 4px;">vs</span>
-                        <select id="adb-diff-to" class="control-select"><option value="">Select branch...</option></select>
-                        <button class="btn btn-sm" onclick="computeDiff()">Compute Diff</button>
-                    </div>
-                </div>
-                <div class="card-body" id="adb-diff-view"><div class="empty-state">Select two branches and compute diff</div></div>
-            </div>
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Commit Log</span>
-                    <div class="card-controls">
-                        <select id="adb-log-branch" class="control-select"><option value="main">main</option></select>
-                        <button class="btn btn-sm" onclick="loadCommitLog()">Load</button>
-                    </div>
-                </div>
-                <div class="card-body" id="adb-commit-log"><div class="empty-state">Select a branch and load commits</div></div>
-            </div>
-        </section>
-
-        <section class="grid-full">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Agent Branch Status</span>
-                    <div class="card-controls">
-                        <select id="adb-agent-select" class="control-select"><option value="">Select Agent...</option></select>
-                        <button class="btn btn-sm" onclick="loadAgentDbStatus()">View</button>
-                    </div>
-                </div>
-                <div class="card-body" id="adb-agent-status"><div class="empty-state">Select an agent to view its branch status and pending changes</div></div>
-            </div>
-        </section>
-
-        <!-- Merge/Create Branch Modal -->
-        <div id="adb-modal" class="modal" style="display:none;">
-            <div class="modal-content">
-                <h3 id="adb-modal-title">Action</h3>
-                <div class="modal-form" id="adb-modal-body"></div>
-                <div class="modal-actions">
-                    <button class="btn btn-primary" id="adb-modal-confirm">Confirm</button>
-                    <button class="btn" onclick="document.getElementById('adb-modal').style.display='none'">Cancel</button>
-                </div>
-            </div>
+        <div class="metric-card" id="hero-tasks">
+          <div class="metric-label">Tasks Today</div>
+          <div class="metric-value">0</div>
         </div>
+        <div class="metric-card" id="hero-risk">
+          <div class="metric-label">System Risk</div>
+          <div class="metric-value">Low</div>
+        </div>
+        <div class="metric-card" id="hero-uptime">
+          <div class="metric-label">Uptime</div>
+          <div class="metric-value">99.9%</div>
+        </div>
+      </div>
     </div>
 
-    <!-- ===== TAB: FEATURES GUIDE ===== -->
-    <div class="tab-content" id="tab-features">
-        <section class="grid-full">
-            <div class="card" style="border-left:4px solid var(--accent)">
-                <div class="card-body" style="padding:24px;">
-                    <h2 style="margin-bottom:4px;">MortgageFintechOS v3.0.0</h2>
-                    <p style="color:var(--text-muted);margin-bottom:16px;">Fully Connected Autonomous AI Operating System</p>
-                    <p>13 AI agents across 4 divisions operating 24/7 with 9 integrations, predictive telemetry, live ontology mapping, and expert-guided operations. Built by Cory Lawson / The Lawson Group.</p>
-                </div>
-            </div>
-        </section>
-        <section class="grid-full" id="features-list">
-            <div class="empty-state">Loading features...</div>
-        </section>
+    <!-- Architecture Layers -->
+    <div class="arch-layers">
+      <div class="arch-layer">
+        <div class="arch-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        </div>
+        <div class="arch-title">Semantic Data Layer</div>
+        <div class="arch-desc">Unified ontology connecting all data sources, agent state, and domain knowledge into a coherent semantic graph for intelligent reasoning.</div>
+      </div>
+      <div class="arch-layer">
+        <div class="arch-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4"/><path d="M12 19v4"/><path d="M4.22 4.22l2.83 2.83"/><path d="M16.95 16.95l2.83 2.83"/><path d="M1 12h4"/><path d="M19 12h4"/><path d="M4.22 19.78l2.83-2.83"/><path d="M16.95 7.05l2.83-2.83"/></svg>
+        </div>
+        <div class="arch-title">Dynamic Logic Layer</div>
+        <div class="arch-desc">AI-driven decision engine that orchestrates agent coordination, risk assessment, and adaptive workflow optimization in real time.</div>
+      </div>
+      <div class="arch-layer">
+        <div class="arch-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <div class="arch-title">Kinetic Action Layer</div>
+        <div class="arch-desc">Autonomous execution framework that translates decisions into concrete actions across integrated tools, APIs, and deployment targets.</div>
+      </div>
     </div>
 
-</main>
+    <!-- Capability Grid: 13 Agents -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">Agent Capabilities</div></div>
+      <div class="card-body">
+        <div class="capability-grid">
+          <div class="capability-card">
+            <div class="cap-icon">D</div>
+            <div class="cap-name">DIEGO</div>
+            <div class="cap-role">Pipeline Orchestration</div>
+            <div class="cap-status healthy"><span class="status-dot"></span></div>
+          </div>
+          <div class="capability-card">
+            <div class="cap-icon">M</div>
+            <div class="cap-name">MARTIN</div>
+            <div class="cap-role">Document Intelligence</div>
+            <div class="cap-status healthy"><span class="status-dot"></span></div>
+          </div>
+          <div class="capability-card">
+            <div class="cap-icon">N</div>
+            <div class="cap-name">NOVA</div>
+            <div class="cap-role">Income &amp; DTI Analysis</div>
+            <div class="cap-status healthy"><span class="status-dot"></span></div>
+          </div>
+          <div class="capability-card">
+            <div class="cap-icon">J</div>
+            <div class="cap-name">JARVIS</div>
+            <div class="cap-role">Condition Resolution</div>
+            <div class="cap-status healthy"><span class="status-dot"></span></div>
+          </div>
+          <div class="capability-card">
+            <div class="cap-icon">A</div>
+            <div class="cap-name">ATLAS</div>
+            <div class="cap-role">Full-Stack Engineering</div>
+            <div class="cap-status healthy"><span class="status-dot"></span></div>
+          </div>
+          <div class="capability-card">
+            <div class="cap-icon">C</div>
+            <div class="cap-name">CIPHER</div>
+            <div class="cap-role">Security Engineering</div>
+            <div class="cap-status healthy"><span class="status-dot"></span></div>
+          </div>
+          <div class="capability-card">
+            <div class="cap-icon">F</div>
+            <div class="cap-name">FORGE</div>
+            <div class="cap-role">DevOps Engineering</div>
+            <div class="cap-status healthy"><span class="status-dot"></span></div>
+          </div>
+          <div class="capability-card">
+            <div class="cap-icon">N</div>
+            <div class="cap-name">NEXUS</div>
+            <div class="cap-role">Code Quality</div>
+            <div class="cap-status healthy"><span class="status-dot"></span></div>
+          </div>
+          <div class="capability-card">
+            <div class="cap-icon">S</div>
+            <div class="cap-name">STORM</div>
+            <div class="cap-role">Data Engineering</div>
+            <div class="cap-status healthy"><span class="status-dot"></span></div>
+          </div>
+          <div class="capability-card">
+            <div class="cap-icon">S</div>
+            <div class="cap-name">SENTINEL</div>
+            <div class="cap-role">System Intelligence</div>
+            <div class="cap-status healthy"><span class="status-dot"></span></div>
+          </div>
+          <div class="capability-card">
+            <div class="cap-icon">H</div>
+            <div class="cap-name">HUNTER</div>
+            <div class="cap-role">Lead Generation</div>
+            <div class="cap-status healthy"><span class="status-dot"></span></div>
+          </div>
+          <div class="capability-card">
+            <div class="cap-icon">H</div>
+            <div class="cap-name">HERALD</div>
+            <div class="cap-role">Content Marketing</div>
+            <div class="cap-status healthy"><span class="status-dot"></span></div>
+          </div>
+          <div class="capability-card">
+            <div class="cap-icon">A</div>
+            <div class="cap-name">AMBASSADOR</div>
+            <div class="cap-role">Community Engagement</div>
+            <div class="cap-status healthy"><span class="status-dot"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-<footer class="footer">
-    MortgageFintechOS v3.0.0 &mdash; Cory Lawson / The Lawson Group &mdash; Fully Connected Autonomous AI Operating System
-</footer>
+    <!-- Integration Row -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">Platform Integrations</div></div>
+      <div class="card-body">
+        <div class="integration-row">
+          <div class="integration-chip"><span class="chip-dot healthy"></span><span class="chip-name">GitHub</span></div>
+          <div class="integration-chip"><span class="chip-dot healthy"></span><span class="chip-name">Notion</span></div>
+          <div class="integration-chip"><span class="chip-dot healthy"></span><span class="chip-name">Google Drive</span></div>
+          <div class="integration-chip"><span class="chip-dot healthy"></span><span class="chip-name">Wispr Flow</span></div>
+          <div class="integration-chip"><span class="chip-dot healthy"></span><span class="chip-name">LLM Router</span></div>
+          <div class="integration-chip"><span class="chip-dot healthy"></span><span class="chip-name">GHOST OSINT</span></div>
+          <div class="integration-chip"><span class="chip-dot healthy"></span><span class="chip-name">PentAGI</span></div>
+          <div class="integration-chip"><span class="chip-dot healthy"></span><span class="chip-name">Paperclip</span></div>
+          <div class="integration-chip"><span class="chip-dot healthy"></span><span class="chip-name">Browser</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-home -->
+
+  <!-- ============================================================ -->
+  <!-- PAGE: COMMAND CENTER                                         -->
+  <!-- ============================================================ -->
+  <div id="page-command-center" class="page">
+
+    <div class="metrics-row">
+      <div class="metric-card" id="metric-uptime">
+        <div class="metric-label">Uptime</div>
+        <div class="metric-value">—</div>
+      </div>
+      <div class="metric-card" id="metric-agents">
+        <div class="metric-label">Active Agents</div>
+        <div class="metric-value">—</div>
+      </div>
+      <div class="metric-card" id="metric-pending">
+        <div class="metric-label">Pending</div>
+        <div class="metric-value">—</div>
+      </div>
+      <div class="metric-card" id="metric-completed">
+        <div class="metric-label">Completed</div>
+        <div class="metric-value">—</div>
+      </div>
+      <div class="metric-card" id="metric-failed">
+        <div class="metric-label">Failed</div>
+        <div class="metric-value">—</div>
+      </div>
+      <div class="metric-card" id="metric-cpu">
+        <div class="metric-label">CPU</div>
+        <div class="metric-value">—</div>
+      </div>
+      <div class="metric-card" id="metric-mem">
+        <div class="metric-label">Memory</div>
+        <div class="metric-value">—</div>
+      </div>
+    </div>
+
+    <div class="grid-2col">
+      <!-- AI Agents Table -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">AI Agents</div></div>
+        <div class="card-body">
+          <table>
+            <thead>
+              <tr>
+                <th>Agent</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Tasks</th>
+                <th>Errors</th>
+                <th>Heartbeat</th>
+              </tr>
+            </thead>
+            <tbody id="agents-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent Tasks Table -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">Recent Tasks</div></div>
+        <div class="card-body">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Agent</th>
+                <th>Action</th>
+                <th>Priority</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="queue-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-full">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Alerts</div></div>
+        <div class="card-body">
+          <div id="alerts-container">
+            <div class="empty-state">No active alerts</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-command-center -->
+
+  <!-- ============================================================ -->
+  <!-- PAGE: ACTION LOG                                             -->
+  <!-- ============================================================ -->
+  <div id="page-action-log" class="page">
+
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-label">Total Actions</div>
+        <div class="metric-value" id="al-total">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Actions / Hour</div>
+        <div class="metric-value" id="al-rate">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Failures</div>
+        <div class="metric-value" id="al-failures">0</div>
+      </div>
+    </div>
+
+    <!-- Timeline Chart -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">Action Timeline</div></div>
+      <div class="card-body">
+        <div id="al-timeline" style="width:100%;height:200px;"></div>
+      </div>
+    </div>
+
+    <!-- Action Log Table -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Action Log</div>
+        <div class="card-controls">
+          <label class="control-label">Agent:
+            <select class="control-select" id="al-agent-filter">
+              <option value="">All Agents</option>
+            </select>
+          </label>
+          <label class="control-label" style="margin-left:12px;">
+            <input type="checkbox" id="al-failures-only"> Failures only
+          </label>
+        </div>
+      </div>
+      <div class="card-body">
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Agent</th>
+              <th>Action</th>
+              <th>Status</th>
+              <th>Duration</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="al-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /page-action-log -->
+
+  <!-- ============================================================ -->
+  <!-- PAGE: SCHEDULE                                               -->
+  <!-- ============================================================ -->
+  <div id="page-schedule" class="page">
+
+    <div class="grid-2col">
+      <!-- Scheduled Jobs -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">Scheduled Jobs</div></div>
+        <div class="card-body">
+          <table>
+            <thead>
+              <tr>
+                <th>Job</th>
+                <th>Agent</th>
+                <th>Schedule</th>
+                <th>Last Run</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="sched-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recommendations -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">Recommendations</div></div>
+        <div class="card-body">
+          <div id="sched-recommendations">
+            <div class="empty-state">No recommendations at this time</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule Edit Modal -->
+    <div class="modal" id="sched-modal" style="display:none;">
+      <div class="modal-content">
+        <h3>Edit Schedule</h3>
+        <div class="modal-form">
+          <label class="control-label">Job Name
+            <input class="control-input" type="text" id="sched-modal-name" readonly>
+          </label>
+          <label class="control-label">Hour (0-23)
+            <input class="control-input" type="number" id="sched-hour" min="0" max="23">
+          </label>
+          <label class="control-label">Minute (0-59)
+            <input class="control-input" type="number" id="sched-minute" min="0" max="59">
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" id="sched-modal-save">Save</button>
+          <button class="btn" id="sched-modal-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-schedule -->
+
+  <!-- ============================================================ -->
+  <!-- PAGE: ONTOLOGY                                               -->
+  <!-- ============================================================ -->
+  <div id="page-ontology" class="page">
+
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-label">Hydrospeed Engine</div>
+        <div class="metric-value" style="font-size:1rem;">Active</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Agents</div>
+        <div class="metric-value" id="onto-agents">13</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Integrations</div>
+        <div class="metric-value" id="onto-integrations">9</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Active Flows</div>
+        <div class="metric-value" id="onto-flows">0</div>
+      </div>
+    </div>
+
+    <!-- Ontology Graph -->
+    <div class="ontology-container">
+      <div class="ontology-graph" id="ontology-graph"></div>
+      <div class="ontology-panel" id="ontology-panel">
+        <div class="empty-state">Click a node to view details</div>
+      </div>
+    </div>
+
+    <!-- Agent Profiles -->
+    <div class="card" style="margin-top:20px;">
+      <div class="card-header">
+        <div class="card-title">Agent Profiles</div>
+        <div class="card-controls">
+          <select class="control-select" id="onto-agent-select">
+            <option value="">Select an agent...</option>
+            <option value="DIEGO">DIEGO</option>
+            <option value="MARTIN">MARTIN</option>
+            <option value="NOVA">NOVA</option>
+            <option value="JARVIS">JARVIS</option>
+            <option value="ATLAS">ATLAS</option>
+            <option value="CIPHER">CIPHER</option>
+            <option value="FORGE">FORGE</option>
+            <option value="NEXUS">NEXUS</option>
+            <option value="STORM">STORM</option>
+            <option value="SENTINEL">SENTINEL</option>
+            <option value="HUNTER">HUNTER</option>
+            <option value="HERALD">HERALD</option>
+            <option value="AMBASSADOR">AMBASSADOR</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="onto-profile">
+          <div class="empty-state">Select an agent to view profile</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Agent Proposals -->
+    <div class="card" style="margin-top:20px;">
+      <div class="card-header">
+        <div class="card-title">Agent Proposals</div>
+        <div class="card-controls">
+          <button class="btn btn-primary btn-sm" id="onto-new-proposal-btn">New Proposal</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="onto-proposals">
+          <div class="empty-state">No active proposals</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-ontology -->
+
+  <!-- ============================================================ -->
+  <!-- PAGE: TELEMETRY                                              -->
+  <!-- ============================================================ -->
+  <div id="page-telemetry" class="page">
+
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-label">Risk Score</div>
+        <div class="metric-value" id="tele-score">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Risk Level</div>
+        <div class="metric-value" id="tele-level">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Tracked Metrics</div>
+        <div class="metric-value" id="tele-tracked">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Critical Issues</div>
+        <div class="metric-value" id="tele-critical">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Predictions</div>
+        <div class="metric-value" id="tele-predictions">0</div>
+      </div>
+    </div>
+
+    <!-- Risk Formula -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">Risk Calculation Formula</div></div>
+      <div class="card-body">
+        <div class="formula-display">
+          <span class="formula-weight">Risk Score</span> =
+          <span class="formula-weight">0.35</span> &times; Error Rate +
+          <span class="formula-weight">0.25</span> &times; Task Failure % +
+          <span class="formula-weight">0.20</span> &times; Resource Saturation +
+          <span class="formula-weight">0.10</span> &times; Latency Index +
+          <span class="formula-weight">0.10</span> &times; Agent Degradation
+        </div>
+      </div>
+    </div>
+
+    <!-- Failure Predictions -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">Failure Predictions</div></div>
+      <div class="card-body">
+        <div id="tele-pred-list">
+          <div class="empty-state">No failure predictions at this time</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Per-Agent Risk Table -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">Per-Agent Risk Assessment</div></div>
+      <div class="card-body">
+        <table>
+          <thead>
+            <tr>
+              <th>Agent</th>
+              <th>Error Rate</th>
+              <th>Task Failures</th>
+              <th>Latency</th>
+              <th>Risk Score</th>
+              <th>Level</th>
+            </tr>
+          </thead>
+          <tbody id="tele-agents-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /page-telemetry -->
+
+  <!-- ============================================================ -->
+  <!-- PAGE: EXPERT TIPS                                            -->
+  <!-- ============================================================ -->
+  <div id="page-tips" class="page">
+
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-label">Total Tips</div>
+        <div class="metric-value" id="tips-total">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Critical</div>
+        <div class="metric-value" id="tips-critical">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Categories</div>
+        <div class="metric-value" id="tips-categories">0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Expert Tips</div>
+        <div class="card-controls">
+          <select class="control-select" id="tips-cat-filter">
+            <option value="">All Categories</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="tips-list">
+          <div class="empty-state">Loading tips...</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-tips -->
+
+  <!-- ============================================================ -->
+  <!-- PAGE: AGENT DB                                               -->
+  <!-- ============================================================ -->
+  <div id="page-agentdb" class="page">
+
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-label">Branches</div>
+        <div class="metric-value" id="adb-branches-count">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Tables</div>
+        <div class="metric-value" id="adb-tables-count">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Total Rows</div>
+        <div class="metric-value" id="adb-rows-count">0</div>
+      </div>
+    </div>
+
+    <div class="grid-2col">
+      <!-- Branches Table -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">Branches</div></div>
+        <div class="card-body">
+          <table>
+            <thead>
+              <tr>
+                <th>Branch</th>
+                <th>Agent</th>
+                <th>Created</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="adb-branches-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Schema View -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">Schema</div></div>
+        <div class="card-body">
+          <div id="adb-schema-view">
+            <div class="empty-state">Select a branch to view schema</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table Browser -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Table Browser</div>
+        <div class="card-controls">
+          <label class="control-label">Branch:
+            <select class="control-select" id="adb-branch-select">
+              <option value="">Select branch...</option>
+            </select>
+          </label>
+          <label class="control-label" style="margin-left:12px;">Table:
+            <select class="control-select" id="adb-table-select">
+              <option value="">Select table...</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="adb-table-data">
+          <div class="empty-state">Select a branch and table to browse data</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Diff Viewer -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Diff Viewer</div>
+        <div class="card-controls">
+          <label class="control-label">From:
+            <select class="control-select" id="adb-diff-from">
+              <option value="">Select branch...</option>
+            </select>
+          </label>
+          <label class="control-label" style="margin-left:12px;">To:
+            <select class="control-select" id="adb-diff-to">
+              <option value="">Select branch...</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="adb-diff-view">
+          <div class="empty-state">Select two branches to compare</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Commit Log -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Commit Log</div>
+        <div class="card-controls">
+          <label class="control-label">Branch:
+            <select class="control-select" id="adb-log-branch">
+              <option value="">Select branch...</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="adb-commit-log">
+          <div class="empty-state">Select a branch to view commit history</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Agent Branch Status -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Agent Branch Status</div>
+        <div class="card-controls">
+          <label class="control-label">Agent:
+            <select class="control-select" id="adb-agent-select">
+              <option value="">Select agent...</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="adb-agent-status">
+          <div class="empty-state">Select an agent to view branch status</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Agent DB Modal -->
+    <div class="modal" id="adb-modal" style="display:none;">
+      <div class="modal-content">
+        <h3 id="adb-modal-title">Confirm Action</h3>
+        <div id="adb-modal-body"></div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" id="adb-modal-confirm">Confirm</button>
+          <button class="btn" id="adb-modal-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-agentdb -->
+
+  <!-- ============================================================ -->
+  <!-- PAGE: AGENT SKILLS                                           -->
+  <!-- ============================================================ -->
+  <div id="page-skills" class="page">
+
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-label">Total Skills</div>
+        <div class="metric-value" id="skills-total-count">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Divisions</div>
+        <div class="metric-value" id="skills-divisions-count">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Advanced Methods</div>
+        <div class="metric-value" id="skills-methods-count">0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Agent Skills Registry</div>
+        <div class="card-controls">
+          <select class="control-select" id="skills-division-filter">
+            <option value="">All Divisions</option>
+            <option value="Mortgage Ops">Mortgage Ops</option>
+            <option value="Engineering">Engineering</option>
+            <option value="Intelligence">Intelligence</option>
+            <option value="Growth Ops">Growth Ops</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="skills-list">
+          <div class="empty-state">Loading skills...</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-skills -->
+
+  <!-- ============================================================ -->
+  <!-- PAGE: FEATURES                                               -->
+  <!-- ============================================================ -->
+  <div id="page-features" class="page">
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Automatous Intelligence Platform v3.0.0</div>
+      </div>
+      <div class="card-body">
+        <p>Complete platform feature manifest and release changelog.</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <div class="card-header"><div class="card-title">Feature List</div></div>
+      <div class="card-body">
+        <div id="features-list">
+          <div class="empty-state">Loading features...</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-features -->
+
+</div><!-- /main-content -->
+
+<!-- ==================== PROMPT GENERATOR FAB ==================== -->
+<button class="prompt-fab" id="prompt-fab-btn">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+  Generate Prompt
+</button>
+
+<!-- Prompt Modal -->
+<div class="prompt-modal" id="prompt-modal" style="display:none;">
+  <div class="prompt-modal-content">
+    <h3>Prompt Generator</h3>
+
+    <label class="control-label">Agent
+      <select class="control-select" id="prompt-agent-select">
+        <option value="">Select agent...</option>
+        <option value="DIEGO">DIEGO — Pipeline Orchestration</option>
+        <option value="MARTIN">MARTIN — Document Intelligence</option>
+        <option value="NOVA">NOVA — Income &amp; DTI Analysis</option>
+        <option value="JARVIS">JARVIS — Condition Resolution</option>
+        <option value="ATLAS">ATLAS — Full-Stack Engineering</option>
+        <option value="CIPHER">CIPHER — Security Engineering</option>
+        <option value="FORGE">FORGE — DevOps Engineering</option>
+        <option value="NEXUS">NEXUS — Code Quality</option>
+        <option value="STORM">STORM — Data Engineering</option>
+        <option value="SENTINEL">SENTINEL — System Intelligence</option>
+        <option value="HUNTER">HUNTER — Lead Generation</option>
+        <option value="HERALD">HERALD — Content Marketing</option>
+        <option value="AMBASSADOR">AMBASSADOR — Community Engagement</option>
+      </select>
+    </label>
+
+    <label class="control-label">Action Type
+      <select class="control-select" id="prompt-action-select">
+        <option value="">Select action...</option>
+        <option value="analyze">Analyze</option>
+        <option value="generate">Generate</option>
+        <option value="review">Review</option>
+        <option value="optimize">Optimize</option>
+        <option value="investigate">Investigate</option>
+        <option value="deploy">Deploy</option>
+        <option value="report">Report</option>
+      </select>
+    </label>
+
+    <label class="control-label">
+      <input type="checkbox" id="prompt-include-context"> Include system context
+    </label>
+
+    <label class="control-label">Custom Instructions
+      <textarea class="control-input" id="prompt-custom-text" rows="4" placeholder="Add any specific instructions..."></textarea>
+    </label>
+
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button class="btn btn-primary" id="prompt-generate-btn">Generate Prompt</button>
+      <button class="btn" id="prompt-copy-btn" style="display:none;">Copy to Clipboard</button>
+    </div>
+
+    <pre class="prompt-output" id="prompt-output" style="display:none;"></pre>
+
+    <button class="btn btn-sm" id="prompt-close-btn" style="margin-top:12px;">Close</button>
+  </div>
+</div>
 
 <script src="/static/app.js"></script>
 </body>

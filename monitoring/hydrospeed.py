@@ -409,3 +409,50 @@ class HydrospeedEngine:
             })
 
         return recommendations
+
+    def get_telemetry_enriched_ontology(self, telemetry: Any, integration_status: dict[str, bool] | None = None) -> dict[str, Any]:
+        """Merge live telemetry risk data onto ontology nodes.
+
+        Returns the full ontology graph with each agent node enriched with
+        real-time health_status (risk score, level, error rate, latency)
+        and each integration node tagged with connection status.
+        """
+        import copy
+        enriched = copy.deepcopy(AGENT_ONTOLOGY)
+        enriched["version"] = "1.0.0"
+        enriched["engine"] = "Hydrospeed"
+        enriched["generated_at"] = datetime.now(timezone.utc).isoformat()
+
+        integration_status = integration_status or {}
+        all_risks = telemetry.get_all_risks() if telemetry else {}
+        agent_risks = all_risks.get("agents", {})
+
+        for node in enriched["nodes"]:
+            if node["type"] == "agent":
+                risk = agent_risks.get(node["id"], {})
+                tel = risk.get("telemetry", {})
+                node["health_status"] = {
+                    "risk_score": risk.get("risk_score", 0.0),
+                    "level": risk.get("level", "unknown"),
+                    "error_rate": tel.get("error_rate", 0.0),
+                    "avg_latency_ms": tel.get("avg_latency_ms", 0.0),
+                    "dominant_factor": risk.get("dominant_factor", ""),
+                    "total_points": tel.get("total_points", 0),
+                }
+            elif node["type"] == "integration":
+                node["connected"] = integration_status.get(node["id"], False)
+            elif node["type"] == "data_source":
+                node["health_status"] = {"level": "active"}
+
+        # Enrich edges with throughput hints
+        for edge in enriched["edges"]:
+            source_risk = agent_risks.get(edge["from"], {})
+            source_tel = source_risk.get("telemetry", {})
+            edge["throughput_points"] = source_tel.get("total_points", 0)
+
+        enriched["system_risk"] = all_risks.get("system_risk", 0.0)
+        enriched["system_level"] = all_risks.get("system_level", "low")
+        enriched["critical_agents"] = all_risks.get("critical_agents", [])
+        enriched["total_tracked"] = all_risks.get("total_tracked", 0)
+
+        return enriched
