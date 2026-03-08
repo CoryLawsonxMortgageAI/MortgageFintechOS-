@@ -2,91 +2,268 @@
 
 **24/7 Autonomous AI Operating System for Mortgage Lending**
 
-Version 1.0.0 | Cory Lawson / The Lawson Group
+Version 3.0 | Cory Lawson / The Lawson Group
 
-MortgageFintechOS is the central, master operating system that orchestrates every layer of a modern AI-driven mortgage lending platform — from loan origination and underwriting through closing, servicing, and secondary market execution.
-
----
-
-## Overview
-
-MortgageFintechOS is an autonomous AI operating system that runs 24/7 to manage mortgage lending operations. It replaces manual processes with four specialized AI agents orchestrated by a central daemon with scheduling, health monitoring, and GitHub integration.
-
-It provides a unified runtime environment that connects borrowers, lenders, servicers, investors, and regulators through a single, event-driven platform.
-
----
-
-## Core Modules
-
-| Module | Description |
-|---|---|
-| **Loan Origination System (LOS)** | End-to-end digital application intake, document collection, and workflow management |
-| **Automated Underwriting Engine (AUE)** | AI/ML-powered credit risk scoring, income analysis, and eligibility determination |
-| **Pricing & Rate Engine** | Real-time rate sheets, lock management, and investor pricing integration |
-| **Appraisal & Valuation** | Automated valuation models (AVM) and appraisal order management |
-| **Compliance & Regulatory** | RESPA, TRID, HMDA, and state-specific compliance monitoring and reporting |
-| **Document Intelligence** | OCR, NLP-based document classification, extraction, and validation |
-| **Closing & Settlement** | eClosing, title integration, notary scheduling, and funding coordination |
-| **Loan Servicing** | Payment processing, escrow management, and loss mitigation workflows |
-| **Secondary Market** | Pipeline hedging, loan delivery, and investor reporting (FNMA, FHLMC, GNMA) |
-| **Borrower Portal** | Self-service digital experience for application status, document upload, and communication |
+MortgageFintechOS is a production-grade autonomous AI operating system that orchestrates 13 specialized AI agents across 4 divisions, with 9 external service integrations, real-time task dispatch, and regulatory compliance built-in. It runs 24/7 — managing mortgage operations, engineering workflows, security scanning, and developer growth while you sleep.
 
 ---
 
 ## Architecture
 
 ```
-+--------------------------------------------------------------+
-|                      MortgageFintechOS                       |
-|                  Autonomous AI Operating System               |
-+--------------------------------------------------------------+
-|                        Orchestrator                           |
-|            Task Queue | Scheduler | Health Monitor            |
-+----------+-----------+-----------+---------------------------+
-|  DIEGO   |  MARTIN   |   NOVA    |         JARVIS            |
-| Pipeline | Document  | Income &  |       Condition            |
-| Orchestr | Intellig  |   DTI     |       Resolution           |
-+----------+-----------+-----------+---------------------------+
-|              GitHub Integration | Alert System                |
-+--------------------------------------------------------------+
-|          PostgreSQL  |  Redis  |  Docker / Systemd            |
-+--------------------------------------------------------------+
++═══════════════════════════════════════════════════════════════════+
+│                        MortgageFintechOS v3.0                     │
+│                   Autonomous AI Operating System                  │
++═══════════════════════════════════════════════════════════════════+
+│                           ORCHESTRATOR                            │
+│       Task Queue (Priority FIFO) │ DailyScheduler (11 jobs)      │
+│       HealthMonitor │ Watchdog │ StateStore │ Paperclip Gov       │
++───────────┬───────────┬───────────┬───────────────────────────────+
+│           │           │           │                               │
+│  ┌────────┴────────┐  │  ┌───────┴────────┐  ┌────────────────┐ │
+│  │  MORTGAGE OPS   │  │  │   ENGINEERING   │  │  GROWTH OPS    │ │
+│  │  DIEGO Pipeline │  │  │  ATLAS FullStack│  │  HUNTER Leads  │ │
+│  │  MARTIN DocIntel│  │  │  CIPHER Security│  │  HERALD Content│ │
+│  │  NOVA Income/DTI│  │  │  FORGE DevOps   │  │  AMBASSADOR    │ │
+│  │  JARVIS Conditns│  │  │  NEXUS CodeQual │  │   Community    │ │
+│  └─────────────────┘  │  │  STORM DataEng  │  └────────────────┘ │
+│                       │  │  SENTINEL Intel │                      │
+│                       │  └────────────────┘                       │
++───────────────────────────────────────────────────────────────────+
+│                        INTEGRATIONS (9)                            │
+│  GitHub API v3 │ Notion v2025-09-03 │ Google Drive v3 │ Wispr    │
+│  LLM Router (OpenAI/Anthropic/OpenRouter) │ Paperclip AI         │
+│  GHOST OSINT │ PentAGI │ Browser Automation                      │
++───────────────────────────────────────────────────────────────────+
+│               Dashboard (aiohttp:8080) │ 60+ API Endpoints       │
++═══════════════════════════════════════════════════════════════════+
 ```
 
 ---
 
-## AI Agents
+## AI Agents — 13 Agents / 4 Divisions
+
+### Mortgage Operations (4 Agents)
 
 | Agent | Role | Key Capabilities |
 |-------|------|-----------------|
-| DIEGO | Pipeline Orchestration | Loan triage (FHA/VA/Conv/USDA), stage tracking, priority assignment, pipeline health |
-| MARTIN | Document Intelligence | Classification, OCR validation, fraud detection, completeness audit |
-| NOVA | Income & DTI Analysis | W-2 dual-method (HB 4000.1 II.A.5.b), Schedule C (II.A.4.c.ii), DTI grid (II.A.4.b), Collections 5% rule (II.A.4.d.v) |
-| JARVIS | Condition Resolution | LOE drafting, condition-to-document mapping, compliance citations (FHA/FNMA/FHLMC) |
+| **DIEGO** | Pipeline Orchestration | Loan triage (FHA/VA/CONV/USDA/JUMBO), stage progression (application → funding), priority assignment, bottleneck detection, pipeline health reporting |
+| **MARTIN** | Document Intelligence | Classification (W2/paystub/bank/tax/license/title/appraisal), OCR validation, fraud detection (font inconsistency, hidden layers, date mismatches), GHOST OSINT borrower verification, completeness auditing |
+| **NOVA** | Income & DTI Analysis | W-2 dual-method per FHA HB 4000.1 II.A.5.b, Schedule C self-employment (2-year average + depreciation add-back), DTI with compensating factors, collections 5% rule per II.A.4.d.v, income trending |
+| **JARVIS** | Condition Resolution | LOE template generation (employment gap, large deposit, credit inquiry), condition-to-document mapping, compliance citations (FHA/FNMA/FHLMC), condition lifecycle tracking |
+
+### Codebase Engineering (6 Agents)
+
+| Agent | Role | Key Capabilities |
+|-------|------|-----------------|
+| **ATLAS** | Full-Stack Engineering | LLM-powered API generation, feature building with multi-file commits, database migration creation (SQL UP/DOWN), React/TypeScript scaffolding, GitHub branch/commit/PR creation |
+| **CIPHER** | Security Engineering | OWASP scanning via GitHub code scanning alerts, SOC2/PCI-DSS/GLBA compliance checking, encryption auditing (AES-256, TLS 1.3), vulnerability patching with CVE tracking, PentAGI integration |
+| **FORGE** | DevOps Engineering | GitHub Actions workflow triggering, deployment dispatch with environment selection, rollback via workflow or commit revert, CI/CD pipeline YAML generation, secret rotation tracking |
+| **NEXUS** | Code Quality | PR review using real GitHub diff + LLM analysis, test generation (pytest with fixtures/parametrization), tech debt analysis from commit history, SOLID refactoring, review event submission |
+| **STORM** | Data Engineering | ETL pipeline generation (extract/transform/load with async patterns), HMDA compliance reporting, ULDD export specification, database query optimization |
+| **SENTINEL** | Codebase Intelligence | Codebase scanning (structure/commits/branches), technology trend analysis, reverse engineering, build plan generation, AutoResearch (Karpathy-style ML experiments), deep security audit |
+
+### Growth Ops — Autonomous 24/7 (3 Agents)
+
+| Agent | Role | Key Capabilities |
+|-------|------|-----------------|
+| **HUNTER** | Dev Lead Discovery | GitHub trending/topic scanning, Hacker News frontpage monitoring, Reddit subreddit scanning, keyword-weighted lead scoring (mortgage/fintech/AI-agent), tier ranking (hot/warm/cold), Notion sync |
+| **HERALD** | Build-in-Public Content | LLM-powered content generation (tweets, threads, dev.to articles, changelogs, LinkedIn posts), content calendar scheduling (Mon=milestone, Tue/Thu=thread, Wed=article, Fri=changelog), multi-template system |
+| **AMBASSADOR** | Community Engagement | Rate-limited GitHub starring/commenting (25/day max), per-user engagement caps (3/week), anti-spam cooldowns, LLM-generated value-adding responses, blocked domain guardrails (financial/gov sites) |
 
 ---
 
-## Scheduled Operations
+## External Integrations (9 Services)
 
-| Time | Agent | Operation |
-|------|-------|-----------|
-| 06:00 | MARTIN | Document Audit |
-| 06:30 | NOVA | Income Recalculation |
-| 07:00 | DIEGO | Pipeline Health Check |
-| Hourly | System | Queue Health Check |
-| Weekly | DIEGO | Pipeline Report |
+| Service | Version/Protocol | Purpose |
+|---------|-----------------|---------|
+| **GitHub API** | v3 REST | Full code operations: repo CRUD, branch management, PRs (create/review/merge), GitHub Actions (trigger/monitor/cancel), security scanning (code scanning/Dependabot/secret scanning) |
+| **Notion API** | v2025-09-03 | Knowledge base + audit trail. `data_source_id` parent (v2025 concept). Page CRUD, block management, search, agent result auto-sync |
+| **Google Drive API** | v3 | Document source for borrower docs. Service account JWT auth. File listing, download, Google Docs export, batch folder import with MARTIN classification |
+| **Wispr Flow** | Webhook | Voice-to-text transcription. HMAC-SHA256 signature validation. Keyword-based agent routing with confidence scoring |
+| **LLM Router** | Multi-provider | Intelligent routing: OpenAI, Anthropic (Claude Sonnet 4.6), OpenRouter. Task-based routing matrix with agent-specific overrides and automatic fallback |
+| **Paperclip AI** | Custom | Enterprise orchestration with Board approval governance. Per-agent budgets ($300-800/mo), auto-pause at 100%, immutable audit log |
+| **GHOST OSINT** | REST API | Entity investigation for fraud detection. Entity creation/search, relationship mapping, OSINT lookups (email/phone/domain/person), borrower verification |
+| **PentAGI** | REST API | Autonomous penetration testing. 111+ security tools. Vulnerability scanning, attack surface analysis, report generation |
+| **Browser Automation** | HTTP + Sessions | Headless client for Growth Ops. Token-bucket rate limiter, blocked domain guardrails, per-platform action budgets, persistent sessions, fingerprint rotation |
 
 ---
 
-## Key Capabilities
+## Scheduled Operations (11 Jobs)
 
-- **AI-First Underwriting** — Machine learning models for credit risk, fraud detection, and income verification
-- **Real-Time Decisioning** — Sub-second loan eligibility and pricing decisions
-- **End-to-End Digital Workflow** — Fully paperless process from application to funding
-- **Open Integration Platform** — RESTful APIs, webhooks, and event streaming for third-party integrations
-- **Regulatory Compliance Engine** — Automated TRID disclosures, HMDA LAR generation, and audit trails
-- **Multi-Channel Support** — Retail, wholesale, correspondent, and consumer-direct lending channels
-- **Secure by Design** — SOC 2 Type II, PCI DSS, and bank-grade encryption standards
+| Time | Agent | Operation | Priority |
+|------|-------|-----------|----------|
+| 02:00 | HUNTER | Dev lead sweep (GitHub + HN + Reddit) | LOW |
+| 03:00 | CIPHER | Security scan (code scanning + Dependabot + secrets) | HIGH |
+| 05:30 | System | Google Drive folder import (new borrower docs) | MEDIUM |
+| 06:00 | MARTIN | Document audit (classification + fraud check) | MEDIUM |
+| 06:30 | NOVA | Income recalculation (W-2 + Schedule C) | MEDIUM |
+| 07:00 | DIEGO | Pipeline health check (bottleneck detection) | HIGH |
+| 07:30 | System | Notion audit sync (push results to knowledge base) | MEDIUM |
+| 08:00 | HERALD | Daily content generation (calendar-driven) | LOW |
+| 10:00 | AMBASSADOR | Community engagement (rate-limited outreach) | LOW |
+| Hourly | System | Queue health check | — |
+| Weekly (Mon 08:00) | DIEGO | Pipeline report (GitHub + stakeholders) | LOW |
+
+---
+
+## Dashboard UI
+
+The web dashboard runs on port 8080 and provides 10 pages:
+
+| Page | Purpose |
+|------|---------|
+| **Office Floor** | KPIs, task assignment, agent status tables, activity log |
+| **Office Manager** | AIOS Kernel supervision, pipeline dependency visualization |
+| **Live Monitor** | Real-time agent swim lanes with progress bars, execution streaming, live metrics |
+| **AI Chat** | Multi-model chat via Puter.js (500+ LLMs, no API keys) |
+| **Intelligence Reports** | Auto-generated reports from agent tasks |
+| **Model Discovery** | Neural self-learning model ranking engine with benchmark scoring |
+| **Paperclip AI** | Enterprise ticket lifecycle, Board approval, budget tracking, org chart, audit log |
+| **Code Workspace** | GitHub integration, AutoResearch (Karpathy-style), Edge Agents (SubZeroClaw) |
+| **Knowledge Hub** | Open Notebook (NotebookLM alternative), Notion, Wispr Flow, Google Drive |
+| **Growth Ops** | HUNTER leads, HERALD content queue, AMBASSADOR engagement stats |
+| **Tech Stack** | Complete technology reference, architecture patterns, key terms glossary |
+| **Connections** | Vercel deploy, Telegram bot, GHOST OSINT, PentAGI, Security Operations Center |
+
+---
+
+## API Reference (60+ Endpoints)
+
+### Core
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/healthz` | Health check |
+| `GET` | `/api/status` | Full system status |
+| `GET` | `/api/health` | Detailed health report |
+| `GET` | `/api/agents` | List all agents |
+| `GET` | `/api/queue` | Queue stats + recent tasks |
+| `GET` | `/api/schedule` | Scheduled jobs |
+| `GET` | `/api/alerts` | Health alerts |
+| `POST` | `/api/tasks/submit` | Submit task to agent |
+| `GET` | `/api/tasks/{id}` | Task detail + result |
+| `GET` | `/api/tasks/results/feed` | Live results feed |
+
+### Notion
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/notion/status` | Configuration status |
+| `GET` | `/api/notion/pages` | Query pages |
+| `POST` | `/api/notion/pages` | Create page |
+| `GET` | `/api/notion/pages/{id}` | Review page (MARTIN classifies) |
+| `POST` | `/api/notion/sync-audit` | Audit sync to Notion |
+
+### Google Drive
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/drive/files` | List files in folder |
+| `POST` | `/api/drive/import` | Import folder + classify |
+
+### Wispr Flow
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/wispr/webhook` | Receive voice notes |
+| `GET` | `/api/wispr/status` | Connection status |
+
+### GitHub Code Ops
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/github/repo` | Repository info |
+| `GET` | `/api/github/prs` | List pull requests |
+| `GET` | `/api/github/security` | Aggregated security alerts |
+| `POST` | `/api/github/security/scan` | Trigger CIPHER scan |
+| `GET` | `/api/github/actions` | Recent workflow runs |
+| `GET` | `/api/github/commits` | Recent commits |
+| `GET` | `/api/github/branches` | List branches |
+
+### Paperclip AI
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/paperclip/status` | Orchestration status |
+| `GET/POST` | `/api/paperclip/tickets` | List/create tickets |
+| `POST` | `/api/paperclip/tickets/{id}/approve` | Board approval |
+| `POST` | `/api/paperclip/tickets/{id}/reject` | Board rejection |
+| `GET` | `/api/paperclip/budgets` | Per-agent budgets |
+| `GET` | `/api/paperclip/audit` | Immutable audit log |
+
+### GHOST OSINT
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/ghost/status` | OSINT status |
+| `POST` | `/api/ghost/verify` | Borrower verification |
+| `GET` | `/api/ghost/search` | Entity search |
+| `POST` | `/api/ghost/investigations` | Create investigation |
+
+### PentAGI
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/pentagi/status` | Pentest status |
+| `POST` | `/api/pentagi/assess` | Run security assessment |
+| `GET` | `/api/pentagi/vulnerabilities` | List vulnerabilities |
+
+### Growth Ops
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/growth/status` | All Growth Ops agent status |
+| `POST` | `/api/growth/sweep` | Full sweep (HUNTER + HERALD + AMBASSADOR) |
+| `POST` | `/api/growth/hunter/scan` | Trigger HUNTER scan |
+| `GET` | `/api/growth/hunter/leads` | Scored lead rankings |
+| `POST` | `/api/growth/herald/generate` | Generate content |
+| `GET` | `/api/growth/herald/queue` | Content queue |
+| `POST` | `/api/growth/ambassador/engage` | Trigger engagement |
+| `GET` | `/api/growth/ambassador/stats` | Engagement metrics |
+
+---
+
+## Technology Stack
+
+| Layer | Technology | Version | Purpose |
+|-------|-----------|---------|---------|
+| Runtime | Python | 3.12+ | Core application, async/await, type hints |
+| Async | asyncio + aiohttp | 3.9+ | Non-blocking HTTP server/client, REST APIs |
+| Config | python-dotenv + pydantic | 1.0+ / 2.5+ | Environment-based config with validation |
+| Logging | structlog | 23.2+ | Structured JSON logging with context binding |
+| CLI | click | 8.1+ | Command-line interface for daemon startup |
+| System | psutil | 5.9+ | CPU, memory, disk metrics for health monitor |
+| Auth | google-auth | 2.23+ | Google Drive service account JWT |
+| AI (Frontend) | Puter.js | v2 | 500+ LLM models (Claude, GPT, DeepSeek, Kimi K2.5) — no API keys required |
+| AI (Backend) | LLM Router | Custom | Multi-provider routing: OpenAI, Anthropic, OpenRouter |
+| Frontend | Vanilla JS + HTML5 | ES2022 | Zero-dependency SPA with CSS custom properties |
+| Deploy | Vercel | — | Auto-deploy on push, deploy hooks |
+| VCS | GitHub API | v3 REST | Code ops, PRs, Actions, security scanning |
+
+---
+
+## Architecture Patterns
+
+| Pattern | Description |
+|---------|-------------|
+| **Agent Registry** | Orchestrator maintains agent dictionary. Dynamic registration, health monitoring, integration injection |
+| **Priority Task Queue** | FIFO with 4 priority levels (CRITICAL/HIGH/MEDIUM/LOW). Retry with exponential backoff (2^n seconds). History tracking for audit |
+| **Watchdog Supervision** | Crash loop detection for subsystems. Auto-restart with 30s polling. GitHub issue creation after 5+ crashes in 5 minutes |
+| **State Persistence** | Debounced writes to disk via StateStore. Agent state, task queue, and budgets survive restarts |
+| **Integration Injection** | Agents receive integration clients post-registration. Decoupled, testable, swappable |
+| **LLM Routing Matrix** | Task category → optimal model mapping. Agent-specific overrides. Automatic fallback chains |
+| **Board Governance** | Paperclip AI: ticket lifecycle (open → approved → in_progress → completed). Per-agent budgets with auto-pause |
+| **Rate-Limited Automation** | Token-bucket rate limiter per domain. Blocked domains (financial/gov). Per-platform hourly action budgets |
+
+---
+
+## Key Terms
+
+| Term | Definition |
+|------|-----------|
+| **Agentic AI** | AI systems that autonomously plan, execute, and adapt without human intervention |
+| **Multi-Agent Orchestration** | Central daemon coordinating 13 agents via task queue with cross-agent pipelines |
+| **RAG** | Retrieval-Augmented Generation — agents retrieve context before LLM generation |
+| **DAG** | Directed Acyclic Graph — task dependency graphs for pipeline execution |
+| **OWASP Top 10** | Standard security vulnerability categories for compliance reporting |
+| **FHA HB 4000.1** | FHA Single Family Housing Policy Handbook — regulatory reference for income/DTI |
+| **HMDA** | Home Mortgage Disclosure Act — regulatory reporting requirement |
+| **ULDD** | Uniform Loan Delivery Dataset — Fannie Mae/Freddie Mac delivery format |
+| **DTI** | Debt-to-Income ratio — front-end (housing) and back-end (total) |
+| **LOE** | Letter of Explanation — documents explaining borrower anomalies |
+| **SOC2/PCI-DSS/GLBA** | Security/privacy compliance frameworks for financial services |
 
 ---
 
@@ -94,7 +271,7 @@ It provides a unified runtime environment that connects borrowers, lenders, serv
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.12+
 - Docker and Docker Compose (optional)
 - PostgreSQL 15+ (optional)
 - Redis 7+ (optional)
@@ -105,34 +282,34 @@ It provides a unified runtime environment that connects borrowers, lenders, serv
 git clone https://github.com/CoryLawsonxMortgageAI/MortgageFintechOS-.git
 cd MortgageFintechOS-
 cp .env.example .env
-# Edit .env with your settings
+# Edit .env with your API keys and configuration
 
-# Option 1: Direct install
-./setup.sh install
+# Install dependencies
+pip install -r requirements.txt
 
-# Option 2: Docker
-cd docker && docker-compose up -d
+# Start the autonomous system
+python main.py start
 ```
 
-### Commands
+### Environment Variables
 
-```bash
-python main.py start       # Start the autonomous system
-python main.py status      # Show system status
-python main.py health      # Run health checks
-python main.py schedule    # View scheduled tasks
-python main.py agents      # List registered agents
-```
-
-### Systemd Deployment
-
-```bash
-sudo ./setup.sh install
-sudo ./setup.sh configure
-sudo ./setup.sh start
-sudo ./setup.sh status
-sudo ./setup.sh logs
-```
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `GITHUB_TOKEN` | GitHub API token for code ops | Yes |
+| `GITHUB_REPO` | Target repository | Yes |
+| `NOTION_API_TOKEN` | Notion integration token (v2025-09-03) | No |
+| `NOTION_DATABASE_ID` | Notion database ID | No |
+| `NOTION_DATA_SOURCE_ID` | Notion data source ID (v2025) | No |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | Google Drive service account path | No |
+| `GOOGLE_DRIVE_FOLDER_ID` | Default Drive folder | No |
+| `WISPR_WEBHOOK_SECRET` | Wispr Flow webhook HMAC secret | No |
+| `OPENAI_API_KEY` | OpenAI API key for LLM Router | No |
+| `ANTHROPIC_API_KEY` | Anthropic API key for LLM Router | No |
+| `OPENROUTER_API_KEY` | OpenRouter API key for LLM Router | No |
+| `GHOST_API_KEY` | GHOST OSINT API key | No |
+| `PENTAGI_API_KEY` | PentAGI API key | No |
+| `GROWTH_OPS_ENABLED` | Enable Growth Ops agents (default: true) | No |
+| `DASHBOARD_PORT` | Dashboard port (default: 8080) | No |
 
 ---
 
@@ -140,96 +317,91 @@ sudo ./setup.sh logs
 
 ```
 MortgageFintechOS-/
-  main.py                        Entry point (CLI)
-  setup.sh                       Installation script
-  requirements.txt               Python dependencies
-  .env.example                   Environment template
+  main.py                              Entry point (CLI)
+  setup.sh                             Installation script
+  requirements.txt                     Python dependencies
+  .env.example                         Environment template
+  index.html                           Dashboard UI (SPA)
+
   config/
-    settings.py                  Central configuration
+    settings.py                        Central configuration (dataclass)
+
   core/
-    orchestrator.py              Central async daemon
-    task_queue.py                Priority-based task queue
+    orchestrator.py                    Central async daemon (lifecycle, dispatch, scheduling)
+    task_queue.py                      Priority-based task queue with history
+
   agents/
-    base.py                      Abstract base agent
-    diego.py                     DIEGO - Pipeline orchestration
-    martin.py                    MARTIN - Document intelligence
-    nova.py                      NOVA - Income & DTI analysis
-    jarvis.py                    JARVIS - Condition resolution
-  schedulers/
-    daily_scheduler.py           Cron-like task scheduler
+    base.py                           Abstract base agent (retry, heartbeat, integration injection)
+    diego.py                          DIEGO — Pipeline orchestration
+    martin.py                         MARTIN — Document intelligence + fraud detection
+    nova.py                           NOVA — Income & DTI analysis (FHA HB 4000.1)
+    jarvis.py                         JARVIS — Condition resolution + LOE drafting
+    atlas.py                          ATLAS — Full-stack engineering (GitHub code ops)
+    cipher.py                         CIPHER — Security engineering (OWASP + PentAGI)
+    forge.py                          FORGE — DevOps engineering (GitHub Actions)
+    nexus.py                          NEXUS — Code quality (PR review + test gen)
+    storm.py                          STORM — Data engineering (ETL + HMDA + ULDD)
+    sentinel.py                       SENTINEL — Codebase intelligence + AutoResearch
+    hunter.py                         HUNTER — Dev lead discovery (24/7 autonomous)
+    herald.py                         HERALD — Build-in-public content creation
+    ambassador.py                     AMBASSADOR — Community engagement with guardrails
+
   integrations/
-    github_client.py             GitHub API integration
+    github_client.py                  GitHub API v3 (code ops, PRs, Actions, security)
+    notion_client.py                  Notion API v2025-09-03 (data_source_id)
+    gdrive_client.py                  Google Drive API v3 (service account JWT)
+    wispr_client.py                   Wispr Flow webhook receiver
+    llm_router.py                     Multi-LLM router (OpenAI/Anthropic/OpenRouter)
+    paperclip_service.py              Enterprise orchestration + governance
+    ghost_client.py                   GHOST OSINT CRM (entity investigation)
+    pentagi_client.py                 PentAGI autonomous pentesting
+    browser_client.py                 Browser automation (rate-limited, guardrails)
+
+  dashboard/
+    server.py                         aiohttp web server (60+ endpoints)
+
   monitoring/
-    health_monitor.py            Agent health & alerting
-  docker/
-    Dockerfile                   Container image
-    docker-compose.yml           Full stack deployment
-    mortgagefintechos.service    Systemd unit file
+    health_monitor.py                 Agent health & alerting
+
+  schedulers/
+    daily_scheduler.py                Cron-like job scheduler
+
+  persistence/
+    state_store.py                    Debounced state persistence
 ```
 
 ---
 
 ## FHA Compliance
 
-All calculations cite specific FHA Handbook 4000.1 sections:
+All mortgage calculations cite specific FHA Handbook 4000.1 sections:
 
-- **W-2 Dual-Method**: II.A.5.b
-- **Schedule C Self-Employment**: II.A.4.c.ii
-- **DTI Ratios & Compensating Factors**: II.A.4.b
-- **Collections 5% Rule**: II.A.4.d.v
-
----
-
-## Configuration
-
-Set environment variables in `.env`:
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| DATABASE_URL | PostgreSQL connection | postgresql://localhost:5432/mortgageos |
-| REDIS_URL | Redis connection | redis://localhost:6379 |
-| GITHUB_TOKEN | GitHub API token | (required for GitHub integration) |
-| GITHUB_REPO | Target repository | CoryLawsonxMortgageAI/MortgageFintechOS- |
-| LOG_LEVEL | Logging level | INFO |
-| AGENT_RETRY_COUNT | Max task retries | 3 |
+| Regulation | Section | Agent |
+|-----------|---------|-------|
+| W-2 Dual-Method Income | II.A.5.b | NOVA |
+| Schedule C Self-Employment | II.A.4.c.ii | NOVA |
+| DTI Ratios & Compensating Factors | II.A.4.b | NOVA |
+| Collections 5% Rule | II.A.4.d.v | NOVA |
+| Document Classification | II.A | MARTIN |
+| Condition Mapping | Various | JARVIS |
+| HMDA Reporting | Reg C | STORM |
+| ULDD Delivery | FNMA/FHLMC specs | STORM |
 
 ---
 
-## API Reference
+## Security
 
-The MortgageFintechOS exposes a comprehensive REST API. Full documentation is available at `/api/docs` when running locally.
-
-### Core Endpoints
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/v1/loans` | Create a new loan application |
-| `GET` | `/api/v1/loans/{id}` | Retrieve loan details |
-| `POST` | `/api/v1/loans/{id}/underwrite` | Trigger automated underwriting |
-| `POST` | `/api/v1/loans/{id}/price` | Get real-time pricing |
-| `GET` | `/api/v1/loans/{id}/compliance` | Retrieve compliance status |
-| `POST` | `/api/v1/loans/{id}/close` | Initiate closing process |
-
----
-
-## Compliance & Security
-
-MortgageFintechOS is built to meet the following standards and regulations:
-
-- **Federal Regulations**: RESPA, TILA, ECOA, HMDA, Fair Housing Act, CFPB guidelines
-- **Data Security**: AES-256 encryption at rest, TLS 1.3 in transit
-- **Privacy**: CCPA, GLBA Safeguards Rule compliant
-- **Audit**: Full audit trail with immutable logging for all loan events
-
----
-
-## Roadmap
-
-- [ ] Enhanced AI fraud detection with behavioral biometrics
-- [ ] Blockchain-based title and deed recording
-- [ ] Real-time co-borrower collaboration portal
-- [ ] Expanded GSE and portfolio investor delivery channels
-- [ ] Open banking integration for automated asset verification
+| Layer | Implementation |
+|-------|---------------|
+| **Code Scanning** | GitHub code scanning alerts → CIPHER OWASP mapping |
+| **Dependency Scanning** | Dependabot alerts → CIPHER compliance check |
+| **Secret Scanning** | GitHub secret scanning → CIPHER alert management |
+| **Penetration Testing** | PentAGI autonomous pentesting (111+ tools) |
+| **OSINT** | GHOST OSINT entity investigation + borrower verification |
+| **Encryption** | AES-256 at rest, TLS 1.3 in transit, CIPHER audit |
+| **Compliance** | SOC2 Type II, PCI-DSS, GLBA Safeguards Rule |
+| **Governance** | Paperclip AI Board approval + per-agent budget enforcement |
+| **Watchdog** | Crash loop detection with auto-GitHub issue creation |
 
 ---
 
@@ -239,4 +411,4 @@ Copyright 2026 Cory Lawson / The Lawson Group. All rights reserved.
 
 ---
 
-*MortgageFintechOS — Powering the Future of Mortgage Lending*
+*MortgageFintechOS v3.0 — 13 Agents, 4 Divisions, 9 Integrations, 24/7 Autonomous Operation*
