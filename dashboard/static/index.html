@@ -945,7 +945,7 @@
       </div>
       <div class="metric-card">
         <div class="metric-label">Active Guardrails</div>
-        <div class="metric-value" id="rt-guardrails">6</div>
+        <div class="metric-value" id="rt-guardrails">7</div>
       </div>
       <div class="metric-card">
         <div class="metric-label">Blocked Actions</div>
@@ -978,7 +978,8 @@
             <thead>
               <tr>
                 <th>Agent</th>
-                <th>Allowed Tools</th>
+                <th>Division</th>
+                <th>Tools Allowed</th>
                 <th>Memory Access</th>
                 <th>Action Scope</th>
                 <th>Safety Class</th>
@@ -1027,11 +1028,11 @@
     <div class="metrics-row">
       <div class="metric-card">
         <div class="metric-label">Total Integrations</div>
-        <div class="metric-value">9</div>
+        <div class="metric-value">10</div>
       </div>
       <div class="metric-card">
         <div class="metric-label">Connected</div>
-        <div class="metric-value" id="int-connected">9</div>
+        <div class="metric-value" id="int-connected">10</div>
       </div>
       <div class="metric-card">
         <div class="metric-label">Last Sync</div>
@@ -1170,6 +1171,24 @@
             </table>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Predictive Intelligence Section -->
+    <div class="card" style="margin-top:24px;">
+      <div class="card-header">
+        <h3>Predictive Pipeline Intelligence</h3>
+        <span class="text-secondary" style="font-size:12px;">Multi-factor risk prediction with downstream cascade analysis</span>
+      </div>
+      <div class="card-body">
+        <div class="metrics-row" style="margin-bottom:16px;">
+          <div class="metric-card"><div class="metric-label">Pipeline Health</div><div class="metric-value" id="pred-health-score">--</div></div>
+          <div class="metric-card"><div class="metric-label">Stages at Risk</div><div class="metric-value" id="pred-stages-at-risk">--</div></div>
+          <div class="metric-card"><div class="metric-label">Top Risk Factor</div><div class="metric-value" id="pred-top-risk" style="font-size:14px;">--</div></div>
+          <div class="metric-card"><div class="metric-label">Seasonal Adj.</div><div class="metric-value" id="pred-seasonal">--</div></div>
+        </div>
+        <div id="pred-stage-risks" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;"></div>
+        <div id="pred-system-risks" style="margin-top:16px;"></div>
       </div>
     </div>
 
