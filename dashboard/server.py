@@ -5,6 +5,7 @@ the autonomous AI operating system in real time. Includes endpoints
 for Notion, Google Drive, Wispr Flow, and GitHub code operations.
 """
 
+import asyncio
 import json
 from datetime import datetime
 from pathlib import Path
@@ -69,6 +70,20 @@ class DashboardServer:
         self._app.router.add_get("/api/github/actions", self._handle_github_actions)
         self._app.router.add_get("/api/github/commits", self._handle_github_commits)
         self._app.router.add_get("/api/github/branches", self._handle_github_branches)
+
+        # Paperclip AI — Enterprise Orchestration
+        self._app.router.add_get("/api/paperclip/health", self._handle_clip_health)
+        self._app.router.add_get("/api/paperclip/status", self._handle_clip_status)
+        self._app.router.add_get("/api/paperclip/tickets", self._handle_clip_tickets)
+        self._app.router.add_post("/api/paperclip/tickets", self._handle_clip_create_ticket)
+        self._app.router.add_post("/api/paperclip/tickets/{ticket_id}/approve", self._handle_clip_approve)
+        self._app.router.add_post("/api/paperclip/tickets/{ticket_id}/reject", self._handle_clip_reject)
+        self._app.router.add_post("/api/paperclip/tickets/{ticket_id}/start", self._handle_clip_start)
+        self._app.router.add_post("/api/paperclip/tickets/{ticket_id}/complete", self._handle_clip_complete)
+        self._app.router.add_get("/api/paperclip/budgets", self._handle_clip_budgets)
+        self._app.router.add_post("/api/paperclip/budgets/{agent}/set", self._handle_clip_set_budget)
+        self._app.router.add_post("/api/paperclip/budgets/{agent}/reset", self._handle_clip_reset_budget)
+        self._app.router.add_get("/api/paperclip/audit", self._handle_clip_audit)
 
         # Static files
         self._app.router.add_static("/static", STATIC_DIR, show_index=False)
@@ -214,6 +229,98 @@ class DashboardServer:
         if not self.orchestrator._github:
             return web.json_response({"error": "GitHub not configured"}, status=503)
         return web.json_response(await self.orchestrator._github.list_branches(), dumps=_json_dumps)
+
+    # --- Paperclip AI handlers ---
+
+    async def _handle_clip_health(self, request: web.Request) -> web.Response:
+        if not self.orchestrator._paperclip:
+            return web.json_response({"error": "Paperclip not initialized"}, status=503)
+        return web.json_response({"status": "ok", "service": "paperclip-ai", "version": "1.0.0"})
+
+    async def _handle_clip_status(self, request: web.Request) -> web.Response:
+        if not self.orchestrator._paperclip:
+            return web.json_response({"error": "Paperclip not initialized"}, status=503)
+        return web.json_response(self.orchestrator._paperclip.get_status(), dumps=_json_dumps)
+
+    async def _handle_clip_tickets(self, request: web.Request) -> web.Response:
+        if not self.orchestrator._paperclip:
+            return web.json_response({"error": "Paperclip not initialized"}, status=503)
+        status = request.query.get("status")
+        limit = int(request.query.get("limit", "50"))
+        tickets = self.orchestrator._paperclip.list_tickets(status=status, limit=limit)
+        return web.json_response({"tickets": tickets}, dumps=_json_dumps)
+
+    async def _handle_clip_create_ticket(self, request: web.Request) -> web.Response:
+        if not self.orchestrator._paperclip:
+            return web.json_response({"error": "Paperclip not initialized"}, status=503)
+        body = await request.json()
+        owner = body.get("owner", "")
+        title = body.get("title", "")
+        cost = int(body.get("estimated_cost", 0))
+        if not owner or not title:
+            return web.json_response({"error": "owner and title are required"}, status=400)
+        ticket = await self.orchestrator._paperclip.create_ticket(owner=owner, title=title, estimated_cost=cost)
+        return web.json_response(ticket, dumps=_json_dumps)
+
+    async def _handle_clip_approve(self, request: web.Request) -> web.Response:
+        if not self.orchestrator._paperclip:
+            return web.json_response({"error": "Paperclip not initialized"}, status=503)
+        ticket_id = request.match_info["ticket_id"]
+        result = await self.orchestrator._paperclip.approve_ticket(ticket_id)
+        if "error" in result:
+            return web.json_response(result, status=404)
+        # Auto-dispatch to agent after approval
+        asyncio.create_task(self.orchestrator.paperclip_execute_ticket(ticket_id))
+        return web.json_response(result, dumps=_json_dumps)
+
+    async def _handle_clip_reject(self, request: web.Request) -> web.Response:
+        if not self.orchestrator._paperclip:
+            return web.json_response({"error": "Paperclip not initialized"}, status=503)
+        ticket_id = request.match_info["ticket_id"]
+        result = await self.orchestrator._paperclip.reject_ticket(ticket_id)
+        if "error" in result:
+            return web.json_response(result, status=404)
+        return web.json_response(result, dumps=_json_dumps)
+
+    async def _handle_clip_start(self, request: web.Request) -> web.Response:
+        if not self.orchestrator._paperclip:
+            return web.json_response({"error": "Paperclip not initialized"}, status=503)
+        result = await self.orchestrator._paperclip.start_ticket(request.match_info["ticket_id"])
+        if "error" in result:
+            return web.json_response(result, status=404)
+        return web.json_response(result, dumps=_json_dumps)
+
+    async def _handle_clip_complete(self, request: web.Request) -> web.Response:
+        if not self.orchestrator._paperclip:
+            return web.json_response({"error": "Paperclip not initialized"}, status=503)
+        result = await self.orchestrator._paperclip.complete_ticket(request.match_info["ticket_id"])
+        if "error" in result:
+            return web.json_response(result, status=404)
+        return web.json_response(result, dumps=_json_dumps)
+
+    async def _handle_clip_budgets(self, request: web.Request) -> web.Response:
+        if not self.orchestrator._paperclip:
+            return web.json_response({"error": "Paperclip not initialized"}, status=503)
+        return web.json_response(self.orchestrator._paperclip.get_budgets(), dumps=_json_dumps)
+
+    async def _handle_clip_set_budget(self, request: web.Request) -> web.Response:
+        if not self.orchestrator._paperclip:
+            return web.json_response({"error": "Paperclip not initialized"}, status=503)
+        body = await request.json()
+        result = await self.orchestrator._paperclip.set_budget(request.match_info["agent"], int(body.get("budget", 0)))
+        return web.json_response(result, dumps=_json_dumps)
+
+    async def _handle_clip_reset_budget(self, request: web.Request) -> web.Response:
+        if not self.orchestrator._paperclip:
+            return web.json_response({"error": "Paperclip not initialized"}, status=503)
+        result = await self.orchestrator._paperclip.reset_budget(request.match_info["agent"])
+        return web.json_response(result, dumps=_json_dumps)
+
+    async def _handle_clip_audit(self, request: web.Request) -> web.Response:
+        if not self.orchestrator._paperclip:
+            return web.json_response({"error": "Paperclip not initialized"}, status=503)
+        limit = int(request.query.get("limit", "50"))
+        return web.json_response({"audit": self.orchestrator._paperclip.get_audit_log(limit)}, dumps=_json_dumps)
 
 
 def _json_dumps(obj: Any) -> str:

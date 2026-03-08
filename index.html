@@ -376,14 +376,14 @@ optgroup{font-weight:700;color:var(--t);font-size:11px}
 <!-- PAPERCLIP AI — Enterprise Agent Orchestration -->
 <div id="pg-clip" class="pg">
   <div class="gr g1">
-    <div class="cd"><div class="ch"><span class="ct">Paperclip AI Integration</span><span class="cc">Enterprise Agent Orchestration — Port 3100</span></div>
+    <div class="cd"><div class="ch"><span class="ct">Paperclip AI — Enterprise Orchestration</span><span class="cc">Integrated Backend Service</span></div>
     <div style="padding:14px">
-      <p style="font-size:11px;color:var(--t2);margin-bottom:10px">Connect to Paperclip AI for enterprise approval workflows, cost tracking, org charts, and unified agent governance. Paperclip runs at <b>localhost:3100</b> with embedded PostgreSQL.</p>
-      <div style="display:grid;grid-template-columns:1fr auto;gap:6px;align-items:end;margin-bottom:10px">
-        <div class="cmf"><label>Paperclip Server URL</label><input id="clip-url" value="http://localhost:3100" placeholder="http://localhost:3100"></div>
+      <p style="font-size:11px;color:var(--t2);margin-bottom:10px">Enterprise approval workflows, cost tracking, org charts, and unified agent governance. Runs as part of the MortgageFintechOS backend with persistent state.</p>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">
         <button class="btn btn-bl" onclick="clipConnect()">Connect</button>
+        <button class="btn" onclick="clipRefresh()">Refresh</button>
       </div>
-      <div id="clip-status" style="padding:6px 10px;border-radius:4px;font-size:10px;font-family:var(--m);background:var(--a);border:1px solid var(--b);margin-bottom:10px">Status: Not connected — run <b>npx paperclipai</b> to start</div>
+      <div id="clip-status" style="padding:6px 10px;border-radius:4px;font-size:10px;font-family:var(--m);background:var(--a);border:1px solid var(--b);margin-bottom:10px">Status: Not connected — click Connect</div>
     </div></div>
   </div>
   <div class="gr g2">
@@ -907,88 +907,89 @@ async function tgTest(){
   }catch(e){box.textContent="✗ "+e.message;}
 }
 
-// ══════ PAPERCLIP AI INTEGRATION ══════
-const clipTickets=[];
-const clipAudit=[];
-const clipBudgets={
-  DIEGO:{budget:500,used:127},MARTIN:{budget:500,used:312},NOVA:{budget:400,used:198},JARVIS:{budget:400,used:89},
-  ATLAS:{budget:800,used:445},CIPHER:{budget:600,used:201},FORGE:{budget:700,used:388},NEXUS:{budget:500,used:267},STORM:{budget:300,used:45},SENTINEL:{budget:400,used:112}
-};
+// ══════ PAPERCLIP AI — LIVE BACKEND INTEGRATION ══════
+let clipTickets=[];
+let clipAudit=[];
+let clipBudgets={};
 let clipConnected=false;
+const CLIP_API=location.origin;
 
 async function clipConnect(){
-  const url=document.getElementById("clip-url").value;
   const st=document.getElementById("clip-status");
-  st.innerHTML="Connecting to "+esc(url)+"...";
+  st.innerHTML="Connecting to Paperclip backend...";
   try{
-    const r=await fetch(url+"/api/health",{signal:AbortSignal.timeout(3000)});
-    if(r.ok){clipConnected=true;st.innerHTML='<span style="color:var(--g)">✓ Connected to Paperclip at '+esc(url)+'</span>';st.style.background="var(--gb)";st.style.borderColor="#bbf7d0";
-      clipAuditLog("system","Connected to Paperclip AI at "+url);renderClip();return;}
+    const r=await fetch(CLIP_API+"/api/paperclip/health",{signal:AbortSignal.timeout(3000)});
+    if(r.ok){
+      const d=await r.json();
+      clipConnected=true;
+      st.innerHTML='<span style="color:var(--g)">✓ Connected — Paperclip AI service v'+(d.version||"1.0.0")+' LIVE</span>';
+      st.style.background="var(--gb)";st.style.borderColor="#bbf7d0";
+      await clipRefresh();
+      return;
+    }
   }catch(e){}
-  // Simulate connection for demo when server not running
-  clipConnected=true;
-  st.innerHTML='<span style="color:var(--g)">✓ Connected (simulation mode) — run <b>npx paperclipai</b> for live data</span>';
-  st.style.background="var(--gb)";st.style.borderColor="#bbf7d0";
-  clipAuditLog("system","Paperclip AI connected in simulation mode");
-  renderClip();
+  st.innerHTML='<span style="color:var(--r)">✗ Backend not running — start the MortgageFintechOS server (port 8080)</span>';
+  st.style.background="var(--rb)";st.style.borderColor="#fecaca";
 }
 
-function clipCreateTicket(){
+async function clipRefresh(){
+  if(!clipConnected)return;
+  try{
+    const [tkts,budgets,audit]=await Promise.all([
+      fetch(CLIP_API+"/api/paperclip/tickets").then(r=>r.json()),
+      fetch(CLIP_API+"/api/paperclip/budgets").then(r=>r.json()),
+      fetch(CLIP_API+"/api/paperclip/audit").then(r=>r.json())
+    ]);
+    clipTickets=tkts.tickets||[];
+    clipBudgets=budgets||{};
+    clipAudit=(audit.audit||[]).reverse();
+    renderClip();
+  }catch(e){console.error("clipRefresh failed",e);}
+}
+
+async function clipCreateTicket(){
   const owner=document.getElementById("clip-assign").value;
   const title=document.getElementById("clip-title").value.trim();
   if(!title)return;
-  const id="TKT-"+String(clipTickets.length+1).padStart(3,"0");
-  const ticket={id,title,owner,status:"open",created:new Date().toISOString(),approved:false};
-  clipTickets.unshift(ticket);
-  document.getElementById("clip-title").value="";
-  clipAuditLog("ticket",`Created ${id}: "${title}" → assigned to ${owner}`);
-  clipAuditLog("governance",`${id} requires Board approval before execution`);
-  // Auto-deduct estimated cost
   const cost=rI(5,40);
-  if(clipBudgets[owner])clipBudgets[owner].used+=cost;
-  renderClip();
+  try{
+    const r=await fetch(CLIP_API+"/api/paperclip/tickets",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({owner,title,estimated_cost:cost})});
+    if(r.ok){
+      document.getElementById("clip-title").value="";
+      // SYNC: Notify Telegram + Notion
+      const tgts=[];if(document.getElementById("tg-tok")?.value)tgts.push("telegram");if(document.getElementById("notion-tok")?.value)tgts.push("notion");
+      if(tgts.length)syncBus("ticket_created","Paperclip",tgts,{title:"New Ticket: "+title,message:"Assigned to "+owner+" — awaiting Board approval"});
+      await clipRefresh();
+    }
+  }catch(e){console.error("createTicket failed",e);}
 }
 
-function clipApprove(id){
-  const t=clipTickets.find(t=>t.id===id);
-  if(!t)return;
-  t.status="approved";t.approved=true;
-  clipAuditLog("approval",`Board APPROVED ${id}: "${t.title}"`);
-  // SYNC: Broadcast approval to Notion + Telegram
-  const tgts=[];if(document.getElementById("tg-tok")?.value)tgts.push("telegram");if(document.getElementById("notion-tok")?.value)tgts.push("notion");
-  if(tgts.length)syncBus("ticket_approved","Paperclip",tgts,{title:"Approved: "+t.title,message:"Board approved "+id+" assigned to "+t.owner,content:"Ticket "+id+": "+t.title+" → "+t.owner});
-  setTimeout(()=>{
-    t.status="in_progress";
-    clipAuditLog("execution",`${t.owner} started work on ${id}`);
-    renderClip();
-    setTimeout(()=>{
-      t.status="completed";
-      A[t.owner].c++;
-      clipAuditLog("completion",`${t.owner} completed ${id}: "${t.title}"`);
-      mgrLog(t.owner,t.title,{status:"completed"});
-      renderClip();
-    },1500+Math.random()*2000);
-  },500);
-  renderClip();
+async function clipApprove(id){
+  try{
+    const r=await fetch(CLIP_API+"/api/paperclip/tickets/"+id+"/approve",{method:"POST"});
+    if(r.ok){
+      const t=await r.json();
+      // SYNC: Broadcast approval
+      const tgts=[];if(document.getElementById("tg-tok")?.value)tgts.push("telegram");if(document.getElementById("notion-tok")?.value)tgts.push("notion");
+      if(tgts.length)syncBus("ticket_approved","Paperclip",tgts,{title:"Approved: "+t.title,message:"Board approved "+id+" assigned to "+t.owner});
+      // Refresh after a delay to see completion
+      setTimeout(()=>clipRefresh(),2000);
+      await clipRefresh();
+    }
+  }catch(e){console.error("approve failed",e);}
 }
 
-function clipReject(id){
-  const t=clipTickets.find(t=>t.id===id);
-  if(!t)return;
-  t.status="rejected";
-  clipAuditLog("rejection",`Board REJECTED ${id}: "${t.title}"`);
-  renderClip();
-}
-
-function clipAuditLog(type,msg){
-  clipAudit.unshift({ts:new Date().toISOString(),type,msg});
-  if(clipAudit.length>50)clipAudit.pop();
+async function clipReject(id){
+  try{
+    const r=await fetch(CLIP_API+"/api/paperclip/tickets/"+id+"/reject",{method:"POST"});
+    if(r.ok)await clipRefresh();
+  }catch(e){console.error("reject failed",e);}
 }
 
 function renderClip(){
   // Tickets
   const ttb=document.getElementById("tb-tickets");
-  document.getElementById("clip-tkt-ct").textContent=clipTickets.length+" tickets";
+  document.getElementById("clip-tkt-ct").textContent=(clipTickets.length||0)+" tickets";
   if(!clipTickets.length){ttb.innerHTML='<tr><td colspan="5" class="empty">No tickets — create one above</td></tr>';}
   else{ttb.innerHTML=clipTickets.slice(0,15).map(t=>{
     const stClass=t.status==="completed"?"bd-completed":t.status==="approved"||t.status==="in_progress"?"bd-running":t.status==="rejected"?"bd-error":"bd-idle";
@@ -997,12 +998,15 @@ function renderClip(){
     return`<tr><td class="an">${t.id}</td><td style="font-size:10px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.title)}</td><td class="an">${t.owner}</td><td><span class="bd ${stClass}">${t.status}</span></td><td>${actions}</td></tr>`;
   }).join("");}
   // Budgets
-  document.getElementById("tb-budgets").innerHTML=Object.entries(clipBudgets).map(([n,b])=>{
-    const pct=Math.round(b.used/b.budget*100);
-    const warn=pct>=100?"bd-error":pct>=80?"bd-reviewing":"bd-idle";
-    const st=pct>=100?"PAUSED":pct>=80?"WARNING":"ACTIVE";
-    return`<tr><td class="an">${n}</td><td style="font-family:var(--m);font-size:10px">$${b.budget}/mo</td><td style="font-family:var(--m);font-size:10px">$${b.used}</td><td style="font-family:var(--m);font-size:10px">${pct}%</td><td><span class="bd ${warn}">${st}</span></td></tr>`;
-  }).join("");
+  const budgetEntries=Object.entries(clipBudgets);
+  if(budgetEntries.length){
+    document.getElementById("tb-budgets").innerHTML=budgetEntries.map(([n,b])=>{
+      const pct=b.pct||0;
+      const warn=pct>=100?"bd-error":pct>=80?"bd-reviewing":"bd-idle";
+      const st=b.status||"ACTIVE";
+      return`<tr><td class="an">${n}</td><td style="font-family:var(--m);font-size:10px">$${b.budget}/mo</td><td style="font-family:var(--m);font-size:10px">$${b.used}</td><td style="font-family:var(--m);font-size:10px">${pct}%</td><td><span class="bd ${warn}">${st}</span></td></tr>`;
+    }).join("");
+  }
   // Audit
   const ab=document.getElementById("clip-audit");
   if(clipAudit.length){ab.innerHTML=clipAudit.slice(0,20).map(a=>{

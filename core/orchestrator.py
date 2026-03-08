@@ -32,6 +32,7 @@ from integrations.notion_client import NotionClient
 from integrations.gdrive_client import GDriveClient
 from integrations.wispr_client import WisprClient
 from integrations.llm_router import LLMRouter
+from integrations.paperclip_service import PaperclipService
 from monitoring.health_monitor import HealthMonitor
 from persistence.state_store import StateStore
 from schedulers.daily_scheduler import DailyScheduler, ScheduledJob
@@ -59,6 +60,7 @@ class Orchestrator:
         self._gdrive: GDriveClient | None = None
         self._wispr: WisprClient | None = None
         self._llm: LLMRouter | None = None
+        self._paperclip: PaperclipService | None = None
         self._dashboard: DashboardServer | None = None
         self._running = False
         self._start_time: datetime | None = None
@@ -137,6 +139,11 @@ class Orchestrator:
                 default_model=self.settings.default_llm_model,
             )
             self._log.info("llm_router_enabled", providers=self._llm.get_status()["available_providers"])
+
+    async def _setup_paperclip(self) -> None:
+        self._paperclip = PaperclipService()
+        await self._paperclip.start(self._state_store)
+        self._log.info("paperclip_integration_enabled")
 
     def _inject_integrations(self) -> None:
         """Inject integration clients into all agents."""
@@ -230,6 +237,7 @@ class Orchestrator:
         self._setup_gdrive()
         self._setup_wispr()
         self._setup_llm()
+        await self._setup_paperclip()
         self._inject_integrations()
         self._setup_schedule()
         self._scheduler.set_state_store(self._state_store)
@@ -268,6 +276,8 @@ class Orchestrator:
             await agent.save_state()
 
         await self._state_store.save("task_queue", self._task_queue.to_dict())
+        if self._paperclip:
+            await self._state_store.save("paperclip", self._paperclip.to_dict())
         self._scheduler.stop()
         self._health_monitor.stop()
 
@@ -467,6 +477,28 @@ class Orchestrator:
             return {"error": "GitHub not configured"}
         return await self._github.list_pull_requests(state=state)
 
+    # --- Coordination: Paperclip ---
+
+    async def paperclip_execute_ticket(self, ticket_id: str) -> None:
+        """After Board approval, start the ticket, dispatch work, then complete it."""
+        if not self._paperclip:
+            return
+        ticket = self._paperclip._find_ticket(ticket_id)
+        if not ticket or ticket["status"] != "approved":
+            return
+        await self._paperclip.start_ticket(ticket_id)
+        agent_name = ticket["owner"]
+        agent = self._agents.get(agent_name)
+        if agent:
+            actions = list(agent.handlers.keys()) if hasattr(agent, "handlers") else []
+            action = actions[0] if actions else "classify_document"
+            try:
+                task_id = await self.submit_task(agent_name, action, payload={"ticket_id": ticket_id, "title": ticket["title"]}, priority=TaskPriority.MEDIUM)
+                self._log.info("paperclip_ticket_dispatched", ticket_id=ticket_id, agent=agent_name, task_id=task_id)
+            except Exception as e:
+                self._log.error("paperclip_dispatch_failed", ticket_id=ticket_id, error=str(e))
+        await self._paperclip.complete_ticket(ticket_id)
+
     # --- Status ---
 
     def get_status(self) -> dict[str, Any]:
@@ -491,6 +523,7 @@ class Orchestrator:
                 "gdrive": bool(self._gdrive),
                 "wispr": bool(self._wispr),
                 "llm": self._llm.get_status() if self._llm else None,
+                "paperclip": self._paperclip.get_status() if self._paperclip else None,
             },
         }
 
