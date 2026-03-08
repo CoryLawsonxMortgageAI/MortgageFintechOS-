@@ -141,6 +141,22 @@ class DashboardServer:
         # Features Guide
         self._app.router.add_get("/api/features", self._handle_features_guide)
 
+        # Agent Database (Dolt-style version control)
+        self._app.router.add_get("/api/agentdb/schema", self._handle_agentdb_schema)
+        self._app.router.add_get("/api/agentdb/schema/sql", self._handle_agentdb_schema_sql)
+        self._app.router.add_get("/api/agentdb/branches", self._handle_agentdb_branches)
+        self._app.router.add_post("/api/agentdb/branches", self._handle_agentdb_create_branch)
+        self._app.router.add_delete("/api/agentdb/branches/{branch}", self._handle_agentdb_delete_branch)
+        self._app.router.add_get("/api/agentdb/tables", self._handle_agentdb_tables)
+        self._app.router.add_get("/api/agentdb/query/{table}", self._handle_agentdb_query)
+        self._app.router.add_post("/api/agentdb/insert/{table}", self._handle_agentdb_insert)
+        self._app.router.add_post("/api/agentdb/update/{table}/{row_id}", self._handle_agentdb_update)
+        self._app.router.add_get("/api/agentdb/diff", self._handle_agentdb_diff)
+        self._app.router.add_post("/api/agentdb/merge", self._handle_agentdb_merge)
+        self._app.router.add_post("/api/agentdb/reset", self._handle_agentdb_reset)
+        self._app.router.add_get("/api/agentdb/log/{branch}", self._handle_agentdb_log)
+        self._app.router.add_get("/api/agentdb/agent/{agent_name}", self._handle_agentdb_agent_status)
+
         # Static files
         self._app.router.add_static("/static", STATIC_DIR, show_index=False)
 
@@ -652,6 +668,117 @@ class DashboardServer:
     async def _handle_telemetry_context(self, request: web.Request) -> web.Response:
         return web.json_response(self.orchestrator._telemetry.get_workflow_context(), dumps=_json_dumps)
 
+    # --- Agent Database handlers (Dolt-style version control) ---
+
+    async def _handle_agentdb_schema(self, request: web.Request) -> web.Response:
+        return web.json_response(self.orchestrator._agent_db.get_schema(), dumps=_json_dumps)
+
+    async def _handle_agentdb_schema_sql(self, request: web.Request) -> web.Response:
+        return web.Response(text=self.orchestrator._agent_db.get_schema_sql(),
+                            content_type="text/plain")
+
+    async def _handle_agentdb_branches(self, request: web.Request) -> web.Response:
+        return web.json_response({"branches": self.orchestrator._agent_db.list_branches()}, dumps=_json_dumps)
+
+    async def _handle_agentdb_create_branch(self, request: web.Request) -> web.Response:
+        body = await request.json()
+        name = body.get("name", "")
+        from_branch = body.get("from", "main")
+        if not name:
+            return web.json_response({"error": "Branch name required"}, status=400)
+        result = self.orchestrator._agent_db.create_branch(name, from_branch)
+        if "error" in result:
+            return web.json_response(result, status=409)
+        return web.json_response(result, dumps=_json_dumps)
+
+    async def _handle_agentdb_delete_branch(self, request: web.Request) -> web.Response:
+        branch = request.match_info["branch"]
+        result = self.orchestrator._agent_db.delete_branch(branch)
+        if "error" in result:
+            return web.json_response(result, status=400)
+        return web.json_response(result, dumps=_json_dumps)
+
+    async def _handle_agentdb_tables(self, request: web.Request) -> web.Response:
+        branch = request.query.get("branch", "main")
+        return web.json_response(self.orchestrator._agent_db.get_table_stats(branch), dumps=_json_dumps)
+
+    async def _handle_agentdb_query(self, request: web.Request) -> web.Response:
+        table = request.match_info["table"]
+        branch = request.query.get("branch", "main")
+        limit = int(request.query.get("limit", "50"))
+        offset = int(request.query.get("offset", "0"))
+        # Parse filters from query params (exclude reserved params)
+        reserved = {"branch", "limit", "offset"}
+        filters = {k: v for k, v in request.query.items() if k not in reserved}
+        result = self.orchestrator._agent_db.query(branch, table, filters or None, limit, offset)
+        if "error" in result:
+            return web.json_response(result, status=404)
+        return web.json_response(result, dumps=_json_dumps)
+
+    async def _handle_agentdb_insert(self, request: web.Request) -> web.Response:
+        table = request.match_info["table"]
+        body = await request.json()
+        branch = body.pop("branch", "main")
+        author = body.pop("author", "DASHBOARD")
+        result = self.orchestrator._agent_db.insert(branch, table, body, author)
+        if "error" in result:
+            return web.json_response(result, status=400)
+        return web.json_response(result, dumps=_json_dumps)
+
+    async def _handle_agentdb_update(self, request: web.Request) -> web.Response:
+        table = request.match_info["table"]
+        row_id = request.match_info["row_id"]
+        body = await request.json()
+        branch = body.pop("branch", "main")
+        author = body.pop("author", "DASHBOARD")
+        result = self.orchestrator._agent_db.update(branch, table, row_id, body, author)
+        if "error" in result:
+            return web.json_response(result, status=404)
+        return web.json_response(result, dumps=_json_dumps)
+
+    async def _handle_agentdb_diff(self, request: web.Request) -> web.Response:
+        from_branch = request.query.get("from", "main")
+        to_branch = request.query.get("to", "")
+        table = request.query.get("table")
+        if not to_branch:
+            return web.json_response({"error": "'to' branch required"}, status=400)
+        diffs = self.orchestrator._agent_db.diff(from_branch, to_branch, table)
+        return web.json_response({"diffs": diffs, "from": from_branch, "to": to_branch, "count": len(diffs)}, dumps=_json_dumps)
+
+    async def _handle_agentdb_merge(self, request: web.Request) -> web.Response:
+        body = await request.json()
+        source = body.get("source", "")
+        target = body.get("target", "main")
+        author = body.get("author", "DASHBOARD")
+        if not source:
+            return web.json_response({"error": "Source branch required"}, status=400)
+        result = self.orchestrator._agent_db.merge(source, target, author)
+        if "error" in result:
+            return web.json_response(result, status=400)
+        return web.json_response(result, dumps=_json_dumps)
+
+    async def _handle_agentdb_reset(self, request: web.Request) -> web.Response:
+        body = await request.json()
+        branch = body.get("branch", "")
+        commit_id = body.get("commit_id")
+        steps = int(body.get("steps", 1))
+        if not branch:
+            return web.json_response({"error": "Branch required"}, status=400)
+        result = self.orchestrator._agent_db.reset(branch, commit_id, steps)
+        if "error" in result:
+            return web.json_response(result, status=400)
+        return web.json_response(result, dumps=_json_dumps)
+
+    async def _handle_agentdb_log(self, request: web.Request) -> web.Response:
+        branch = request.match_info["branch"]
+        limit = int(request.query.get("limit", "20"))
+        commits = self.orchestrator._agent_db.log(branch, limit)
+        return web.json_response({"branch": branch, "commits": commits}, dumps=_json_dumps)
+
+    async def _handle_agentdb_agent_status(self, request: web.Request) -> web.Response:
+        agent_name = request.match_info["agent_name"]
+        return web.json_response(self.orchestrator._agent_db.get_agent_branch_status(agent_name), dumps=_json_dumps)
+
     # --- Features Guide handler ---
 
     async def _handle_features_guide(self, request: web.Request) -> web.Response:
@@ -714,6 +841,13 @@ _FEATURES_GUIDE = {
             "description": "Configurable job scheduling with runtime updates. Change job times, enable/disable jobs, and get expert recommendations on schedule optimization.",
             "tech": "DailyScheduler with time-based, interval-based, and weekly job support. State persistence for last-run times. Runtime modification via API.",
             "how_to_use": "Click any scheduled job to edit its time. Toggle jobs on/off. Check the Recommendations panel for dependency ordering and conflict warnings.",
+        },
+        {
+            "title": "Agent Database",
+            "icon": "database",
+            "description": "Dolt-inspired version-controlled database with Git-style branching for agent data. Each agent works on an isolated branch — changes are reviewed via diffs before merging to main. Supports instant rollback, UUID primary keys, and auto-commit on every write.",
+            "tech": "In-memory relational store with 6 tables (agent_operations, agent_state, integration_events, schedule_history, audit_trail, workflow_proposals). Branch-per-agent isolation, DOLT_DIFF-style change computation, atomic merge, commit graph with parent tracking. Persisted via StateStore.",
+            "how_to_use": "View the Agent DB tab. Browse branches, view table data, compute diffs between branches, merge agent changes to main, and rollback mistakes. Each agent auto-creates its own branch on first operation.",
         },
         {
             "title": "Safety Guardrails",

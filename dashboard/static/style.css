@@ -342,3 +342,38 @@ tbody tr:hover { background: var(--bg-secondary); }
     .metrics-row { grid-template-columns: 1fr; }
     .tab-btn { padding: 10px 12px; font-size: 12px; }
 }
+
+/* ─── Agent Database (Dolt-style) ─── */
+
+.schema-table { padding: 10px 0; border-bottom: 1px solid var(--border-light); }
+.schema-table:last-child { border-bottom: none; }
+.schema-table-name { font-weight: 700; font-family: var(--font-mono); font-size: 13px; color: var(--accent); margin-bottom: 4px; }
+.schema-columns { display: flex; flex-wrap: wrap; gap: 4px; }
+.schema-col { background: var(--bg-secondary); padding: 2px 8px; border-radius: 3px; font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); }
+.schema-sql { font-family: var(--font-mono); font-size: 12px; background: #1a1a2e; color: #e0e0e0; padding: 16px; border-radius: var(--radius); white-space: pre-wrap; line-height: 1.5; max-height: 400px; overflow-y: auto; }
+
+.diff-entry { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; margin-bottom: 4px; font-size: 12px; }
+.diff-added { background: #d1fae5; }
+.diff-removed { background: #fee2e2; }
+.diff-modified { background: #fef3c7; }
+.diff-icon { font-weight: 700; font-family: var(--font-mono); width: 16px; text-align: center; }
+.diff-added .diff-icon { color: var(--success); }
+.diff-removed .diff-icon { color: var(--danger); }
+.diff-modified .diff-icon { color: var(--warning); }
+.diff-table { font-weight: 600; color: var(--text-primary); min-width: 120px; }
+.diff-id { font-family: var(--font-mono); color: var(--text-muted); min-width: 70px; }
+.diff-detail { color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+
+.commit-entry { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-light); font-size: 12px; flex-wrap: wrap; }
+.commit-entry:last-child { border-bottom: none; }
+.commit-header { display: flex; gap: 10px; align-items: center; }
+.commit-id { font-family: var(--font-mono); color: var(--accent); background: var(--bg-secondary); padding: 2px 6px; border-radius: 3px; font-weight: 600; }
+.commit-author { font-weight: 600; color: var(--text-primary); }
+.commit-message { color: var(--text-secondary); flex: 1; }
+.commit-time { color: var(--text-muted); font-size: 11px; }
+
+.agent-db-status { display: flex; flex-direction: column; gap: 16px; }
+.adb-stat-section { padding: 12px 0; border-bottom: 1px solid var(--border-light); }
+.adb-stat-section:last-child { border-bottom: none; }
+.adb-stat-title { font-weight: 700; font-size: 13px; margin-bottom: 8px; color: var(--text-primary); }
+.adb-stat-row { display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; color: var(--text-secondary); }

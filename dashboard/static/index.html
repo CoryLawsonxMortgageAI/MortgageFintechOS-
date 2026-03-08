@@ -33,6 +33,7 @@
     <button class="tab-btn" data-tab="ontology">Hydrospeed Ontology</button>
     <button class="tab-btn" data-tab="telemetry">Predictive Telemetry</button>
     <button class="tab-btn" data-tab="tips">Expert Tips</button>
+    <button class="tab-btn" data-tab="agentdb">Agent DB</button>
     <button class="tab-btn" data-tab="features">Features Guide</button>
 </nav>
 
@@ -327,6 +328,122 @@
                 <div class="card-body" id="tips-list"><div class="empty-state">Loading...</div></div>
             </div>
         </section>
+    </div>
+
+    <!-- ===== TAB: AGENT DATABASE ===== -->
+    <div class="tab-content" id="tab-agentdb">
+        <section class="metrics-row">
+            <div class="metric-card" style="border-left:4px solid var(--accent)">
+                <div class="metric-label">Agent Database</div>
+                <div class="metric-value" style="font-size:16px;">Version Controlled</div>
+                <div class="metric-sub">Dolt-inspired Git-style branching</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Branches</div>
+                <div id="adb-branches-count" class="metric-value">1</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Tables</div>
+                <div id="adb-tables-count" class="metric-value">6</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Total Rows</div>
+                <div id="adb-rows-count" class="metric-value">0</div>
+            </div>
+        </section>
+
+        <section class="grid-2col">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Branches</span>
+                    <button class="btn btn-sm" onclick="showCreateBranch()">+ New Branch</button>
+                </div>
+                <div class="card-body">
+                    <table>
+                        <thead><tr><th>Branch</th><th>Parent</th><th>Commits</th><th>Rows</th><th>Last Commit</th><th>Actions</th></tr></thead>
+                        <tbody id="adb-branches-tbody"><tr><td colspan="6" class="empty-state">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Schema</span>
+                    <button class="btn btn-sm" onclick="showSchemaSQL()">View SQL</button>
+                </div>
+                <div class="card-body" id="adb-schema-view"><div class="empty-state">Loading...</div></div>
+            </div>
+        </section>
+
+        <section class="grid-full">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Table Browser</span>
+                    <div class="card-controls">
+                        <select id="adb-branch-select" class="control-select"><option value="main">main</option></select>
+                        <select id="adb-table-select" class="control-select">
+                            <option value="agent_operations">agent_operations</option>
+                            <option value="agent_state">agent_state</option>
+                            <option value="integration_events">integration_events</option>
+                            <option value="schedule_history">schedule_history</option>
+                            <option value="audit_trail">audit_trail</option>
+                            <option value="workflow_proposals">workflow_proposals</option>
+                        </select>
+                        <button class="btn btn-sm btn-primary" onclick="queryTable()">Query</button>
+                    </div>
+                </div>
+                <div class="card-body" id="adb-table-data"><div class="empty-state">Select a branch and table, then click Query</div></div>
+            </div>
+        </section>
+
+        <section class="grid-2col">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Diff Viewer</span>
+                    <div class="card-controls">
+                        <select id="adb-diff-from" class="control-select"><option value="main">main</option></select>
+                        <span style="color:var(--text-muted);padding:0 4px;">vs</span>
+                        <select id="adb-diff-to" class="control-select"><option value="">Select branch...</option></select>
+                        <button class="btn btn-sm" onclick="computeDiff()">Compute Diff</button>
+                    </div>
+                </div>
+                <div class="card-body" id="adb-diff-view"><div class="empty-state">Select two branches and compute diff</div></div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Commit Log</span>
+                    <div class="card-controls">
+                        <select id="adb-log-branch" class="control-select"><option value="main">main</option></select>
+                        <button class="btn btn-sm" onclick="loadCommitLog()">Load</button>
+                    </div>
+                </div>
+                <div class="card-body" id="adb-commit-log"><div class="empty-state">Select a branch and load commits</div></div>
+            </div>
+        </section>
+
+        <section class="grid-full">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Agent Branch Status</span>
+                    <div class="card-controls">
+                        <select id="adb-agent-select" class="control-select"><option value="">Select Agent...</option></select>
+                        <button class="btn btn-sm" onclick="loadAgentDbStatus()">View</button>
+                    </div>
+                </div>
+                <div class="card-body" id="adb-agent-status"><div class="empty-state">Select an agent to view its branch status and pending changes</div></div>
+            </div>
+        </section>
+
+        <!-- Merge/Create Branch Modal -->
+        <div id="adb-modal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <h3 id="adb-modal-title">Action</h3>
+                <div class="modal-form" id="adb-modal-body"></div>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" id="adb-modal-confirm">Confirm</button>
+                    <button class="btn" onclick="document.getElementById('adb-modal').style.display='none'">Cancel</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- ===== TAB: FEATURES GUIDE ===== -->

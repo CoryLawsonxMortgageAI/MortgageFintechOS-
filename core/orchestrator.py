@@ -44,6 +44,7 @@ from monitoring.action_log import ActionLog, ActionType
 from monitoring.telemetry import PredictiveTelemetry
 from monitoring.hydrospeed import HydrospeedEngine
 from persistence.state_store import StateStore
+from persistence.agent_database import AgentDatabase
 from schedulers.daily_scheduler import DailyScheduler, ScheduledJob
 
 logger = structlog.get_logger()
@@ -77,6 +78,7 @@ class Orchestrator:
         self._action_log = ActionLog()
         self._telemetry = PredictiveTelemetry()
         self._hydrospeed = HydrospeedEngine()
+        self._agent_db = AgentDatabase()
         self._running = False
         self._start_time: datetime | None = None
         self._log = logger.bind(component="orchestrator")
@@ -319,11 +321,16 @@ class Orchestrator:
         self._scheduler.set_state_store(self._state_store)
         self._health_monitor.set_task_queue(self._task_queue)
 
-        # 5. Restore action log
+        # 5. Restore action log and agent database
         action_log_data = await self._state_store.load("action_log")
         if action_log_data:
             self._action_log.restore_from_dict(action_log_data)
             self._log.info("action_log_restored")
+
+        agent_db_data = await self._state_store.load("agent_database")
+        if agent_db_data:
+            self._agent_db.restore_from_dict(agent_db_data)
+            self._log.info("agent_database_restored")
 
         # 6. Start dashboard
         self._dashboard = DashboardServer(self, host=dashboard_host, port=dashboard_port)
@@ -359,6 +366,7 @@ class Orchestrator:
 
         await self._state_store.save("task_queue", self._task_queue.to_dict())
         await self._state_store.save("action_log", self._action_log.to_dict())
+        await self._state_store.save("agent_database", self._agent_db.to_dict())
         if self._paperclip:
             await self._state_store.save("paperclip", self._paperclip.to_dict())
         self._scheduler.stop()
@@ -441,6 +449,7 @@ class Orchestrator:
                 self._health_monitor.record_task(success=True)
                 self._action_log.record(agent.name, ActionType.TASK_COMPLETED, task.action, duration_ms=duration_ms, detail=f"task_id={task.id}")
                 self._telemetry.record(agent.name, task.action, duration_ms, success=True, queue_depth=self._task_queue.get_stats().get("pending", 0))
+                self._agent_db.record_operation(agent.name, task.action, "completed", payload=task.payload, result=result, duration_ms=duration_ms)
 
                 # Auto-create GitHub issue for high-priority tasks
                 if self._github and task.priority <= TaskPriority.HIGH:
@@ -462,6 +471,7 @@ class Orchestrator:
                 self._health_monitor.record_task(success=False)
                 self._action_log.record(agent.name, ActionType.TASK_FAILED, task.action, duration_ms=duration_ms, success=False, detail=str(e)[:200])
                 self._telemetry.record(agent.name, task.action, duration_ms, success=False, error_msg=str(e)[:200], queue_depth=self._task_queue.get_stats().get("pending", 0))
+                self._agent_db.record_operation(agent.name, task.action, "failed", payload=task.payload, error=str(e)[:200], duration_ms=duration_ms)
                 if task.status == TaskStatus.RETRYING:
                     await self._task_queue.enqueue(task)
 

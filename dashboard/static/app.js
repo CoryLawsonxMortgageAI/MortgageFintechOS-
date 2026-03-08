@@ -108,6 +108,7 @@ async function refreshTab(tab) {
         if (tab === "ontology") await refreshOntology();
         if (tab === "telemetry") await refreshTelemetry();
         if (tab === "tips") await refreshTips();
+        if (tab === "agentdb") await refreshAgentDB();
         if (tab === "features") await refreshFeatures();
     } catch (e) { console.error("Tab refresh failed:", tab, e); }
 }
@@ -533,4 +534,277 @@ async function refreshFeatures() {
             <div class="profile-tags">${s.agents.map(a => `<span class="profile-tag" title="${a.division}: ${a.actions.join(', ')}">${a.name}</span>`).join("")}</div>
         </div>` : ""}
     </div>`).join("");
+}
+
+// --- Agent Database (Dolt-style version control) ---
+
+let adbBranchesLoaded = false;
+
+async function refreshAgentDB() {
+    const [branches, tables] = await Promise.all([
+        fetchJSON("/api/agentdb/branches"),
+        fetchJSON("/api/agentdb/tables?branch=main"),
+    ]);
+
+    const branchList = branches.branches || [];
+    document.getElementById("adb-branches-count").textContent = branchList.length;
+    document.getElementById("adb-tables-count").textContent = Object.keys((tables.tables || {})).length;
+    const totalRows = Object.values(tables.tables || {}).reduce((sum, t) => sum + (t.row_count || 0), 0);
+    document.getElementById("adb-rows-count").textContent = totalRows;
+
+    // Branches table
+    const tbody = document.getElementById("adb-branches-tbody");
+    tbody.innerHTML = branchList.map(b => {
+        const lastMsg = b.last_commit ? esc(b.last_commit.message).slice(0, 40) : "--";
+        const lastTime = b.last_commit ? formatRelative(b.last_commit.timestamp) : "--";
+        const actions = b.name === "main"
+            ? '<span style="color:var(--text-muted);font-size:12px">protected</span>'
+            : `<button class="btn btn-sm" onclick="mergeBranch('${esc(b.name)}')">Merge</button>
+               <button class="btn btn-sm" onclick="diffBranch('${esc(b.name)}')">Diff</button>`;
+        return `<tr>
+            <td><span class="agent-name">${esc(b.name)}</span></td>
+            <td style="font-size:12px;color:var(--text-muted)">${esc(b.parent || "--")}</td>
+            <td style="font-family:var(--font-mono)">${b.commits}</td>
+            <td style="font-family:var(--font-mono)">${b.total_rows}</td>
+            <td style="font-size:12px" title="${lastMsg}">${lastTime}</td>
+            <td>${actions}</td>
+        </tr>`;
+    }).join("");
+
+    // Schema view
+    const schemaDiv = document.getElementById("adb-schema-view");
+    const tblStats = tables.tables || {};
+    schemaDiv.innerHTML = Object.entries(tblStats).map(([name, info]) => `<div class="schema-table">
+        <div class="schema-table-name">${esc(name)}</div>
+        <div class="schema-columns">${(info.columns || []).map(c => `<span class="schema-col">${esc(c)}</span>`).join("")}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${info.row_count} rows</div>
+    </div>`).join("");
+
+    // Populate branch selects
+    if (!adbBranchesLoaded) {
+        const selects = ["adb-branch-select", "adb-diff-from", "adb-diff-to", "adb-log-branch"];
+        selects.forEach(id => {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            sel.innerHTML = "";
+            if (id === "adb-diff-to") {
+                sel.innerHTML = '<option value="">Select branch...</option>';
+            }
+            branchList.forEach(b => {
+                const opt = document.createElement("option");
+                opt.value = b.name;
+                opt.textContent = b.name;
+                sel.appendChild(opt);
+            });
+        });
+
+        // Agent select
+        const agentSel = document.getElementById("adb-agent-select");
+        if (agentSel && agentSel.options.length <= 1) {
+            Object.keys(AGENT_DESCRIPTIONS).forEach(name => {
+                const opt = document.createElement("option");
+                opt.value = name;
+                opt.textContent = name + " - " + AGENT_DESCRIPTIONS[name];
+                agentSel.appendChild(opt);
+            });
+        }
+        adbBranchesLoaded = true;
+    }
+}
+
+async function queryTable() {
+    const branch = document.getElementById("adb-branch-select").value;
+    const table = document.getElementById("adb-table-select").value;
+    const data = await fetchJSON(`/api/agentdb/query/${table}?branch=${branch}&limit=50`);
+    const div = document.getElementById("adb-table-data");
+
+    if (data.error) { div.innerHTML = `<div class="empty-state">${esc(data.error)}</div>`; return; }
+    const rows = data.rows || [];
+    if (!rows.length) { div.innerHTML = `<div class="empty-state">No rows in ${table} on branch ${branch}</div>`; return; }
+
+    const cols = Object.keys(rows[0]);
+    div.innerHTML = `<div style="overflow-x:auto"><table>
+        <thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead>
+        <tbody>${rows.map(r => `<tr>${cols.map(c => {
+            let val = r[c];
+            if (typeof val === "object" && val !== null) val = JSON.stringify(val).slice(0, 80);
+            return `<td style="font-size:12px;font-family:var(--font-mono);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(String(val ?? ""))}</td>`;
+        }).join("")}</tr>`).join("")}
+        </tbody>
+    </table></div>
+    <div style="font-size:12px;color:var(--text-muted);padding:8px">Showing ${rows.length} of ${data.total} rows on <b>${esc(branch)}</b></div>`;
+}
+
+async function computeDiff() {
+    const from = document.getElementById("adb-diff-from").value;
+    const to = document.getElementById("adb-diff-to").value;
+    if (!to) { alert("Select a target branch"); return; }
+
+    const data = await fetchJSON(`/api/agentdb/diff?from=${from}&to=${to}`);
+    const div = document.getElementById("adb-diff-view");
+    const diffs = data.diffs || [];
+
+    if (!diffs.length) {
+        div.innerHTML = `<div class="empty-state">No differences between ${esc(from)} and ${esc(to)}</div>`;
+        return;
+    }
+
+    div.innerHTML = `<div style="font-size:12px;color:var(--text-muted);padding:8px 0">${diffs.length} change(s)</div>` +
+        diffs.map(d => {
+            const typeClass = d.diff_type === "added" ? "diff-added" : d.diff_type === "removed" ? "diff-removed" : "diff-modified";
+            const icon = d.diff_type === "added" ? "+" : d.diff_type === "removed" ? "-" : "~";
+            const detail = d.diff_type === "added"
+                ? JSON.stringify(d.to_row || {}).slice(0, 120)
+                : d.diff_type === "removed"
+                ? JSON.stringify(d.from_row || {}).slice(0, 120)
+                : `FROM: ${JSON.stringify(d.from_row || {}).slice(0, 60)} TO: ${JSON.stringify(d.to_row || {}).slice(0, 60)}`;
+            return `<div class="diff-entry ${typeClass}">
+                <span class="diff-icon">${icon}</span>
+                <span class="diff-table">${esc(d.table)}</span>
+                <span class="diff-id">${esc((d.row_id || "").slice(0, 8))}</span>
+                <span class="diff-detail">${esc(detail)}</span>
+            </div>`;
+        }).join("");
+}
+
+function diffBranch(branch) {
+    document.getElementById("adb-diff-from").value = "main";
+    document.getElementById("adb-diff-to").value = branch;
+    computeDiff();
+}
+
+async function mergeBranch(source) {
+    if (!confirm(`Merge '${source}' into 'main'? This will apply all changes atomically.`)) return;
+    const resp = await fetch("/api/agentdb/merge", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ source, target: "main", author: "DASHBOARD" }),
+    });
+    const result = await resp.json();
+    if (result.error) { alert("Merge error: " + result.error); return; }
+    alert(`Merged! Added: ${result.added}, Modified: ${result.modified}, Removed: ${result.removed}`);
+    adbBranchesLoaded = false;
+    refreshTab("agentdb");
+}
+
+async function loadCommitLog() {
+    const branch = document.getElementById("adb-log-branch").value;
+    const data = await fetchJSON(`/api/agentdb/log/${branch}?limit=20`);
+    const div = document.getElementById("adb-commit-log");
+    const commits = data.commits || [];
+
+    if (!commits.length || commits[0]?.error) {
+        div.innerHTML = `<div class="empty-state">No commits on ${esc(branch)}</div>`;
+        return;
+    }
+
+    div.innerHTML = commits.map(c => `<div class="commit-entry">
+        <div class="commit-header">
+            <span class="commit-id">${esc((c.id || "").slice(0, 8))}</span>
+            <span class="commit-author">${esc(c.author)}</span>
+            <span class="commit-time">${formatRelative(c.timestamp)}</span>
+        </div>
+        <div class="commit-message">${esc(c.message)}</div>
+    </div>`).join("");
+}
+
+async function loadAgentDbStatus() {
+    const name = document.getElementById("adb-agent-select").value;
+    if (!name) return;
+    const data = await fetchJSON(`/api/agentdb/agent/${name}`);
+    const div = document.getElementById("adb-agent-status");
+
+    if (data.error) {
+        div.innerHTML = `<div class="empty-state">${esc(data.error)}</div>`;
+        return;
+    }
+
+    const state = data.state || {};
+    const ops = data.recent_operations || [];
+    const diffs = data.diffs || [];
+    const commits = data.recent_commits || [];
+
+    div.innerHTML = `
+        <div class="agent-db-status">
+            <div class="adb-stat-section">
+                <div class="adb-stat-title">Branch: <span class="agent-name">${esc(data.branch)}</span></div>
+                <div class="adb-stat-row">
+                    <span>Pending changes: <b>${data.pending_changes}</b></span>
+                    <span>Status: <span class="agent-badge ${state.status || 'idle'}">${state.status || "unknown"}</span></span>
+                    <span>Tasks: ${state.tasks_completed || 0} completed, ${state.tasks_failed || 0} failed</span>
+                    <span>Health: ${(state.health_score || 1.0).toFixed(2)}</span>
+                </div>
+            </div>
+
+            ${diffs.length ? `<div class="adb-stat-section">
+                <div class="adb-stat-title">Pending Diffs (${diffs.length})</div>
+                ${diffs.slice(0, 10).map(d => {
+                    const tc = d.diff_type === "added" ? "diff-added" : d.diff_type === "removed" ? "diff-removed" : "diff-modified";
+                    return `<div class="diff-entry ${tc}">
+                        <span class="diff-icon">${d.diff_type === "added" ? "+" : d.diff_type === "removed" ? "-" : "~"}</span>
+                        <span class="diff-table">${esc(d.table)}</span>
+                        <span class="diff-id">${esc((d.row_id || "").slice(0, 8))}</span>
+                    </div>`;
+                }).join("")}
+                ${diffs.length > 10 ? `<div style="font-size:12px;color:var(--text-muted)">...and ${diffs.length - 10} more</div>` : ""}
+                <button class="btn btn-sm btn-primary" style="margin-top:8px" onclick="mergeBranch('${esc(data.branch)}')">Merge to main</button>
+            </div>` : ""}
+
+            ${ops.length ? `<div class="adb-stat-section">
+                <div class="adb-stat-title">Recent Operations</div>
+                <table><thead><tr><th>Action</th><th>Status</th><th>Duration</th><th>Time</th></tr></thead>
+                <tbody>${ops.map(o => `<tr>
+                    <td>${esc(o.action)}</td>
+                    <td><span class="agent-badge ${o.status === 'completed' ? 'idle' : 'error'}">${o.status}</span></td>
+                    <td style="font-family:var(--font-mono);font-size:12px">${o.duration_ms ? o.duration_ms + "ms" : "--"}</td>
+                    <td style="font-size:12px;color:var(--text-muted)">${formatRelative(o.created_at)}</td>
+                </tr>`).join("")}</tbody></table>
+            </div>` : ""}
+
+            ${commits.length ? `<div class="adb-stat-section">
+                <div class="adb-stat-title">Recent Commits</div>
+                ${commits.slice(0, 5).map(c => `<div class="commit-entry">
+                    <span class="commit-id">${esc((c.id || "").slice(0, 8))}</span>
+                    <span class="commit-message">${esc(c.message)}</span>
+                    <span class="commit-time">${formatRelative(c.timestamp)}</span>
+                </div>`).join("")}
+            </div>` : ""}
+        </div>`;
+}
+
+function showCreateBranch() {
+    const modal = document.getElementById("adb-modal");
+    document.getElementById("adb-modal-title").textContent = "Create Branch";
+    document.getElementById("adb-modal-body").innerHTML = `
+        <label>Branch name: <input type="text" id="adb-new-branch-name" class="control-input" placeholder="feature/my-branch"></label>
+        <label>From branch:
+            <select id="adb-new-branch-from" class="control-select">
+                ${(document.getElementById("adb-branch-select")?.innerHTML || '<option value="main">main</option>')}
+            </select>
+        </label>`;
+    document.getElementById("adb-modal-confirm").onclick = async () => {
+        const name = document.getElementById("adb-new-branch-name").value.trim();
+        const from = document.getElementById("adb-new-branch-from").value;
+        if (!name) { alert("Branch name required"); return; }
+        const resp = await fetch("/api/agentdb/branches", {
+            method: "POST", headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ name, from }),
+        });
+        const result = await resp.json();
+        if (result.error) { alert(result.error); return; }
+        modal.style.display = "none";
+        adbBranchesLoaded = false;
+        refreshTab("agentdb");
+    };
+    modal.style.display = "flex";
+}
+
+async function showSchemaSQL() {
+    const resp = await fetch("/api/agentdb/schema/sql");
+    const sql = await resp.text();
+    const modal = document.getElementById("adb-modal");
+    document.getElementById("adb-modal-title").textContent = "Database Schema (SQL)";
+    document.getElementById("adb-modal-body").innerHTML = `<pre class="schema-sql">${esc(sql)}</pre>`;
+    document.getElementById("adb-modal-confirm").onclick = () => { modal.style.display = "none"; };
+    document.getElementById("adb-modal-confirm").textContent = "Close";
+    modal.style.display = "flex";
 }
