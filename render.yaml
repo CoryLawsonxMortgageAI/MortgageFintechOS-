@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: mortgagefintechos-ai-office
+    runtime: static
+    buildCommand: echo "Static site ready"
+    staticPublishPath: ./public
+    pullRequestPreviewsEnabled: true
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+    routes:
+      - type: rewrite
+        source: /orchestration
+        destination: /orchestration.html
+      - type: rewrite
+        source: /ontology
+        destination: /ontology.html
