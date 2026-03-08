@@ -126,6 +126,18 @@ class Settings:
         default_factory=lambda: os.getenv("DATA_DIR", "data")
     )
 
+    # Growth Ops — Autonomous 24/7 Agent System
+    growth_ops_enabled: bool = field(
+        default_factory=lambda: os.getenv("GROWTH_OPS_ENABLED", "true").lower() == "true"
+    )
+    hunter_sweep_hour: int = 2     # 02:00 — HUNTER lead sweep
+    hunter_sweep_minute: int = 0
+    herald_content_hour: int = 8   # 08:00 — HERALD daily content
+    herald_content_minute: int = 0
+    ambassador_engage_hour: int = 10  # 10:00 — AMBASSADOR engagement
+    ambassador_engage_minute: int = 0
+    browser_requests_per_minute: int = 30
+
     # Watchdog
     watchdog_interval: int = 30
     watchdog_max_crashes: int = 5

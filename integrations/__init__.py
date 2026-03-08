@@ -5,8 +5,9 @@ from integrations.wispr_client import WisprClient
 from integrations.llm_router import LLMRouter
 from integrations.ghost_client import GhostClient
 from integrations.pentagi_client import PentAGIClient
+from integrations.browser_client import BrowserClient
 
 __all__ = [
     "GitHubClient", "NotionClient", "GDriveClient", "WisprClient",
-    "LLMRouter", "GhostClient", "PentAGIClient",
+    "LLMRouter", "GhostClient", "PentAGIClient", "BrowserClient",
 ]

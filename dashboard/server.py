@@ -99,6 +99,16 @@ class DashboardServer:
         self._app.router.add_post("/api/pentagi/assess", self._handle_pentagi_assess)
         self._app.router.add_get("/api/pentagi/vulnerabilities", self._handle_pentagi_vulns)
 
+        # Growth Ops — Autonomous 24/7 Agent System
+        self._app.router.add_get("/api/growth/status", self._handle_growth_status)
+        self._app.router.add_post("/api/growth/sweep", self._handle_growth_sweep)
+        self._app.router.add_post("/api/growth/hunter/scan", self._handle_hunter_scan)
+        self._app.router.add_get("/api/growth/hunter/leads", self._handle_hunter_leads)
+        self._app.router.add_post("/api/growth/herald/generate", self._handle_herald_generate)
+        self._app.router.add_get("/api/growth/herald/queue", self._handle_herald_queue)
+        self._app.router.add_post("/api/growth/ambassador/engage", self._handle_ambassador_engage)
+        self._app.router.add_get("/api/growth/ambassador/stats", self._handle_ambassador_stats)
+
         # Static files
         self._app.router.add_static("/static", STATIC_DIR, show_index=False)
 
@@ -437,6 +447,65 @@ class DashboardServer:
     async def _handle_pentagi_vulns(self, request: web.Request) -> web.Response:
         data = await self.orchestrator.pentagi_list_vulnerabilities(severity=request.query.get("severity", ""))
         return web.json_response(data, dumps=_json_dumps)
+
+
+    # --- Growth Ops handlers ---
+
+    async def _handle_growth_status(self, request: web.Request) -> web.Response:
+        data = await self.orchestrator.growth_ops_status()
+        return web.json_response(data, dumps=_json_dumps)
+
+    async def _handle_growth_sweep(self, request: web.Request) -> web.Response:
+        data = await self.orchestrator.growth_ops_sweep()
+        return web.json_response(data, dumps=_json_dumps)
+
+    async def _handle_hunter_scan(self, request: web.Request) -> web.Response:
+        body = await request.json() if request.content_length else {}
+        source = body.get("source", "all")
+        action = {"github": "scan_github", "hn": "scan_hn", "reddit": "scan_reddit"}.get(source, "full_sweep")
+        from core.task_queue import TaskPriority
+        task_id = await self.orchestrator.submit_task("HUNTER", action, payload=body, priority=TaskPriority.LOW)
+        return web.json_response({"task_id": task_id, "action": action})
+
+    async def _handle_hunter_leads(self, request: web.Request) -> web.Response:
+        agent = self.orchestrator._agents.get("HUNTER")
+        if not agent:
+            return web.json_response({"error": "HUNTER agent not registered"}, status=503)
+        from core.task_queue import Task, TaskPriority
+        task = Task(priority=TaskPriority.LOW, agent_name="HUNTER", action="score_leads", payload={})
+        result = await agent.execute(task)
+        return web.json_response(result, dumps=_json_dumps)
+
+    async def _handle_herald_generate(self, request: web.Request) -> web.Response:
+        body = await request.json() if request.content_length else {}
+        action = body.get("action", "daily_content")
+        from core.task_queue import TaskPriority
+        task_id = await self.orchestrator.submit_task("HERALD", action, payload=body, priority=TaskPriority.LOW)
+        return web.json_response({"task_id": task_id, "action": action})
+
+    async def _handle_herald_queue(self, request: web.Request) -> web.Response:
+        agent = self.orchestrator._agents.get("HERALD")
+        if not agent:
+            return web.json_response({"error": "HERALD agent not registered"}, status=503)
+        from core.task_queue import Task, TaskPriority
+        task = Task(priority=TaskPriority.LOW, agent_name="HERALD", action="get_content_queue", payload={})
+        result = await agent.execute(task)
+        return web.json_response(result, dumps=_json_dumps)
+
+    async def _handle_ambassador_engage(self, request: web.Request) -> web.Response:
+        body = await request.json() if request.content_length else {}
+        from core.task_queue import TaskPriority
+        task_id = await self.orchestrator.submit_task("AMBASSADOR", "daily_engagement", payload=body, priority=TaskPriority.LOW)
+        return web.json_response({"task_id": task_id, "action": "daily_engagement"})
+
+    async def _handle_ambassador_stats(self, request: web.Request) -> web.Response:
+        agent = self.orchestrator._agents.get("AMBASSADOR")
+        if not agent:
+            return web.json_response({"error": "AMBASSADOR agent not registered"}, status=503)
+        from core.task_queue import Task, TaskPriority
+        task = Task(priority=TaskPriority.LOW, agent_name="AMBASSADOR", action="get_engagement_stats", payload={})
+        result = await agent.execute(task)
+        return web.json_response(result, dumps=_json_dumps)
 
 
 def _json_dumps(obj: Any) -> str:

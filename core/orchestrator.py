@@ -24,6 +24,9 @@ from agents.forge import ForgeAgent
 from agents.nexus import NexusAgent
 from agents.storm import StormAgent
 from agents.sentinel import SentinelAgent
+from agents.hunter import HunterAgent
+from agents.herald import HeraldAgent
+from agents.ambassador import AmbassadorAgent
 from config.settings import Settings
 from core.task_queue import Task, TaskQueue, TaskPriority, TaskStatus
 from dashboard.server import DashboardServer
@@ -35,6 +38,7 @@ from integrations.llm_router import LLMRouter
 from integrations.paperclip_service import PaperclipService
 from integrations.ghost_client import GhostClient
 from integrations.pentagi_client import PentAGIClient
+from integrations.browser_client import BrowserClient
 from monitoring.health_monitor import HealthMonitor
 from persistence.state_store import StateStore
 from schedulers.daily_scheduler import DailyScheduler, ScheduledJob
@@ -65,6 +69,7 @@ class Orchestrator:
         self._paperclip: PaperclipService | None = None
         self._ghost: GhostClient | None = None
         self._pentagi: PentAGIClient | None = None
+        self._browser: BrowserClient | None = None
         self._dashboard: DashboardServer | None = None
         self._running = False
         self._start_time: datetime | None = None
@@ -99,6 +104,11 @@ class Orchestrator:
         self.register_agent(StormAgent(max_retries=retry))
         # Intelligence
         self.register_agent(SentinelAgent(max_retries=retry))
+        # Growth Ops — Autonomous 24/7
+        if self.settings.growth_ops_enabled:
+            self.register_agent(HunterAgent(max_retries=retry))
+            self.register_agent(HeraldAgent(max_retries=retry))
+            self.register_agent(AmbassadorAgent(max_retries=retry))
 
     # --- Integration setup ---
 
@@ -165,6 +175,15 @@ class Orchestrator:
             )
             self._log.info("pentagi_integration_enabled")
 
+    async def _setup_browser(self) -> None:
+        if self.settings.growth_ops_enabled:
+            self._browser = BrowserClient(
+                data_dir=self.settings.data_dir,
+                requests_per_minute=self.settings.browser_requests_per_minute,
+            )
+            await self._browser.start()
+            self._log.info("browser_client_enabled")
+
     def _inject_integrations(self) -> None:
         """Inject integration clients into all agents."""
         for agent in self._agents.values():
@@ -176,6 +195,12 @@ class Orchestrator:
                 ghost=self._ghost,
                 pentagi=self._pentagi,
             )
+        # Inject browser client into Growth Ops agents
+        if self._browser:
+            for name in ("HUNTER", "HERALD", "AMBASSADOR"):
+                agent = self._agents.get(name)
+                if agent and hasattr(agent, "set_browser_client"):
+                    agent.set_browser_client(self._browser)
         self._log.info("integrations_injected", agents=len(self._agents))
 
     def _setup_schedule(self) -> None:
@@ -231,6 +256,26 @@ class Orchestrator:
             callback=self._scheduled_weekly_report,
             day_of_week=self.settings.weekly_report_day,
         ))
+        # Growth Ops — Autonomous 24/7 Agent System
+        if self.settings.growth_ops_enabled:
+            # 02:00 — HUNTER lead sweep
+            self._scheduler.add_job(ScheduledJob(
+                name="hunter_lead_sweep",
+                run_time=time(self.settings.hunter_sweep_hour, self.settings.hunter_sweep_minute),
+                callback=self._scheduled_hunter_sweep,
+            ))
+            # 08:00 — HERALD daily content
+            self._scheduler.add_job(ScheduledJob(
+                name="herald_daily_content",
+                run_time=time(self.settings.herald_content_hour, self.settings.herald_content_minute),
+                callback=self._scheduled_herald_content,
+            ))
+            # 10:00 — AMBASSADOR engagement
+            self._scheduler.add_job(ScheduledJob(
+                name="ambassador_engagement",
+                run_time=time(self.settings.ambassador_engage_hour, self.settings.ambassador_engage_minute),
+                callback=self._scheduled_ambassador_engage,
+            ))
 
     async def start(self, dashboard_host: str = "0.0.0.0", dashboard_port: int = 8080) -> None:
         """Start the orchestrator and all subsystems."""
@@ -262,6 +307,7 @@ class Orchestrator:
         await self._setup_paperclip()
         self._setup_ghost()
         self._setup_pentagi()
+        await self._setup_browser()
         self._inject_integrations()
         self._setup_schedule()
         self._scheduler.set_state_store(self._state_store)
@@ -428,6 +474,15 @@ class Orchestrator:
         if self._notion:
             await self.notion_sync_audit()
 
+    async def _scheduled_hunter_sweep(self) -> None:
+        await self.submit_task("HUNTER", "full_sweep", priority=TaskPriority.LOW)
+
+    async def _scheduled_herald_content(self) -> None:
+        await self.submit_task("HERALD", "daily_content", priority=TaskPriority.LOW)
+
+    async def _scheduled_ambassador_engage(self) -> None:
+        await self.submit_task("AMBASSADOR", "daily_engagement", priority=TaskPriority.LOW)
+
     # --- Coordination: Notion ---
 
     async def notion_create_page(self, title: str, content: str = "") -> dict[str, Any]:
@@ -552,6 +607,30 @@ class Orchestrator:
             return {"error": "PentAGI not configured"}
         return await self._pentagi.list_vulnerabilities(severity)
 
+    # --- Coordination: Growth Ops ---
+
+    async def growth_ops_status(self) -> dict[str, Any]:
+        """Get status of all Growth Ops agents."""
+        result: dict[str, Any] = {"enabled": self.settings.growth_ops_enabled}
+        for name in ("HUNTER", "HERALD", "AMBASSADOR"):
+            agent = self._agents.get(name)
+            if agent:
+                result[name.lower()] = await agent.health_check()
+        if self._browser:
+            result["browser"] = self._browser.get_status()
+        return result
+
+    async def growth_ops_sweep(self) -> dict[str, Any]:
+        """Trigger a full Growth Ops sweep: HUNTER scan → HERALD content → AMBASSADOR engage."""
+        results: dict[str, Any] = {}
+        hunter_id = await self.submit_task("HUNTER", "full_sweep", priority=TaskPriority.LOW)
+        results["hunter_task"] = hunter_id
+        herald_id = await self.submit_task("HERALD", "daily_content", priority=TaskPriority.LOW)
+        results["herald_task"] = herald_id
+        ambassador_id = await self.submit_task("AMBASSADOR", "daily_engagement", priority=TaskPriority.LOW)
+        results["ambassador_task"] = ambassador_id
+        return results
+
     # --- Status ---
 
     def get_status(self) -> dict[str, Any]:
@@ -579,7 +658,9 @@ class Orchestrator:
                 "paperclip": self._paperclip.get_status() if self._paperclip else None,
                 "ghost_osint": self._ghost.get_status() if self._ghost else None,
                 "pentagi": self._pentagi.get_status() if self._pentagi else None,
+                "browser": self._browser.get_status() if self._browser else None,
             },
+            "growth_ops": self.settings.growth_ops_enabled,
         }
 
     def get_health(self) -> dict[str, Any]:
