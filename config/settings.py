@@ -75,6 +75,22 @@ class Settings:
         default_factory=lambda: os.getenv("DEFAULT_LLM_MODEL", "anthropic/claude-sonnet-4-6")
     )
 
+    # GHOST OSINT CRM
+    ghost_base_url: str = field(
+        default_factory=lambda: os.getenv("GHOST_BASE_URL", "http://localhost:5000")
+    )
+    ghost_api_key: str = field(
+        default_factory=lambda: os.getenv("GHOST_API_KEY", "")
+    )
+
+    # PentAGI
+    pentagi_base_url: str = field(
+        default_factory=lambda: os.getenv("PENTAGI_BASE_URL", "http://localhost:8443")
+    )
+    pentagi_api_key: str = field(
+        default_factory=lambda: os.getenv("PENTAGI_API_KEY", "")
+    )
+
     # Scheduler defaults
     document_audit_hour: int = 6
     document_audit_minute: int = 0
@@ -109,6 +125,18 @@ class Settings:
     data_dir: str = field(
         default_factory=lambda: os.getenv("DATA_DIR", "data")
     )
+
+    # Growth Ops — Autonomous 24/7 Agent System
+    growth_ops_enabled: bool = field(
+        default_factory=lambda: os.getenv("GROWTH_OPS_ENABLED", "true").lower() == "true"
+    )
+    hunter_sweep_hour: int = 2     # 02:00 — HUNTER lead sweep
+    hunter_sweep_minute: int = 0
+    herald_content_hour: int = 8   # 08:00 — HERALD daily content
+    herald_content_minute: int = 0
+    ambassador_engage_hour: int = 10  # 10:00 — AMBASSADOR engagement
+    ambassador_engage_minute: int = 0
+    browser_requests_per_minute: int = 30
 
     # Watchdog
     watchdog_interval: int = 30

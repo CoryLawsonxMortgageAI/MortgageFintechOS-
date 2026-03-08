@@ -59,6 +59,14 @@ class CipherAgent(BaseAgent):
         """Scan for OWASP vulnerabilities using GitHub code scanning + LLM analysis."""
         result: dict[str, Any] = {"scanned_at": datetime.now(timezone.utc).isoformat()}
 
+        # PentAGI autonomous scanning if available
+        if self._pentagi:
+            try:
+                pentagi_vulns = await self._pentagi.list_vulnerabilities(severity="critical")
+                result["pentagi_vulnerabilities"] = pentagi_vulns
+            except Exception as e:
+                result["pentagi_note"] = f"PentAGI scan skipped: {e}"
+
         if self._github:
             # Pull real security alerts from GitHub
             security = await self._github.get_security_summary()

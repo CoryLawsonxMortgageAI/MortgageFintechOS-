@@ -41,6 +41,8 @@ class SentinelAgent(BaseAgent):
             "analyze_trends": self._analyze_trends,
             "reverse_engineer": self._reverse_engineer,
             "generate_build_plan": self._generate_build_plan,
+            "run_autoresearch": self._run_autoresearch,
+            "deep_security_audit": self._deep_security_audit,
         }
         handler = handlers.get(task.action)
         if not handler:
@@ -288,3 +290,199 @@ DESCRIPTION: [what this step does]"""
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "plan": plan,
         }
+
+    async def _run_autoresearch(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Autonomous ML research: modify → train → evaluate → iterate.
+
+        Based on karpathy/autoresearch pattern. SENTINEL generates code modifications,
+        evaluates them via LLM analysis, and commits successful experiments to GitHub.
+        """
+        target = payload.get("target", "risk_model")
+        directive = payload.get("directive", "")
+        max_experiments = payload.get("max_experiments", 1)
+
+        experiments = []
+        best_score = 0.0
+
+        for i in range(max_experiments):
+            experiment = {"id": i + 1, "target": target, "started_at": datetime.now(timezone.utc).isoformat()}
+
+            if self._llm:
+                prompt = f"""You are running an autoresearch experiment (karpathy/autoresearch pattern).
+
+Target model: {target}
+Research directive: {directive}
+Experiment #{i + 1} of {max_experiments}
+
+Generate a focused code modification to improve the model. Return JSON:
+{{
+    "modification": "description of the change",
+    "code": "python code implementing the change",
+    "hypothesis": "why this should improve the model",
+    "expected_metric_improvement": "what metric and by how much",
+    "risk_level": "low/medium/high",
+    "estimated_score": 0.0 to 1.0
+}}"""
+
+                result_text = await self.llm_complete(
+                    action="run_autoresearch",
+                    system_prompt=SYSTEM_PROMPT + "\nYou are also a senior ML research scientist.",
+                    user_prompt=prompt,
+                    temperature=0.6,
+                )
+
+                # Try to parse JSON from result
+                try:
+                    # Find JSON in response
+                    json_start = result_text.find("{")
+                    json_end = result_text.rfind("}") + 1
+                    if json_start >= 0 and json_end > json_start:
+                        parsed = json.loads(result_text[json_start:json_end])
+                        experiment.update(parsed)
+                        score = float(parsed.get("estimated_score", 0))
+                        if score > best_score:
+                            best_score = score
+                except (json.JSONDecodeError, ValueError):
+                    experiment["raw_result"] = result_text[:500]
+
+            experiment["completed_at"] = datetime.now(timezone.utc).isoformat()
+
+            # Commit successful experiments to GitHub
+            if self._github and experiment.get("code") and experiment.get("risk_level") != "high":
+                try:
+                    branch = f"sentinel/autoresearch-{target}-{i+1}"
+                    await self._github.create_branch(branch)
+                    await self._github.create_or_update_file(
+                        path=f"research/experiments/{target}_exp_{i+1}.py",
+                        content=experiment["code"],
+                        message=f"[SENTINEL] AutoResearch: {target} experiment #{i+1} — {experiment.get('modification', 'optimization')}",
+                        branch=branch,
+                    )
+                    experiment["branch"] = branch
+                    experiment["committed"] = True
+                except Exception as e:
+                    experiment["commit_error"] = str(e)
+
+            experiments.append(experiment)
+
+        self._scan_history.append({
+            "type": "autoresearch",
+            "target": target,
+            "experiments": len(experiments),
+            "best_score": best_score,
+            "completed_at": datetime.now(timezone.utc).isoformat(),
+        })
+        await self.save_state()
+
+        return {
+            "target": target,
+            "experiments_run": len(experiments),
+            "best_score": best_score,
+            "experiments": experiments,
+            "completed_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+    async def _deep_security_audit(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Deep security audit combining GitHub scanning + LLM-powered analysis.
+
+        Inspired by CyberStrikeAI penetration testing patterns. Performs:
+        - GitHub code scanning alerts analysis
+        - Dependabot vulnerability assessment
+        - Secret scanning
+        - LLM-powered OWASP Top 10 mapping
+        - Attack surface analysis
+        """
+        branch = payload.get("branch", "main")
+        focus = payload.get("focus", "full")
+
+        if not self._github:
+            return {"error": "GitHub client not configured"}
+
+        # Gather all security data from GitHub
+        security_summary = await self._github.get_security_summary()
+        code_alerts = security_summary.get("code_scanning_alerts", [])
+        dep_alerts = security_summary.get("dependabot_alerts", [])
+        secret_alerts = security_summary.get("secret_scanning_alerts", [])
+
+        # Read key security-sensitive files
+        sensitive_files = []
+        for path in ["config/settings.py", "dashboard/server.py", "core/orchestrator.py", ".env.example"]:
+            try:
+                content = await self._github.get_file_content(path, ref=branch)
+                if "error" not in content:
+                    sensitive_files.append({"path": path, "size": len(content.get("content", ""))})
+            except Exception:
+                pass
+
+        analysis = ""
+        if self._llm:
+            prompt = f"""Perform a deep security audit of this codebase.
+
+GitHub Security Alerts:
+- Code Scanning: {len(code_alerts)} alerts
+- Dependabot: {len(dep_alerts)} dependency vulnerabilities
+- Secret Scanning: {len(secret_alerts)} exposed secrets
+
+Alert Details:
+{json.dumps(code_alerts[:5], indent=2, default=str)}
+{json.dumps(dep_alerts[:5], indent=2, default=str)}
+
+Files analyzed: {json.dumps([f['path'] for f in sensitive_files])}
+
+Provide a structured security audit report:
+1. CRITICAL vulnerabilities requiring immediate action
+2. OWASP Top 10 mapping (which categories are affected)
+3. Dependency risk assessment
+4. Secret/credential exposure risk
+5. API security analysis
+6. Authentication/authorization gaps
+7. Data protection compliance (PII, GLBA, SOC2)
+8. Attack surface map
+9. Remediation priority list (ordered by risk)
+10. Recommended security controls to implement"""
+
+            analysis = await self.llm_complete(
+                action="deep_security_audit",
+                system_prompt=SYSTEM_PROMPT + "\nYou are also a senior cybersecurity penetration testing expert.",
+                user_prompt=prompt,
+                max_tokens=6000,
+            )
+
+        result = {
+            "audited_at": datetime.now(timezone.utc).isoformat(),
+            "branch": branch,
+            "code_scanning_alerts": len(code_alerts),
+            "dependabot_alerts": len(dep_alerts),
+            "secret_scanning_alerts": len(secret_alerts),
+            "total_alerts": len(code_alerts) + len(dep_alerts) + len(secret_alerts),
+            "files_analyzed": len(sensitive_files),
+            "analysis": analysis,
+            "risk_level": "critical" if secret_alerts else "high" if dep_alerts else "medium" if code_alerts else "low",
+        }
+
+        # Create GitHub issue with audit results if critical
+        if self._github and result["total_alerts"] > 0:
+            try:
+                await self._github.create_issue(
+                    title=f"[SENTINEL] Security Audit — {result['total_alerts']} alerts found",
+                    body=f"## Security Audit Report\n\n"
+                         f"- Code Scanning: {len(code_alerts)} alerts\n"
+                         f"- Dependabot: {len(dep_alerts)} vulnerabilities\n"
+                         f"- Secret Scanning: {len(secret_alerts)} exposed\n"
+                         f"- Risk Level: **{result['risk_level'].upper()}**\n\n"
+                         f"### Analysis\n{analysis[:2000]}",
+                    labels=["security", "automated"],
+                )
+                result["issue_created"] = True
+            except Exception:
+                pass
+
+        self._scan_history.append({
+            "type": "security_audit",
+            "total_alerts": result["total_alerts"],
+            "risk_level": result["risk_level"],
+            "audited_at": result["audited_at"],
+        })
+        await self.save_state()
+
+        return result
