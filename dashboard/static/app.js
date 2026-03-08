@@ -719,7 +719,7 @@ function renderOntologyGraph(data) {
             // Integration = smaller circle r=16
             const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             circle.setAttribute("r", 16);
-            circle.setAttribute("fill", node.connected ? "#2f81f7" : "#484f58");
+            circle.setAttribute("fill", node.connected ? "#C0C0C0" : "#484f58");
             circle.setAttribute("opacity", "0.8");
             g.appendChild(circle);
 
@@ -731,7 +731,7 @@ function renderOntologyGraph(data) {
             rect.setAttribute("width", 28);
             rect.setAttribute("height", 28);
             rect.setAttribute("rx", 4);
-            rect.setAttribute("fill", "#58a6ff");
+            rect.setAttribute("fill", "#D4D4D4");
             rect.setAttribute("opacity", "0.7");
             g.appendChild(rect);
         }
