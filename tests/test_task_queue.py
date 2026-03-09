@@ -2,7 +2,7 @@
 
 import pytest
 
-from core.task_queue import Task, TaskPriority, TaskStatus, TaskQueue
+from core.task_queue import Task, TaskPriority, TaskQueue, TaskStatus
 
 
 def _make_task(priority: TaskPriority = TaskPriority.MEDIUM, action: str = "test_action") -> Task:

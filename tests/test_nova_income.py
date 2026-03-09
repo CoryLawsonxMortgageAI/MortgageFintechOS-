@@ -4,8 +4,9 @@ Covers W-2 dual-method (FHA HB 4000.1 II.A.5.b), Schedule C (II.A.4.c.ii),
 DTI with compensating factors (II.A.4.b), and Collections 5% rule (II.A.4.d.v).
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
 
 from agents.nova import NovaAgent
 from core.task_queue import Task, TaskPriority

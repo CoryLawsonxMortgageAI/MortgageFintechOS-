@@ -28,3 +28,6 @@ jobs:
 
       - name: Run tests
         run: pytest -v --tb=short
+
+      - name: Type check with mypy
+        run: mypy agents/ core/ monitoring/ --ignore-missing-imports
