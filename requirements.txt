@@ -5,3 +5,9 @@ structlog>=23.2.0
 click>=8.1.0
 psutil>=5.9.0
 google-auth>=2.23.0
+
+# Dev / Quality
+ruff>=0.3.0
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+mypy>=1.8.0
