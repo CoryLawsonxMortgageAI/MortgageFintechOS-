@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d1117;--s:#161b22;--s2:#1c2333;--b:#30363d;--b2:#21262d;--t:#e6edf3;--t2:#8b949e;--t3:#484f58;--t4:#6e7681;
---accent:#C0C0C0;--accent-bright:#D4D4D4;--ok:#3fb950;--ok2:#238636;--err:#f85149;--warn:#d29922;--purple:#8b5cf6;--cyan:#06b6d4;
+--accent:#C0C0C0;--accent-bright:#D4D4D4;--ok:#3fb950;--ok2:#238636;--err:#f85149;--warn:#d29922;--steel:#0ea5e9;--cyan:#06b6d4;
 --f:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 --m:'SF Mono','Cascadia Code','Fira Code',Consolas,monospace}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -42,7 +42,7 @@ body{font-family:var(--f);background:var(--bg);color:var(--t);overflow-x:hidden;
 .stat{background:var(--s);border:1px solid var(--b);border-radius:6px;padding:12px 14px}
 .stat-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--t4);font-family:var(--m);margin-bottom:2px}
 .stat-val{font-size:22px;font-weight:800;font-family:var(--m);letter-spacing:-.5px;line-height:1.1}
-.stat-val.gold{color:var(--warn)}.stat-val.green{color:var(--ok)}.stat-val.red{color:var(--err)}.stat-val.purple{color:var(--purple)}
+.stat-val.gold{color:var(--warn)}.stat-val.green{color:var(--ok)}.stat-val.red{color:var(--err)}.stat-val.purple{color:var(--steel)}
 
 /* Legend */
 .legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;padding:10px 14px;background:var(--s);border:1px solid var(--b);border-radius:6px}
@@ -78,8 +78,8 @@ body{font-family:var(--f);background:var(--bg);color:var(--t);overflow-x:hidden;
 .cat-compliance{border:1px solid var(--err);background:var(--s2)}
 .cat-income .onode-h{background:var(--cyan);color:#0d1117}
 .cat-income{border:1px solid var(--cyan);background:var(--s2)}
-.cat-product .onode-h{background:var(--purple);color:#fff}
-.cat-product{border:1px solid var(--purple);background:var(--s2)}
+.cat-product .onode-h{background:var(--steel);color:#fff}
+.cat-product{border:1px solid var(--steel);background:var(--s2)}
 .cat-condition .onode-h{background:#fb923c;color:#0d1117}
 .cat-condition{border:1px solid #fb923c;background:var(--s2)}
 
@@ -111,7 +111,7 @@ table tr:hover td{background:rgba(210,153,34,.03)}
 .tag-document{background:rgba(192,192,192,.12);color:var(--accent)}
 .tag-compliance{background:rgba(248,81,73,.12);color:var(--err)}
 .tag-income{background:rgba(6,182,212,.12);color:var(--cyan)}
-.tag-product{background:rgba(139,92,246,.12);color:var(--purple)}
+.tag-product{background:rgba(139,92,246,.12);color:var(--steel)}
 .tag-condition{background:rgba(251,146,60,.12);color:#fb923c}
 
 /* Pipeline visualization */
@@ -497,7 +497,7 @@ const COMPLIANCE_MATRIX = [
   {rule:"HMDA",section:"Reg C",applies:"Data Collection",agent:"DIEGO",validation:"LAR data fields per CFPB spec",severity:"high"},
 ];
 
-const CAT_COLORS={pipeline:"#d29922",agent:"#3fb950",borrower:"#e879f9",document:"#C0C0C0",compliance:"#f85149",income:"#06b6d4",product:"#8b5cf6",condition:"#fb923c"};
+const CAT_COLORS={pipeline:"#d29922",agent:"#3fb950",borrower:"#e879f9",document:"#C0C0C0",compliance:"#f85149",income:"#06b6d4",product:"#0ea5e9",condition:"#fb923c"};
 const CAT_NAMES={pipeline:"Pipeline",agent:"Mortgage Agent",borrower:"Borrower/Applicant",document:"Document",compliance:"Compliance/Regulatory",income:"Income & DTI",product:"Loan Product",condition:"Conditions"};
 
 let activeFilter = "";
@@ -552,7 +552,7 @@ function renderEdges(){
   const rect = g.getBoundingClientRect();
   svg.setAttribute("viewBox",`0 0 ${rect.width} ${rect.height}`);
 
-  const domColors = {Pipeline:"#d29922",Agent:"#3fb950",Borrower:"#e879f9",Document:"#C0C0C0",Compliance:"#f85149",Income:"#06b6d4",Product:"#8b5cf6",Condition:"#fb923c",Taxonomy:"#484f58"};
+  const domColors = {Pipeline:"#d29922",Agent:"#3fb950",Borrower:"#e879f9",Document:"#C0C0C0",Compliance:"#f85149",Income:"#06b6d4",Product:"#0ea5e9",Condition:"#fb923c",Taxonomy:"#484f58"};
 
   RELS.forEach(r=>{
     const from = CLASSES.find(c=>c.id===r.s);
@@ -590,7 +590,7 @@ function renderRelTable(){
   document.getElementById("rel-count").textContent = RELS.length + " relationships";
   document.getElementById("rel-body").innerHTML = RELS.map(r=>`<tr>
     <td style="font-family:var(--m);font-weight:600;color:var(--t);cursor:pointer" onclick="highlightClass('${r.s}')">${r.s}</td>
-    <td style="font-family:var(--m);color:var(--purple)">${r.p}</td>
+    <td style="font-family:var(--m);color:var(--steel)">${r.p}</td>
     <td style="font-family:var(--m);font-weight:600;color:var(--t);cursor:pointer" onclick="highlightClass('${r.o}')">${r.o}</td>
     <td style="font-family:var(--m);color:var(--t3)">${r.card}</td>
     <td><span class="tag tag-${r.dom.toLowerCase()}">${r.dom}</span></td>

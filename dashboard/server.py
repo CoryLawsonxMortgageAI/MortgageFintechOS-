@@ -188,6 +188,52 @@ class DashboardServer:
         self._app.router.add_get("/orchestration.html", self._handle_orchestration_page)
         self._root_dir = root_dir
 
+        # ═══ Total Expert CRM ═══
+        self._app.router.add_get("/api/total-expert/status", self._handle_te_status)
+        self._app.router.add_get("/api/total-expert/contacts", self._handle_te_contacts)
+        self._app.router.add_get("/api/total-expert/contacts/{contact_id}", self._handle_te_contact)
+        self._app.router.add_get("/api/total-expert/loans", self._handle_te_loans)
+        self._app.router.add_get("/api/total-expert/loans/{loan_id}", self._handle_te_loan)
+        self._app.router.add_get("/api/total-expert/pipeline", self._handle_te_pipeline)
+        self._app.router.add_get("/api/total-expert/tasks", self._handle_te_tasks)
+        self._app.router.add_get("/api/total-expert/loan-officers", self._handle_te_loan_officers)
+        self._app.router.add_post("/api/total-expert/sync", self._handle_te_sync)
+
+        # ═══ Palantir-Style Ontology Engine ═══
+        self._app.router.add_get("/api/ontology-engine/types", self._handle_oe_types)
+        self._app.router.add_get("/api/ontology-engine/types/{type_name}", self._handle_oe_type)
+        self._app.router.add_get("/api/ontology-engine/links", self._handle_oe_links)
+        self._app.router.add_get("/api/ontology-engine/actions", self._handle_oe_actions)
+        self._app.router.add_get("/api/ontology-engine/objects/{type_name}", self._handle_oe_objects)
+        self._app.router.add_get("/api/ontology-engine/objects/{type_name}/{object_id}", self._handle_oe_object)
+        self._app.router.add_get("/api/ontology-engine/graph/{type_name}/{object_id}", self._handle_oe_graph)
+        self._app.router.add_post("/api/ontology-engine/actions/{action_name}/execute", self._handle_oe_execute_action)
+        self._app.router.add_post("/api/ontology-engine/actions/{action_name}/validate", self._handle_oe_validate_action)
+        self._app.router.add_get("/api/ontology-engine/analytics/pipeline", self._handle_oe_pipeline_analytics)
+        self._app.router.add_get("/api/ontology-engine/analytics/funnel", self._handle_oe_funnel)
+        self._app.router.add_get("/api/ontology-engine/analytics/lifecycle", self._handle_oe_lifecycle)
+        self._app.router.add_get("/api/ontology-engine/graph-export", self._handle_oe_graph_export)
+        self._app.router.add_get("/api/ontology-engine/stats", self._handle_oe_stats)
+        self._app.router.add_get("/api/ontology-engine/search/{type_name}", self._handle_oe_search)
+        self._app.router.add_get("/api/ontology-engine/action-log", self._handle_oe_action_log)
+        self._app.router.add_get("/api/ontology-engine/formula", self._handle_oe_formula)
+
+        # ═══ No-Code Agent Builder ═══
+        self._app.router.add_get("/api/agent-builder/agents", self._handle_ab_list)
+        self._app.router.add_post("/api/agent-builder/agents", self._handle_ab_create)
+        self._app.router.add_get("/api/agent-builder/agents/{agent_id}", self._handle_ab_get)
+        self._app.router.add_put("/api/agent-builder/agents/{agent_id}", self._handle_ab_update)
+        self._app.router.add_delete("/api/agent-builder/agents/{agent_id}", self._handle_ab_delete)
+        self._app.router.add_post("/api/agent-builder/agents/{agent_id}/deploy", self._handle_ab_deploy)
+        self._app.router.add_post("/api/agent-builder/agents/{agent_id}/undeploy", self._handle_ab_undeploy)
+        self._app.router.add_get("/api/agent-builder/templates", self._handle_ab_templates)
+        self._app.router.add_post("/api/agent-builder/from-template", self._handle_ab_from_template)
+        self._app.router.add_post("/api/agent-builder/agents/{agent_id}/skills", self._handle_ab_add_skill)
+        self._app.router.add_get("/api/agent-builder/status", self._handle_ab_status)
+        self._app.router.add_post("/api/agent-builder/import", self._handle_ab_import)
+        self._app.router.add_get("/api/agent-builder/agents/{agent_id}/export", self._handle_ab_export)
+        self._app.router.add_post("/api/agent-builder/validate", self._handle_ab_validate)
+
         # Static files
         self._app.router.add_static("/static", STATIC_DIR, show_index=False)
 
@@ -1198,3 +1244,365 @@ def _json_dumps(obj: Any) -> str:
             return f"<{len(o)} bytes>"
         raise TypeError(f"Object of type {type(o)} is not JSON serializable")
     return json.dumps(obj, default=default)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# TOTAL EXPERT CRM HANDLERS
+# ═══════════════════════════════════════════════════════════════════════
+
+async def _handle_te_status(self, request: web.Request) -> web.Response:
+    te = getattr(self.orchestrator, "_total_expert", None)
+    if te:
+        return web.json_response(te.get_status(), dumps=_json_dumps)
+    return web.json_response({"connected": False, "component": "total_expert", "message": "Not configured"})
+
+async def _handle_te_contacts(self, request: web.Request) -> web.Response:
+    te = getattr(self.orchestrator, "_total_expert", None)
+    if not te:
+        return web.json_response({"error": "Total Expert not configured"}, status=503)
+    page = int(request.query.get("page", "1"))
+    per_page = int(request.query.get("per_page", "50"))
+    result = await te.list_contacts(page=page, per_page=per_page)
+    return web.json_response(result, dumps=_json_dumps)
+
+async def _handle_te_contact(self, request: web.Request) -> web.Response:
+    te = getattr(self.orchestrator, "_total_expert", None)
+    if not te:
+        return web.json_response({"error": "Total Expert not configured"}, status=503)
+    contact_id = request.match_info["contact_id"]
+    result = await te.get_contact(contact_id)
+    return web.json_response(result, dumps=_json_dumps)
+
+async def _handle_te_loans(self, request: web.Request) -> web.Response:
+    te = getattr(self.orchestrator, "_total_expert", None)
+    if not te:
+        return web.json_response({"error": "Total Expert not configured"}, status=503)
+    page = int(request.query.get("page", "1"))
+    result = await te.list_loans(page=page)
+    return web.json_response(result, dumps=_json_dumps)
+
+async def _handle_te_loan(self, request: web.Request) -> web.Response:
+    te = getattr(self.orchestrator, "_total_expert", None)
+    if not te:
+        return web.json_response({"error": "Total Expert not configured"}, status=503)
+    loan_id = request.match_info["loan_id"]
+    result = await te.get_loan(loan_id)
+    return web.json_response(result, dumps=_json_dumps)
+
+async def _handle_te_pipeline(self, request: web.Request) -> web.Response:
+    te = getattr(self.orchestrator, "_total_expert", None)
+    if not te:
+        return web.json_response({"error": "Total Expert not configured"}, status=503)
+    result = await te.get_pipeline_summary()
+    return web.json_response(result, dumps=_json_dumps)
+
+async def _handle_te_tasks(self, request: web.Request) -> web.Response:
+    te = getattr(self.orchestrator, "_total_expert", None)
+    if not te:
+        return web.json_response({"error": "Total Expert not configured"}, status=503)
+    result = await te.list_tasks()
+    return web.json_response(result, dumps=_json_dumps)
+
+async def _handle_te_loan_officers(self, request: web.Request) -> web.Response:
+    te = getattr(self.orchestrator, "_total_expert", None)
+    if not te:
+        return web.json_response({"error": "Total Expert not configured"}, status=503)
+    result = await te.list_loan_officers()
+    return web.json_response(result, dumps=_json_dumps)
+
+async def _handle_te_sync(self, request: web.Request) -> web.Response:
+    te = getattr(self.orchestrator, "_total_expert", None)
+    oe = getattr(self.orchestrator, "_ontology_engine", None)
+    if not te:
+        return web.json_response({"error": "Total Expert not configured"}, status=503)
+    results = {}
+    if oe:
+        for obj_type in ["Contact", "Loan", "Task", "LoanOfficer"]:
+            r = await oe.sync_objects(obj_type, te)
+            results[obj_type] = r
+    return web.json_response({"sync_results": results, "timestamp": datetime.now().isoformat()}, dumps=_json_dumps)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# ONTOLOGY ENGINE HANDLERS
+# ═══════════════════════════════════════════════════════════════════════
+
+async def _handle_oe_types(self, request: web.Request) -> web.Response:
+    oe = getattr(self.orchestrator, "_ontology_engine", None)
+    if not oe:
+        from core.ontology_engine import OBJECT_TYPES
+        return web.json_response({"types": {k: {"property_count": len(v["properties"]), "icon": v["icon"], "color": v["color"]} for k, v in OBJECT_TYPES.items()}}, dumps=_json_dumps)
+    return web.json_response(oe.get_object_types(), dumps=_json_dumps)
+
+async def _handle_oe_type(self, request: web.Request) -> web.Response:
+    oe = getattr(self.orchestrator, "_ontology_engine", None)
+    type_name = request.match_info["type_name"]
+    if not oe:
+        from core.ontology_engine import OBJECT_TYPES
+        ot = OBJECT_TYPES.get(type_name)
+        return web.json_response(ot or {"error": "Not found"}, dumps=_json_dumps)
+    result = oe.get_object_type(type_name)
+    return web.json_response(result or {"error": "Not found"}, dumps=_json_dumps)
+
+async def _handle_oe_links(self, request: web.Request) -> web.Response:
+    oe = getattr(self.orchestrator, "_ontology_engine", None)
+    if not oe:
+        from core.ontology_engine import LINK_TYPES
+        return web.json_response(LINK_TYPES, dumps=_json_dumps)
+    return web.json_response(oe.get_link_types(), dumps=_json_dumps)
+
+async def _handle_oe_actions(self, request: web.Request) -> web.Response:
+    oe = getattr(self.orchestrator, "_ontology_engine", None)
+    if not oe:
+        from core.ontology_engine import ONTOLOGY_ACTIONS
+        return web.json_response(ONTOLOGY_ACTIONS, dumps=_json_dumps)
+    return web.json_response(oe.get_actions(), dumps=_json_dumps)
+
+async def _handle_oe_objects(self, request: web.Request) -> web.Response:
+    oe = getattr(self.orchestrator, "_ontology_engine", None)
+    type_name = request.match_info["type_name"]
+    if not oe:
+        return web.json_response({"data": [], "total": 0}, dumps=_json_dumps)
+    page = int(request.query.get("page", "1"))
+    per_page = int(request.query.get("per_page", "50"))
+    result = await oe.list_objects(type_name, page=page, per_page=per_page)
+    return web.json_response(result, dumps=_json_dumps)
+
+async def _handle_oe_object(self, request: web.Request) -> web.Response:
+    oe = getattr(self.orchestrator, "_ontology_engine", None)
+    type_name = request.match_info["type_name"]
+    object_id = request.match_info["object_id"]
+    if not oe:
+        return web.json_response({"error": "Ontology engine not initialized"}, status=503)
+    result = await oe.get_object(type_name, object_id)
+    return web.json_response(result or {"error": "Not found"}, dumps=_json_dumps)
+
+async def _handle_oe_graph(self, request: web.Request) -> web.Response:
+    oe = getattr(self.orchestrator, "_ontology_engine", None)
+    type_name = request.match_info["type_name"]
+    object_id = request.match_info["object_id"]
+    depth = int(request.query.get("depth", "2"))
+    if not oe:
+        return web.json_response({"error": "Ontology engine not initialized"}, status=503)
+    result = await oe.get_object_graph(type_name, object_id, depth=depth)
+    return web.json_response(result, dumps=_json_dumps)
+
+async def _handle_oe_execute_action(self, request: web.Request) -> web.Response:
+    oe = getattr(self.orchestrator, "_ontology_engine", None)
+    action_name = request.match_info["action_name"]
+    if not oe:
+        return web.json_response({"error": "Ontology engine not initialized"}, status=503)
+    body = await request.json()
+    object_id = body.get("object_id", "")
+    parameters = body.get("parameters", {})
+    te = getattr(self.orchestrator, "_total_expert", None)
+    result = await oe.execute_action(action_name, object_id, parameters, te_client=te)
+    return web.json_response(result, dumps=_json_dumps)
+
+async def _handle_oe_validate_action(self, request: web.Request) -> web.Response:
+    oe = getattr(self.orchestrator, "_ontology_engine", None)
+    action_name = request.match_info["action_name"]
+    if not oe:
+        return web.json_response({"error": "Ontology engine not initialized"}, status=503)
+    body = await request.json()
+    result = await oe.validate_action(action_name, body.get("object_id", ""), body.get("parameters", {}))
+    return web.json_response(result, dumps=_json_dumps)
+
+async def _handle_oe_pipeline_analytics(self, request: web.Request) -> web.Response:
+    oe = getattr(self.orchestrator, "_ontology_engine", None)
+    if not oe:
+        from core.ontology_engine import PREDICTIVE_FORMULA, STAGE_RISK_BASELINES
+        return web.json_response({"formula": PREDICTIVE_FORMULA, "baselines": STAGE_RISK_BASELINES}, dumps=_json_dumps)
+    result = await oe.get_pipeline_analytics()
+    return web.json_response(result, dumps=_json_dumps)
+
+async def _handle_oe_funnel(self, request: web.Request) -> web.Response:
+    oe = getattr(self.orchestrator, "_ontology_engine", None)
+    if not oe:
+        return web.json_response({"funnel": [], "total": 0}, dumps=_json_dumps)
+    result = await oe.get_loan_funnel()
+    return web.json_response(result, dumps=_json_dumps)
+
+async def _handle_oe_lifecycle(self, request: web.Request) -> web.Response:
+    oe = getattr(self.orchestrator, "_ontology_engine", None)
+    if not oe:
+        return web.json_response({"lifecycle": {}, "total": 0}, dumps=_json_dumps)
+    result = await oe.get_contact_lifecycle()
+    return web.json_response(result, dumps=_json_dumps)
+
+async def _handle_oe_graph_export(self, request: web.Request) -> web.Response:
+    oe = getattr(self.orchestrator, "_ontology_engine", None)
+    if not oe:
+        from core.ontology_engine import OntologyEngine
+        oe = OntologyEngine()
+    return web.json_response(oe.export_ontology_graph(), dumps=_json_dumps)
+
+async def _handle_oe_stats(self, request: web.Request) -> web.Response:
+    oe = getattr(self.orchestrator, "_ontology_engine", None)
+    if not oe:
+        from core.ontology_engine import OntologyEngine
+        oe = OntologyEngine()
+    return web.json_response(oe.get_stats(), dumps=_json_dumps)
+
+async def _handle_oe_search(self, request: web.Request) -> web.Response:
+    oe = getattr(self.orchestrator, "_ontology_engine", None)
+    type_name = request.match_info["type_name"]
+    query = request.query.get("q", "")
+    if not oe:
+        return web.json_response({"results": []}, dumps=_json_dumps)
+    results = await oe.search_objects(type_name, query)
+    return web.json_response({"results": results}, dumps=_json_dumps)
+
+async def _handle_oe_action_log(self, request: web.Request) -> web.Response:
+    oe = getattr(self.orchestrator, "_ontology_engine", None)
+    if not oe:
+        return web.json_response({"log": []}, dumps=_json_dumps)
+    limit = int(request.query.get("limit", "50"))
+    return web.json_response({"log": oe.get_action_log(limit)}, dumps=_json_dumps)
+
+async def _handle_oe_formula(self, request: web.Request) -> web.Response:
+    from core.ontology_engine import PREDICTIVE_FORMULA, PIPELINE_STAGE_WEIGHTS, STAGE_RISK_BASELINES, LOAN_STATUS_TRANSITIONS
+    return web.json_response({
+        "formula": PREDICTIVE_FORMULA,
+        "stage_weights": PIPELINE_STAGE_WEIGHTS,
+        "risk_baselines": STAGE_RISK_BASELINES,
+        "status_transitions": LOAN_STATUS_TRANSITIONS,
+    }, dumps=_json_dumps)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# AGENT BUILDER HANDLERS
+# ═══════════════════════════════════════════════════════════════════════
+
+async def _handle_ab_list(self, request: web.Request) -> web.Response:
+    ab = getattr(self.orchestrator, "_agent_builder", None)
+    if not ab:
+        return web.json_response({"agents": [], "message": "Agent Builder not initialized"}, dumps=_json_dumps)
+    category = request.query.get("category")
+    return web.json_response({"agents": ab.list_agents(category)}, dumps=_json_dumps)
+
+async def _handle_ab_create(self, request: web.Request) -> web.Response:
+    ab = getattr(self.orchestrator, "_agent_builder", None)
+    if not ab:
+        return web.json_response({"error": "Agent Builder not initialized"}, status=503)
+    body = await request.json()
+    result = ab.create_agent(body)
+    if "error" not in result:
+        await ab.save_definitions()
+    return web.json_response(result, dumps=_json_dumps)
+
+async def _handle_ab_get(self, request: web.Request) -> web.Response:
+    ab = getattr(self.orchestrator, "_agent_builder", None)
+    if not ab:
+        return web.json_response({"error": "Agent Builder not initialized"}, status=503)
+    agent_id = request.match_info["agent_id"]
+    result = ab.get_agent(agent_id)
+    return web.json_response(result or {"error": "Agent not found"}, dumps=_json_dumps)
+
+async def _handle_ab_update(self, request: web.Request) -> web.Response:
+    ab = getattr(self.orchestrator, "_agent_builder", None)
+    if not ab:
+        return web.json_response({"error": "Agent Builder not initialized"}, status=503)
+    agent_id = request.match_info["agent_id"]
+    body = await request.json()
+    result = ab.update_agent(agent_id, body)
+    if "error" not in result:
+        await ab.save_definitions()
+    return web.json_response(result, dumps=_json_dumps)
+
+async def _handle_ab_delete(self, request: web.Request) -> web.Response:
+    ab = getattr(self.orchestrator, "_agent_builder", None)
+    if not ab:
+        return web.json_response({"error": "Agent Builder not initialized"}, status=503)
+    agent_id = request.match_info["agent_id"]
+    result = ab.delete_agent(agent_id)
+    if result:
+        await ab.save_definitions()
+    return web.json_response({"deleted": result}, dumps=_json_dumps)
+
+async def _handle_ab_deploy(self, request: web.Request) -> web.Response:
+    ab = getattr(self.orchestrator, "_agent_builder", None)
+    if not ab:
+        return web.json_response({"error": "Agent Builder not initialized"}, status=503)
+    agent_id = request.match_info["agent_id"]
+    agent = await ab.deploy_agent(agent_id)
+    if agent:
+        self.orchestrator.register_agent(agent)
+        return web.json_response({"deployed": True, "codename": agent.name}, dumps=_json_dumps)
+    return web.json_response({"error": "Agent not found"}, status=404)
+
+async def _handle_ab_undeploy(self, request: web.Request) -> web.Response:
+    ab = getattr(self.orchestrator, "_agent_builder", None)
+    if not ab:
+        return web.json_response({"error": "Agent Builder not initialized"}, status=503)
+    agent_id = request.match_info["agent_id"]
+    result = await ab.undeploy_agent(agent_id)
+    return web.json_response({"undeployed": result}, dumps=_json_dumps)
+
+async def _handle_ab_templates(self, request: web.Request) -> web.Response:
+    ab = getattr(self.orchestrator, "_agent_builder", None)
+    if not ab:
+        from core.agent_builder import AGENT_TEMPLATES
+        templates = [{"template_id": k, "name": v["name"], "codename": v["codename"], "description": v["description"], "category": v["category"], "skills_count": len(v.get("skills", []))} for k, v in AGENT_TEMPLATES.items()]
+        return web.json_response({"templates": templates}, dumps=_json_dumps)
+    return web.json_response({"templates": ab.get_templates()}, dumps=_json_dumps)
+
+async def _handle_ab_from_template(self, request: web.Request) -> web.Response:
+    ab = getattr(self.orchestrator, "_agent_builder", None)
+    if not ab:
+        return web.json_response({"error": "Agent Builder not initialized"}, status=503)
+    body = await request.json()
+    template_name = body.get("template", "")
+    overrides = body.get("overrides", {})
+    result = ab.create_from_template(template_name, overrides)
+    if "error" not in result:
+        await ab.save_definitions()
+    return web.json_response(result, dumps=_json_dumps)
+
+async def _handle_ab_add_skill(self, request: web.Request) -> web.Response:
+    ab = getattr(self.orchestrator, "_agent_builder", None)
+    if not ab:
+        return web.json_response({"error": "Agent Builder not initialized"}, status=503)
+    agent_id = request.match_info["agent_id"]
+    body = await request.json()
+    result = ab.add_skill(agent_id, body)
+    return web.json_response(result, dumps=_json_dumps)
+
+async def _handle_ab_status(self, request: web.Request) -> web.Response:
+    ab = getattr(self.orchestrator, "_agent_builder", None)
+    if not ab:
+        from core.agent_builder import AGENT_TEMPLATES
+        return web.json_response({"total_definitions": 0, "running_agents": 0, "templates_available": len(AGENT_TEMPLATES)}, dumps=_json_dumps)
+    return web.json_response(ab.get_status(), dumps=_json_dumps)
+
+async def _handle_ab_import(self, request: web.Request) -> web.Response:
+    ab = getattr(self.orchestrator, "_agent_builder", None)
+    if not ab:
+        return web.json_response({"error": "Agent Builder not initialized"}, status=503)
+    body = await request.text()
+    result = ab.import_agent(body)
+    return web.json_response(result, dumps=_json_dumps)
+
+async def _handle_ab_export(self, request: web.Request) -> web.Response:
+    ab = getattr(self.orchestrator, "_agent_builder", None)
+    if not ab:
+        return web.json_response({"error": "Agent Builder not initialized"}, status=503)
+    agent_id = request.match_info["agent_id"]
+    result = ab.export_agent(agent_id)
+    return web.Response(text=result, content_type="application/json")
+
+async def _handle_ab_validate(self, request: web.Request) -> web.Response:
+    ab = getattr(self.orchestrator, "_agent_builder", None)
+    if not ab:
+        from core.agent_builder import AgentBuilder
+        ab = AgentBuilder()
+    body = await request.json()
+    result = ab.validate_definition(body)
+    return web.json_response(result, dumps=_json_dumps)
+
+
+# Bind handler methods to DashboardServer class
+for _name in dir():
+    if _name.startswith("_handle_te_") or _name.startswith("_handle_oe_") or _name.startswith("_handle_ab_"):
+        _func = locals()[_name]
+        setattr(DashboardServer, _name, _func)

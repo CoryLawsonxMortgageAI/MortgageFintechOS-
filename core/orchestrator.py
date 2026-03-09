@@ -39,6 +39,9 @@ from integrations.paperclip_service import PaperclipService
 from integrations.ghost_client import GhostClient
 from integrations.pentagi_client import PentAGIClient
 from integrations.browser_client import BrowserClient
+from integrations.total_expert_client import TotalExpertClient
+from core.ontology_engine import OntologyEngine
+from core.agent_builder import AgentBuilder
 from monitoring.health_monitor import HealthMonitor
 from monitoring.action_log import ActionLog, ActionType
 from monitoring.telemetry import PredictiveTelemetry
@@ -74,6 +77,9 @@ class Orchestrator:
         self._ghost: GhostClient | None = None
         self._pentagi: PentAGIClient | None = None
         self._browser: BrowserClient | None = None
+        self._total_expert: TotalExpertClient | None = None
+        self._ontology_engine: OntologyEngine | None = None
+        self._agent_builder: AgentBuilder | None = None
         self._dashboard: DashboardServer | None = None
         self._action_log = ActionLog()
         self._telemetry = PredictiveTelemetry()
@@ -191,6 +197,28 @@ class Orchestrator:
             )
             await self._browser.start()
             self._log.info("browser_client_enabled")
+
+    def _setup_total_expert(self) -> None:
+        if self.settings.total_expert_client_id:
+            self._total_expert = TotalExpertClient(
+                client_id=self.settings.total_expert_client_id,
+                client_secret=self.settings.total_expert_client_secret,
+                base_url=self.settings.total_expert_base_url,
+                rate_limit=self.settings.total_expert_rate_limit,
+            )
+            self._log.info("total_expert_integration_enabled")
+
+    def _setup_ontology_engine(self) -> None:
+        self._ontology_engine = OntologyEngine()
+        self._log.info("ontology_engine_initialized")
+
+    async def _setup_agent_builder(self) -> None:
+        self._agent_builder = AgentBuilder(
+            ontology_engine=self._ontology_engine,
+            data_dir=self.settings.data_dir,
+        )
+        await self._agent_builder.load_definitions()
+        self._log.info("agent_builder_initialized", definitions=len(self._agent_builder._definitions))
 
     def _inject_integrations(self) -> None:
         """Inject integration clients into all agents."""
@@ -316,6 +344,9 @@ class Orchestrator:
         self._setup_ghost()
         self._setup_pentagi()
         await self._setup_browser()
+        self._setup_total_expert()
+        self._setup_ontology_engine()
+        await self._setup_agent_builder()
         self._inject_integrations()
         self._setup_schedule()
         self._scheduler.set_state_store(self._state_store)
