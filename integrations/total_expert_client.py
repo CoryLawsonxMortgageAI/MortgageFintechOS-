@@ -17,7 +17,7 @@ import structlog
 
 logger = structlog.get_logger()
 
-DEFAULT_BASE_URL = "https://api.totalexpert.net/v1"
+DEFAULT_BASE_URL = "https://public.totalexpert.net/v1"
 
 
 class TotalExpertClient:
@@ -71,7 +71,8 @@ class TotalExpertClient:
         if self._access_token and self._token_expiry and now < self._token_expiry:
             return self._access_token
 
-        token_url = f"{self._base_url}/oauth/token"
+        # Token endpoint is at the base domain, not under /v1/
+        token_url = self._base_url.replace("/v1", "") + "/token"
         payload = {
             "grant_type": "client_credentials",
             "client_id": self._client_id,
@@ -220,7 +221,7 @@ class TotalExpertClient:
         per_page: int = 50,
     ) -> dict[str, Any]:
         """List contacts with optional filters (status, source, assigned_to, date range)."""
-        params: dict[str, Any] = {"page": page, "per_page": per_page}
+        params: dict[str, Any] = {"page[number]": page, "page[size]": per_page}
         if filters:
             params.update(filters)
         result = await self._request("GET", "/contacts", params=params)
@@ -293,7 +294,7 @@ class TotalExpertClient:
         per_page: int = 50,
     ) -> dict[str, Any]:
         """List loans with optional filters (status, loan_officer_id, date range)."""
-        params: dict[str, Any] = {"page": page, "per_page": per_page}
+        params: dict[str, Any] = {"page[number]": page, "page[size]": per_page}
         if filters:
             params.update(filters)
         result = await self._request("GET", "/loans", params=params)
@@ -395,7 +396,7 @@ class TotalExpertClient:
         per_page: int = 50,
     ) -> dict[str, Any]:
         """List tasks with optional filters (status, assigned_to, priority, due_date)."""
-        params: dict[str, Any] = {"page": page, "per_page": per_page}
+        params: dict[str, Any] = {"page[number]": page, "page[size]": per_page}
         if filters:
             params.update(filters)
         result = await self._request("GET", "/tasks", params=params)

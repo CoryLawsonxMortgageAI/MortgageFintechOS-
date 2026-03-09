@@ -140,7 +140,7 @@ class Settings:
 
     # Total Expert CRM
     total_expert_base_url: str = field(
-        default_factory=lambda: os.getenv("TOTAL_EXPERT_BASE_URL", "https://api.totalexpert.net/v1")
+        default_factory=lambda: os.getenv("TOTAL_EXPERT_BASE_URL", "https://public.totalexpert.net/v1")
     )
     total_expert_client_id: str = field(
         default_factory=lambda: os.getenv("TOTAL_EXPERT_CLIENT_ID", "")
@@ -149,7 +149,7 @@ class Settings:
         default_factory=lambda: os.getenv("TOTAL_EXPERT_CLIENT_SECRET", "")
     )
     total_expert_rate_limit: int = field(
-        default_factory=lambda: int(os.getenv("TOTAL_EXPERT_RATE_LIMIT", "100"))
+        default_factory=lambda: int(os.getenv("TOTAL_EXPERT_RATE_LIMIT", "1000"))
     )
 
     # Watchdog
