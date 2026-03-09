@@ -1,0 +1,25 @@
+name: Deploy to Netlify
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v3
+        with:
+          publish-dir: './public'
+          production-branch: main
+          production-deploy: true
+          deploy-message: "Deploy from GitHub Actions - ${{ github.sha }}"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: d8f73846-faf4-48a5-9983-664508dce482
+        timeout-minutes: 5

@@ -34,6 +34,16 @@
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="5" cy="5" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="7" y1="7" x2="10" y2="10"/><line x1="14" y1="10" x2="17" y2="7"/><line x1="7" y1="17" x2="10" y2="14"/><line x1="14" y1="14" x2="17" y2="17"/></svg>
       Ontology
     </a>
+
+    <div class="nav-section-label">Domain Ontologies</div>
+    <a class="nav-item" href="/mortgage-ontology.html" style="color:var(--warning)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Mortgage Ontology
+    </a>
+    <a class="nav-item" href="/coding-ontology.html" style="color:var(--info)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      Coding Ontology
+    </a>
     <a class="nav-item" data-page="telemetry">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       Telemetry
@@ -49,6 +59,22 @@
     <a class="nav-item" data-page="skills">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
       Agent Skills
+    </a>
+    <a class="nav-item" data-page="agent-chat">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Agent Chat
+    </a>
+    <a class="nav-item" data-page="agentic-runtime">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Agentic Runtime
+    </a>
+    <a class="nav-item" data-page="integrations">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      Integrations
+    </a>
+    <a class="nav-item" data-page="data-architect">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Data Architect
     </a>
     <a class="nav-item" data-page="features">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
@@ -861,6 +887,322 @@
     </div>
 
   </div><!-- /page-features -->
+
+  <!-- ============================================================ -->
+  <!-- PAGE: AGENT CHAT                                             -->
+  <!-- ============================================================ -->
+  <div id="page-agent-chat" class="page">
+
+    <div class="chat-container">
+      <!-- Left Panel: Agent Selector + Quick Actions -->
+      <div class="chat-sidebar">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Select Agent</div></div>
+          <div class="card-body" style="padding:12px;">
+            <select class="control-select" id="chat-agent-select" style="width:100%;">
+              <option value="DIEGO">DIEGO &mdash; Pipeline Orchestration</option>
+              <option value="MARTIN">MARTIN &mdash; Document Intelligence</option>
+              <option value="NOVA">NOVA &mdash; Income &amp; DTI Analysis</option>
+              <option value="JARVIS">JARVIS &mdash; Condition Resolution</option>
+              <option value="ATLAS">ATLAS &mdash; Full-Stack Engineering</option>
+              <option value="CIPHER">CIPHER &mdash; Security Engineering</option>
+              <option value="FORGE">FORGE &mdash; DevOps Engineering</option>
+              <option value="NEXUS">NEXUS &mdash; Code Quality</option>
+              <option value="STORM">STORM &mdash; Data Engineering</option>
+              <option value="SENTINEL">SENTINEL &mdash; System Intelligence</option>
+              <option value="HUNTER">HUNTER &mdash; Lead Generation</option>
+              <option value="HERALD">HERALD &mdash; Content Marketing</option>
+              <option value="AMBASSADOR">AMBASSADOR &mdash; Community Engagement</option>
+            </select>
+            <div class="chat-agent-info" id="chat-agent-info">
+              <div class="chat-avatar-large" id="chat-agent-avatar">D</div>
+              <div class="chat-agent-name" id="chat-agent-name">DIEGO</div>
+              <div class="chat-agent-role" id="chat-agent-role">Pipeline Orchestration</div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px;">
+          <div class="card-header"><div class="card-title">Quick Actions</div></div>
+          <div class="card-body" style="padding:12px;">
+            <div class="chat-quick-actions" id="chat-quick-actions"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Chat Messages + Input -->
+      <div class="chat-main">
+        <div class="chat-messages" id="chat-messages">
+          <div class="empty-state">Select an agent and start a conversation</div>
+        </div>
+        <div class="chat-input-bar">
+          <input type="text" class="chat-input" id="chat-input" placeholder="Type a message..." autocomplete="off">
+          <button class="btn btn-primary" id="chat-send-btn">Send</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-agent-chat -->
+
+  <!-- ============================================================ -->
+  <!-- PAGE: AGENTIC RUNTIME                                        -->
+  <!-- ============================================================ -->
+  <div id="page-agentic-runtime" class="page">
+
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-label">Compliance Score</div>
+        <div class="metric-value" id="rt-compliance">98.7%</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Active Guardrails</div>
+        <div class="metric-value" id="rt-guardrails">7</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Blocked Actions</div>
+        <div class="metric-value" id="rt-blocked">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Audit Events (24h)</div>
+        <div class="metric-value" id="rt-audit-count">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Agent Isolation</div>
+        <div class="metric-value" style="font-size:1rem;">ENFORCED</div>
+      </div>
+    </div>
+
+    <!-- Five Security Dimensions -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">Security Dimensions</div></div>
+      <div class="card-body" style="padding:16px;">
+        <div class="security-dimensions-grid" id="rt-dimensions"></div>
+      </div>
+    </div>
+
+    <!-- Agent Permission Matrix -->
+    <div class="card" style="margin-top:20px;">
+      <div class="card-header"><div class="card-title">Agent Permission Matrix</div></div>
+      <div class="card-body">
+        <div style="overflow-x:auto;">
+          <table class="permission-matrix-table">
+            <thead>
+              <tr>
+                <th>Agent</th>
+                <th>Division</th>
+                <th>Tools Allowed</th>
+                <th>Memory Access</th>
+                <th>Action Scope</th>
+                <th>Safety Class</th>
+              </tr>
+            </thead>
+            <tbody id="rt-permissions-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audit Trail -->
+    <div class="card" style="margin-top:20px;">
+      <div class="card-header"><div class="card-title">Audit Trail</div></div>
+      <div class="card-body">
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Agent</th>
+              <th>Action</th>
+              <th>Status</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="rt-audit-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Guardrails Status -->
+    <div class="card" style="margin-top:20px;">
+      <div class="card-header"><div class="card-title">Guardrails Status</div></div>
+      <div class="card-body" style="padding:16px;">
+        <div id="rt-guardrails-list"></div>
+      </div>
+    </div>
+
+  </div><!-- /page-agentic-runtime -->
+
+  <!-- ============================================================ -->
+  <!-- PAGE: INTEGRATIONS HUB                                       -->
+  <!-- ============================================================ -->
+  <div id="page-integrations" class="page">
+
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-label">Total Integrations</div>
+        <div class="metric-value">10</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Connected</div>
+        <div class="metric-value" id="int-connected">10</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Last Sync</div>
+        <div class="metric-value" id="int-last-sync" style="font-size:1rem;">--</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">API Calls (24h)</div>
+        <div class="metric-value" id="int-api-calls">0</div>
+      </div>
+    </div>
+
+    <div class="integrations-hub-grid" id="int-cards-grid"></div>
+
+  </div><!-- /page-integrations -->
+
+  <!-- ============================================================ -->
+  <!-- PAGE: DATA ARCHITECT                                         -->
+  <!-- ============================================================ -->
+  <div id="page-data-architect" class="page">
+
+    <!-- Process Mining Metrics -->
+    <div class="metrics-row" id="da-metrics-row">
+      <div class="metric-card">
+        <div class="metric-label">Loans Processed (30d)</div>
+        <div class="metric-value" id="da-loans-processed">438</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Avg Cycle Time</div>
+        <div class="metric-value" id="da-cycle-time">28.3d</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Bottleneck Stage</div>
+        <div class="metric-value" id="da-bottleneck" style="font-size:1rem;">Conditions</div>
+        <div class="metric-sub">avg 6.2 days</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Deviation Rate</div>
+        <div class="metric-value" id="da-deviation">12.3%</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Automation Rate</div>
+        <div class="metric-value" id="da-automation">67%</div>
+      </div>
+    </div>
+
+    <!-- Loan Pipeline Process Mining -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">Loan Pipeline Process Mining</div></div>
+      <div class="card-body" style="padding:24px;">
+        <div class="pipeline-flow" id="da-pipeline-flow"></div>
+        <div class="pipeline-stage-detail" id="da-stage-detail" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Domain Object Types -->
+    <div class="card" style="margin-top:20px;">
+      <div class="card-header"><div class="card-title">Domain Object Types</div></div>
+      <div class="card-body">
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Object Type</th>
+                <th>Properties</th>
+                <th>Links</th>
+                <th>Actions</th>
+                <th>Records</th>
+              </tr>
+            </thead>
+            <tbody id="da-object-types-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pipeline Builder -->
+    <div class="card" style="margin-top:20px;">
+      <div class="card-header"><div class="card-title">Pipeline Builder</div></div>
+      <div class="card-body" style="padding:24px;">
+        <div class="pipeline-builder-canvas" id="da-pipeline-builder"></div>
+      </div>
+    </div>
+
+    <!-- Total Expert Data Sync -->
+    <div class="card" style="margin-top:20px;">
+      <div class="card-header">
+        <div class="card-title">Total Expert Data Sync</div>
+        <button class="btn btn-sm btn-primary" id="da-sync-now-btn">Run Sync Now</button>
+      </div>
+      <div class="card-body" style="padding:16px;">
+        <div class="sync-panel">
+          <div class="sync-metrics" id="da-sync-metrics">
+            <div class="metric-card" style="display:inline-block;margin-right:12px;">
+              <div class="metric-label">Contacts Synced</div>
+              <div class="metric-value" style="font-size:20px;">1,247</div>
+            </div>
+            <div class="metric-card" style="display:inline-block;margin-right:12px;">
+              <div class="metric-label">Loans Tracked</div>
+              <div class="metric-value" style="font-size:20px;">438</div>
+            </div>
+            <div class="metric-card" style="display:inline-block;margin-right:12px;">
+              <div class="metric-label">Campaigns Active</div>
+              <div class="metric-value" style="font-size:20px;">5</div>
+            </div>
+            <div class="metric-card" style="display:inline-block;">
+              <div class="metric-label">Connection</div>
+              <div class="metric-value" style="font-size:14px;"><span class="status-badge healthy"><span class="status-dot"></span> Connected</span></div>
+            </div>
+          </div>
+
+          <div style="margin-top:16px;">
+            <h4 style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">Recent Sync Log</h4>
+            <table>
+              <thead>
+                <tr><th>Timestamp</th><th>Type</th><th>Records</th><th>Status</th><th>Duration</th></tr>
+              </thead>
+              <tbody id="da-sync-log-tbody"></tbody>
+            </table>
+          </div>
+
+          <div style="margin-top:16px;">
+            <h4 style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">Field Mapping</h4>
+            <table class="field-mapping-table">
+              <thead>
+                <tr><th>Total Expert Field</th><th>MortgageFintechOS Object.Property</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>contact_id</td><td>Borrower.borrower_id</td></tr>
+                <tr><td>first_name + last_name</td><td>Borrower.name</td></tr>
+                <tr><td>email</td><td>Borrower.email</td></tr>
+                <tr><td>loan_status</td><td>Loan.status</td></tr>
+                <tr><td>loan_amount</td><td>Loan.amount</td></tr>
+                <tr><td>milestone_date</td><td>Loan.milestone_date</td></tr>
+                <tr><td>campaign_id</td><td>Integration_Event.payload.campaign_id</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Predictive Intelligence Section -->
+    <div class="card" style="margin-top:24px;">
+      <div class="card-header">
+        <h3>Predictive Pipeline Intelligence</h3>
+        <span class="text-secondary" style="font-size:12px;">Multi-factor risk prediction with downstream cascade analysis</span>
+      </div>
+      <div class="card-body">
+        <div class="metrics-row" style="margin-bottom:16px;">
+          <div class="metric-card"><div class="metric-label">Pipeline Health</div><div class="metric-value" id="pred-health-score">--</div></div>
+          <div class="metric-card"><div class="metric-label">Stages at Risk</div><div class="metric-value" id="pred-stages-at-risk">--</div></div>
+          <div class="metric-card"><div class="metric-label">Top Risk Factor</div><div class="metric-value" id="pred-top-risk" style="font-size:14px;">--</div></div>
+          <div class="metric-card"><div class="metric-label">Seasonal Adj.</div><div class="metric-value" id="pred-seasonal">--</div></div>
+        </div>
+        <div id="pred-stage-risks" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;"></div>
+        <div id="pred-system-risks" style="margin-top:16px;"></div>
+      </div>
+    </div>
+
+  </div><!-- /page-data-architect -->
 
 </div><!-- /main-content -->
 

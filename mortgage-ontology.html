@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mortgage OS — Mortgage Domain Ontology</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⬡</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d1117;--s:#161b22;--s2:#1c2333;--b:#30363d;--b2:#21262d;--t:#e6edf3;--t2:#8b949e;--t3:#484f58;--t4:#6e7681;
+--accent:#C0C0C0;--accent-bright:#D4D4D4;--ok:#3fb950;--ok2:#238636;--err:#f85149;--warn:#d29922;--purple:#8b5cf6;--cyan:#06b6d4;
+--f:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+--m:'SF Mono','Cascadia Code','Fira Code',Consolas,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--f);background:var(--bg);color:var(--t);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.topbar{background:var(--s);border-bottom:1px solid var(--b);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-l{display:flex;align-items:center;gap:14px}
+.topbar-l h1{font-size:15px;font-weight:800;letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
+.topbar-l h1 .accent{color:var(--warn)}
+.topbar-l h1 .dim{font-weight:400;color:var(--t3);font-size:13px}
+.topbar-r{display:flex;gap:8px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:9px;font-weight:600;font-family:var(--m);background:rgba(210,153,34,.1);color:var(--warn);border:1px solid rgba(210,153,34,.2);text-transform:uppercase;letter-spacing:.5px}
+.pill .dot{width:5px;height:5px;border-radius:50%;background:var(--warn);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.nav-link{font-size:10px;color:var(--t2);text-decoration:none;font-family:var(--m);padding:5px 12px;border:1px solid var(--b);border-radius:4px;transition:.15s}
+.nav-link:hover{color:var(--t);border-color:var(--accent)}
+.nav-link.active{background:var(--warn);color:#000;border-color:var(--warn)}
+
+/* Toolbar */
+.toolbar{background:var(--s);border-bottom:1px solid var(--b);padding:8px 24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.toolbar label{font-size:10px;font-weight:600;color:var(--t3);font-family:var(--m);text-transform:uppercase;letter-spacing:.4px}
+.toolbar select,.toolbar input{padding:4px 8px;font-size:11px;background:var(--bg);color:var(--t);border:1px solid var(--b);border-radius:4px;font-family:var(--m)}
+.toolbar select:focus,.toolbar input:focus{border-color:var(--accent);outline:none}
+.toolbar .btn{padding:4px 12px;background:var(--warn);color:#000;border:none;border-radius:4px;font-size:10px;font-weight:700;font-family:var(--m);cursor:pointer;transition:.15s}
+.toolbar .btn:hover{background:#e6a817}
+.search-box{flex:1;min-width:160px;max-width:300px}
+
+.canvas{padding:20px 24px;max-width:1600px;margin:0 auto}
+
+/* Stats row */
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px}
+.stat{background:var(--s);border:1px solid var(--b);border-radius:6px;padding:12px 14px}
+.stat-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--t4);font-family:var(--m);margin-bottom:2px}
+.stat-val{font-size:22px;font-weight:800;font-family:var(--m);letter-spacing:-.5px;line-height:1.1}
+.stat-val.gold{color:var(--warn)}.stat-val.green{color:var(--ok)}.stat-val.red{color:var(--err)}.stat-val.purple{color:var(--purple)}
+
+/* Legend */
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;padding:10px 14px;background:var(--s);border:1px solid var(--b);border-radius:6px}
+.lg{display:flex;align-items:center;gap:5px;font-size:9px;font-family:var(--m);color:var(--t2);cursor:pointer;padding:2px 6px;border-radius:3px;transition:.15s}
+.lg:hover{background:rgba(255,255,255,.04)}
+.lg.active{background:rgba(255,255,255,.08)}
+.lg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* Graph container */
+#graph{width:100%;height:700px;background:var(--s);border:1px solid var(--b);border-radius:8px;position:relative;overflow:hidden;cursor:grab}
+#graph:active{cursor:grabbing}
+#graph svg{width:100%;height:100%;position:absolute;top:0;left:0;pointer-events:none}
+
+/* Ontology nodes */
+.onode{position:absolute;border-radius:6px;cursor:pointer;transition:box-shadow .2s,border-color .2s,opacity .2s,transform .2s;padding:0;overflow:hidden;min-width:130px;font-size:10px;opacity:1}
+.onode:hover{box-shadow:0 0 30px rgba(210,153,34,.2);z-index:10;transform:scale(1.03)}
+.onode.faded{opacity:.2}
+.onode-h{padding:7px 12px;font-weight:700;font-size:10px;font-family:var(--m);display:flex;align-items:center;gap:6px;letter-spacing:-.1px}
+.onode-b{padding:5px 12px;font-size:9px;color:var(--t2);line-height:1.4}
+.onode-prop{font-family:var(--m);font-size:8px;color:var(--t3);padding:3px 12px 5px}
+.onode-count{font-size:7px;font-family:var(--m);background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;color:var(--t3)}
+
+/* Category colors */
+.cat-pipeline .onode-h{background:var(--warn);color:#0d1117}
+.cat-pipeline{border:1px solid var(--warn);background:var(--s2)}
+.cat-agent .onode-h{background:var(--ok);color:#fff}
+.cat-agent{border:1px solid var(--ok);background:var(--s2)}
+.cat-borrower .onode-h{background:#e879f9;color:#0d1117}
+.cat-borrower{border:1px solid #e879f9;background:var(--s2)}
+.cat-document .onode-h{background:var(--accent);color:#0d1117}
+.cat-document{border:1px solid var(--accent);background:var(--s2)}
+.cat-compliance .onode-h{background:var(--err);color:#fff}
+.cat-compliance{border:1px solid var(--err);background:var(--s2)}
+.cat-income .onode-h{background:var(--cyan);color:#0d1117}
+.cat-income{border:1px solid var(--cyan);background:var(--s2)}
+.cat-product .onode-h{background:var(--purple);color:#fff}
+.cat-product{border:1px solid var(--purple);background:var(--s2)}
+.cat-condition .onode-h{background:#fb923c;color:#0d1117}
+.cat-condition{border:1px solid #fb923c;background:var(--s2)}
+
+/* Detail sidebar */
+.sidebar{position:fixed;right:0;top:52px;width:380px;height:calc(100vh - 52px);background:var(--s);border-left:1px solid var(--b);overflow-y:auto;transform:translateX(100%);transition:transform .25s ease;z-index:99;padding:18px}
+.sidebar.open{transform:translateX(0)}
+.sb-close{position:absolute;top:12px;right:12px;background:none;border:1px solid var(--b);color:var(--t2);width:24px;height:24px;border-radius:4px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
+.sb-close:hover{color:var(--t);border-color:var(--accent)}
+.sb-title{font-size:16px;font-weight:800;margin-bottom:2px;color:var(--t)}
+.sb-type{font-size:9px;font-family:var(--m);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;padding:3px 8px;border-radius:3px;display:inline-block}
+.sb-sec{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);font-family:var(--m);margin-top:16px;margin-bottom:6px;padding-top:12px;border-top:1px solid var(--b)}
+.sb-row{font-size:11px;color:var(--t2);margin-bottom:5px;padding:4px 0;line-height:1.4}
+.sb-row b{color:var(--t);font-weight:600}
+.sb-tag{display:inline-flex;padding:2px 7px;border-radius:3px;font-size:8px;font-family:var(--m);font-weight:600;margin:2px}
+.sb-example{background:var(--bg);border:1px solid var(--b);border-radius:4px;padding:8px 10px;font-family:var(--m);font-size:9px;color:var(--t2);margin-top:6px;line-height:1.5;white-space:pre-wrap}
+
+/* Tables */
+.tbl-section{margin-top:16px;background:var(--s);border:1px solid var(--b);border-radius:8px;overflow:hidden}
+.tbl-h{padding:10px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--b);color:var(--t);display:flex;align-items:center;justify-content:space-between}
+.tbl-h .count{font-size:9px;font-weight:400;color:var(--t3);font-family:var(--m)}
+table{width:100%;border-collapse:collapse}
+table th{text-align:left;padding:7px 12px;font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);font-family:var(--m);background:var(--s2);border-bottom:1px solid var(--b)}
+table td{padding:7px 12px;font-size:10px;color:var(--t2);border-bottom:1px solid var(--b2)}
+table tr:hover td{background:rgba(210,153,34,.03)}
+.tag{display:inline-flex;padding:1px 6px;border-radius:3px;font-size:8px;font-weight:600;font-family:var(--m)}
+.tag-pipeline{background:rgba(210,153,34,.12);color:var(--warn)}
+.tag-agent{background:rgba(63,185,80,.12);color:var(--ok)}
+.tag-borrower{background:rgba(232,121,249,.12);color:#e879f9}
+.tag-document{background:rgba(192,192,192,.12);color:var(--accent)}
+.tag-compliance{background:rgba(248,81,73,.12);color:var(--err)}
+.tag-income{background:rgba(6,182,212,.12);color:var(--cyan)}
+.tag-product{background:rgba(139,92,246,.12);color:var(--purple)}
+.tag-condition{background:rgba(251,146,60,.12);color:#fb923c}
+
+/* Pipeline visualization */
+.pipeline-viz{margin-top:16px;padding:16px;background:var(--s);border:1px solid var(--b);border-radius:8px}
+.pipeline-row{display:flex;align-items:center;gap:0;overflow-x:auto;padding:8px 0}
+.pipeline-stage{flex-shrink:0;padding:10px 18px;font-size:10px;font-weight:700;font-family:var(--m);color:var(--t);border:1px solid var(--b);border-radius:4px;background:var(--s2);text-align:center;min-width:100px;position:relative;cursor:pointer;transition:.2s}
+.pipeline-stage:hover{border-color:var(--warn);background:rgba(210,153,34,.06)}
+.pipeline-stage .stage-sub{font-size:8px;font-weight:400;color:var(--t3);margin-top:2px}
+.pipeline-stage .stage-agent{font-size:7px;font-weight:600;color:var(--ok);margin-top:3px}
+.pipeline-arrow{flex-shrink:0;width:28px;text-align:center;color:var(--t3);font-size:14px}
+
+.footer{text-align:center;padding:20px;font-size:9px;color:var(--t3);font-family:var(--m);margin-top:16px;border-top:1px solid var(--b)}
+.footer a{color:var(--t2);text-decoration:none}.footer a:hover{color:var(--warn)}
+
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--b);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--t3)}
+@media(max-width:900px){.stats{grid-template-columns:repeat(3,1fr)}.canvas{padding:12px}.sidebar{width:100%}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-l">
+    <h1><span class="accent">Mortgage</span> Domain Ontology <span class="dim">v2.0</span></h1>
+  </div>
+  <div class="topbar-r">
+    <div class="pill"><span class="dot"></span>MORTGAGE OPS</div>
+    <a href="/" class="nav-link">Dashboard</a>
+    <a href="/coding-ontology.html" class="nav-link">Coding Ontology</a>
+    <a href="/orchestration.html" class="nav-link">Orchestration</a>
+  </div>
+</header>
+
+<div class="toolbar">
+  <label>Filter:</label>
+  <select id="cat-filter" onchange="filterCategory(this.value)">
+    <option value="">All Categories</option>
+    <option value="pipeline">Pipeline</option>
+    <option value="agent">Agents</option>
+    <option value="borrower">Borrower</option>
+    <option value="document">Documents</option>
+    <option value="compliance">Compliance</option>
+    <option value="income">Income/DTI</option>
+    <option value="product">Products</option>
+    <option value="condition">Conditions</option>
+  </select>
+  <label>Search:</label>
+  <input type="text" id="search-box" class="search-box" placeholder="Search classes..." oninput="searchClasses(this.value)">
+  <button class="btn" onclick="resetView()">Reset View</button>
+  <button class="btn" onclick="exportJSON()" style="background:var(--s);color:var(--t);border:1px solid var(--b)">Export JSON-LD</button>
+</div>
+
+<div class="canvas">
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Classes</div><div class="stat-val gold" id="stat-classes">0</div></div>
+    <div class="stat"><div class="stat-label">Relationships</div><div class="stat-val green" id="stat-rels">0</div></div>
+    <div class="stat"><div class="stat-label">Properties</div><div class="stat-val" id="stat-props">0</div></div>
+    <div class="stat"><div class="stat-label">Agents</div><div class="stat-val green" id="stat-agents">0</div></div>
+    <div class="stat"><div class="stat-label">Compliance Rules</div><div class="stat-val red" id="stat-compliance">0</div></div>
+    <div class="stat"><div class="stat-label">Loan Products</div><div class="stat-val purple" id="stat-products">0</div></div>
+  </div>
+
+  <div class="legend" id="legend"></div>
+
+  <div id="graph">
+    <svg id="edges"></svg>
+  </div>
+
+  <!-- Loan Pipeline Stages -->
+  <div class="pipeline-viz">
+    <div class="tbl-h">Mortgage Loan Pipeline Stages<span class="count">End-to-End Workflow</span></div>
+    <div class="pipeline-row" id="pipeline-stages"></div>
+  </div>
+
+  <!-- Relationship Table -->
+  <div class="tbl-section">
+    <div class="tbl-h">Ontology Relationships <span class="count" id="rel-count"></span></div>
+    <table>
+      <thead><tr><th>Subject</th><th>Predicate</th><th>Object</th><th>Cardinality</th><th>Domain</th><th>Description</th></tr></thead>
+      <tbody id="rel-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Class Hierarchy -->
+  <div class="tbl-section" style="margin-top:12px">
+    <div class="tbl-h">Class Hierarchy (Taxonomy) <span class="count" id="tax-count"></span></div>
+    <table>
+      <thead><tr><th>Class</th><th>Parent</th><th>Category</th><th>Properties</th><th>Instances</th></tr></thead>
+      <tbody id="tax-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Compliance Matrix -->
+  <div class="tbl-section" style="margin-top:12px">
+    <div class="tbl-h">Regulatory Compliance Matrix <span class="count">FHA / FNMA / FHLMC / VA / USDA</span></div>
+    <table>
+      <thead><tr><th>Rule / Guide</th><th>Section</th><th>Applies To</th><th>Agent</th><th>Validation</th><th>Severity</th></tr></thead>
+      <tbody id="compliance-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="sidebar" class="sidebar">
+  <button class="sb-close" onclick="closeSB()">x</button>
+  <div id="sb-content"></div>
+</div>
+
+<footer class="footer">Mortgage Domain Ontology v2.0 &middot; Cory Lawson / The Lawson Group &middot; <a href="https://github.com/CoryLawsonxMortgageAI/MortgageFintechOS-">GitHub</a></footer>
+
+<script>
+// ========================================================
+// MORTGAGE DOMAIN ONTOLOGY MODEL - Full OWL-inspired schema
+// ========================================================
+
+const CLASSES = [
+  // PIPELINE CORE
+  {id:"LoanPipeline",label:"Loan Pipeline",cat:"pipeline",x:42,y:2,
+   desc:"Master pipeline orchestrating all mortgage applications from intake through funding. Tracks volume, velocity, and pull-through rates.",
+   props:["pipeline_id: str","active_loans: int","pull_through_rate: Decimal","avg_cycle_days: int","total_volume: Decimal","health_score: float"],
+   isa:"owl:Thing",instances:["pipeline_main"],
+   example:"Pipeline manages 47 active loans, 78% pull-through, avg 32-day cycle"},
+  {id:"LoanFile",label:"Loan File",cat:"pipeline",x:28,y:14,
+   desc:"Core business entity. Individual mortgage application with full lifecycle tracking from pre-qualification through funding and post-close.",
+   props:["loan_id: str","loan_number: str","loan_type: LoanType","loan_purpose: Purpose","stage: PipelineStage","sub_stage: str","priority: Priority","status: LoanStatus","assigned_processor: str","assigned_underwriter: str","lock_expiry: datetime","created_at: datetime","updated_at: datetime"],
+   isa:"owl:Thing",instances:["LN-2026-0847","LN-2026-0923","LN-2026-1104"],
+   example:"LN-2026-0847: FHA Purchase, Underwriting stage, Priority HIGH"},
+  {id:"PipelineStage",label:"Pipeline Stage",cat:"pipeline",x:56,y:14,
+   desc:"Enumeration of loan lifecycle stages. Each stage has entry/exit criteria, SLA targets, and responsible agents.",
+   props:["stage_id: str","name: str","order: int","sla_hours: int","entry_criteria: str[]","exit_criteria: str[]","responsible_agent: str"],
+   isa:"owl:Thing",instances:["pre_qual","application","processing","underwriting","conditional_approval","clear_to_close","closing","funding","post_close"],
+   example:"Underwriting stage: SLA 48h, entry requires full doc package"},
+
+  // AGENTS (Mortgage Ops)
+  {id:"DIEGO",label:"DIEGO",cat:"agent",x:2,y:2,
+   desc:"Pipeline Orchestration Agent. Triages new loan applications by product type (FHA/VA/CONV/USDA), assigns priority based on lock expiry and complexity, tracks stage progression and identifies bottlenecks.",
+   props:["pipeline: dict[str, LoanFile]","triage_rules: TriageConfig","sla_config: SLAConfig","active_alerts: Alert[]"],
+   isa:"BaseAgent",instances:["diego_001"],
+   example:"DIEGO triages 12 new apps/day, routes FHA to NOVA for income analysis"},
+  {id:"MARTIN",label:"MARTIN",cat:"agent",x:2,y:18,
+   desc:"Document Intelligence Agent. Performs OCR-based document classification (W-2, paystubs, bank statements, tax returns), fraud signature detection, completeness auditing, and data extraction with confidence scoring.",
+   props:["document_store: dict[str, Document[]]","classification_model: str","ocr_engine: str","fraud_signatures: FraudPattern[]","confidence_threshold: float"],
+   isa:"BaseAgent",instances:["martin_001"],
+   example:"MARTIN classifies 98.4% of docs correctly, flags 2 fraud patterns/week"},
+  {id:"NOVA",label:"NOVA",cat:"agent",x:2,y:34,
+   desc:"Income & DTI Analysis Agent. Implements W-2 dual-method calculation per FHA HB 4000.1 II.A.5.b, Schedule C self-employment analysis, collections 5% rule (II.A.4.d.v), and DTI tier evaluation with compensating factors.",
+   props:["dti_grid: DTITier[]","compensating_factors: str[]","income_methods: str[]","calculation_precision: int","trending_analysis: bool"],
+   isa:"BaseAgent",instances:["nova_001"],
+   example:"NOVA calculates qualifying income: Method 1 = $6,250/mo, Method 2 = $5,833/mo, uses lower"},
+  {id:"JARVIS",label:"JARVIS",cat:"agent",x:2,y:50,
+   desc:"Condition Resolution Agent. Drafts Letters of Explanation, maps underwriting conditions to required documents, provides regulatory citations for each condition, and tracks resolution status.",
+   props:["conditions: dict[str, Condition[]]","loe_templates: dict","citation_db: CitationIndex","resolution_sla: int"],
+   isa:"BaseAgent",instances:["jarvis_001"],
+   example:"JARVIS drafts LOE citing FHA HB 4000.1 II.A.4.c.ii for irregular deposits"},
+
+  // BORROWER DOMAIN
+  {id:"Borrower",label:"Borrower",cat:"borrower",x:30,y:28,
+   desc:"Primary mortgage applicant. Contains PII, employment history, income sources, credit profile, and asset documentation.",
+   props:["borrower_id: str","first_name: str","last_name: str","ssn: encrypted","dob: date","email: str","phone: str","citizenship: str","housing_status: str","years_at_address: int","dependents: int"],
+   isa:"Person",instances:["BRW-001","BRW-002"],
+   example:"John Smith, US Citizen, 3 years at current address, 1 dependent"},
+  {id:"CoBorrower",label:"Co-Borrower",cat:"borrower",x:42,y:28,
+   desc:"Secondary applicant on mortgage. Same qualification requirements as primary borrower. Income combined for DTI calculation.",
+   props:["relationship: str","coborrower_type: str","income_combined: bool"],
+   isa:"Borrower",instances:[],
+   example:"Spouse co-borrower, income combined for qualifying DTI"},
+  {id:"Employment",label:"Employment",cat:"borrower",x:36,y:40,
+   desc:"Borrower employment record. Minimum 2-year history required for most products. Self-employment requires Schedule C + P&L.",
+   props:["employer_name: str","position: str","start_date: date","end_date: date","type: EmploymentType","monthly_income: Decimal","is_current: bool","verification_method: str"],
+   isa:"owl:Thing",instances:[],
+   example:"Acme Corp, Software Engineer, 3.5 years, $8,500/mo, VOE verified"},
+  {id:"CreditProfile",label:"Credit Profile",cat:"borrower",x:48,y:40,
+   desc:"Tri-merge credit report data. Includes FICO scores, tradelines, derogatory events, and credit utilization.",
+   props:["fico_equifax: int","fico_experian: int","fico_transunion: int","representative_score: int","total_tradelines: int","open_accounts: int","derogatory_count: int","collections_balance: Decimal","utilization_pct: Decimal","bankruptcy: BankruptcyRecord","foreclosure: ForeclosureRecord"],
+   isa:"owl:Thing",instances:[],
+   example:"Rep FICO 712, 14 tradelines, 2 collections ($450 total), 28% utilization"},
+
+  // DOCUMENT DOMAIN
+  {id:"Document",label:"Document",cat:"document",x:18,y:28,
+   desc:"Source document uploaded to the system. Classified by MARTIN with confidence scoring. Required for loan qualification.",
+   props:["doc_id: str","type: DocumentType","filename: str","mime_type: str","pages: int","confidence: float","classified_at: datetime","loan_id: str","ocr_text: str","hash: str"],
+   isa:"owl:Thing",instances:["DOC-W2-001","DOC-PS-001","DOC-BS-001"],
+   example:"2025_W2_SmithJ.pdf, classified W-2 with 99.2% confidence"},
+  {id:"DocumentType",label:"Document Type",cat:"document",x:8,y:40,
+   desc:"Enumeration of recognized mortgage document types with validation rules per document category.",
+   props:["type_id: str","name: str","category: str","required_fields: str[]","validation_rules: Rule[]","retention_period: str"],
+   isa:"owl:Thing",instances:["W-2","Paystub","BankStatement","TaxReturn_1040","TaxReturn_1120S","ScheduleC","VOE","VOD","Appraisal","TitleCommitment","HOI","FloodCert","GiftLetter","LOE","DriversLicense","SocialSecurityCard"],
+   example:"W-2: requires employer EIN, wages Box 1, tax year, employee SSN"},
+  {id:"DocumentPackage",label:"Document Package",cat:"document",x:14,y:54,
+   desc:"Complete set of documents required for a loan file at a given stage. MARTIN audits completeness against checklist.",
+   props:["package_id: str","loan_id: str","stage: PipelineStage","required_docs: DocumentType[]","received_docs: Document[]","completeness_pct: float","missing: DocumentType[]"],
+   isa:"owl:Thing",instances:[],
+   example:"Processing package: 14/18 docs received (78%), missing VOE, 2 bank stmts, flood cert"},
+
+  // INCOME DOMAIN
+  {id:"IncomeCalc",label:"Income Calculation",cat:"income",x:54,y:28,
+   desc:"Result of NOVA's income analysis. Implements FHA dual-method W-2 calculation per HB 4000.1 II.A.5.b and alternative methods for self-employed borrowers.",
+   props:["calc_id: str","method: IncomeMethod","year_1_income: Decimal","year_2_income: Decimal","method_1_result: Decimal","method_2_result: Decimal","qualifying_income: Decimal","trending: TrendDirection","variance_pct: Decimal","citation: str"],
+   isa:"owl:Thing",instances:[],
+   example:"W-2 Dual Method: Yr1=$78k Yr2=$72k, M1=$6,250/mo M2=$5,833/mo, qualifying=$5,833"},
+  {id:"DTITier",label:"DTI Tier",cat:"income",x:66,y:28,
+   desc:"Debt-to-income ratio limits with compensating factors per FHA HB 4000.1 II.A.4.b. Standard limits 31/43, with comp factors up to 40/50.",
+   props:["tier_id: str","tier_name: str","front_ratio_limit: Decimal","back_ratio_limit: Decimal","required_comp_factors: int","min_credit_score: int","max_ltv: Decimal","energy_efficient: bool"],
+   isa:"ComplianceRule",instances:["standard_31_43","comp1_37_47","comp2_40_40","comp_max_40_50","va_unlimited"],
+   example:"Standard: 31/43, Comp Tier 1: 37/47 (needs 1 factor), Max: 40/50 (needs 2+ factors)"},
+  {id:"DebtItem",label:"Debt Item",cat:"income",x:60,y:42,
+   desc:"Individual recurring debt obligation counted in DTI calculation. Includes mortgage, auto, student, revolving, installment, and collections above threshold.",
+   props:["creditor: str","account_type: str","monthly_payment: Decimal","balance: Decimal","months_remaining: int","included_in_dti: bool","exclusion_reason: str"],
+   isa:"owl:Thing",instances:[],
+   example:"Chase Auto Loan, $450/mo, $12,400 balance, 28 months remaining, included in DTI"},
+
+  // COMPLIANCE DOMAIN
+  {id:"FHARule",label:"FHA HB 4000.1",cat:"compliance",x:72,y:2,
+   desc:"Federal Housing Administration Handbook 4000.1 — the definitive guide for FHA loan origination, underwriting, and servicing requirements.",
+   props:["section: str","title: str","effective_date: date","volume: str","chapter: str","requirement_type: str"],
+   isa:"RegulatoryFramework",instances:["II.A.1","II.A.4.b","II.A.4.c.ii","II.A.4.d.v","II.A.5.b","II.A.6","II.B.3","II.B.4"],
+   example:"II.A.5.b: W-2 Income Analysis — dual-method calculation requirement"},
+  {id:"FNMAGuide",label:"FNMA Selling Guide",cat:"compliance",x:84,y:2,
+   desc:"Fannie Mae Selling Guide — conventional loan eligibility, underwriting, and delivery requirements.",
+   props:["section: str","chapter: str","subchapter: str","effective_date: date"],
+   isa:"RegulatoryFramework",instances:["B1-1","B3-3.1","B3-3.2","B3-4.1","B3-4.2","B3-5","B5-6"],
+   example:"B3-3.1: Employment & Income Assessment, B3-4.1: Property Requirements"},
+  {id:"FHLMCGuide",label:"FHLMC Guide",cat:"compliance",x:72,y:16,
+   desc:"Freddie Mac Seller/Servicer Guide — purchase eligibility requirements for conventional conforming loans.",
+   props:["section: str","chapter: str"],
+   isa:"RegulatoryFramework",instances:["5301.1","5302.1","5401.1","5501.1","5601.1"],
+   example:"5301.1: Borrower Eligibility, 5401.1: Property & Appraisal Requirements"},
+  {id:"VARule",label:"VA Lender's Handbook",cat:"compliance",x:84,y:16,
+   desc:"Department of Veterans Affairs Lender's Handbook (26-7) — eligibility, underwriting, and guaranty requirements for VA loans.",
+   props:["chapter: str","section: str","topic: str"],
+   isa:"RegulatoryFramework",instances:["Ch4","Ch7","Ch9","Ch10","Ch12"],
+   example:"Ch 4: Credit Underwriting, Ch 9: Legal Instruments, Ch 12: Minimum Property Reqs"},
+  {id:"USDARule",label:"USDA RD Guide",cat:"compliance",x:78,y:30,
+   desc:"USDA Rural Development 3555 Handbook — eligibility and underwriting for guaranteed rural housing loans.",
+   props:["chapter: str","section: str","income_limit_area: str"],
+   isa:"RegulatoryFramework",instances:["Ch5","Ch8","Ch9","Ch12","Ch15"],
+   example:"Ch 5: Eligibility Requirements (income limits by county)"},
+  {id:"TRID",label:"TRID / TILA-RESPA",cat:"compliance",x:72,y:42,
+   desc:"Truth in Lending Act / Real Estate Settlement Procedures Act integrated disclosure rules. Governs Loan Estimate and Closing Disclosure timing.",
+   props:["form_type: str","timing_rule: str","tolerance_category: str","cure_period: int"],
+   isa:"RegulatoryFramework",instances:["LE_3day","CD_3day","CD_tolerance","fee_cure"],
+   example:"LE must be delivered within 3 business days of application; CD 3 days before closing"},
+  {id:"HMDA",label:"HMDA Reporting",cat:"compliance",x:84,y:42,
+   desc:"Home Mortgage Disclosure Act — federal reporting requirements for mortgage lending data. STORM agent handles export.",
+   props:["lar_id: str","action_taken: int","denial_reasons: str[]","rate_spread: Decimal","reporting_year: int"],
+   isa:"RegulatoryFramework",instances:["LAR_2026"],
+   example:"HMDA LAR: Action Taken 1 (Originated), Rate Spread 1.25%, HOEPA N/A"},
+
+  // PRODUCT DOMAIN
+  {id:"LoanProduct",label:"Loan Product",cat:"product",x:28,y:56,
+   desc:"Mortgage product type with specific eligibility criteria, LTV limits, and investor requirements.",
+   props:["product_id: str","product_name: str","loan_type: LoanType","occupancy: str","property_type: str","max_ltv: Decimal","min_fico: int","max_dti: Decimal","max_loan_amount: Decimal"],
+   isa:"owl:Thing",instances:["FHA_Fixed_30","FHA_Fixed_15","VA_Fixed_30","VA_IRRRL","CONV_Fixed_30","CONV_Fixed_15","CONV_ARM_5_1","USDA_GRH_30"],
+   example:"FHA Fixed 30: Max LTV 96.5%, Min FICO 580, Max DTI 43/50, Max $472,030"},
+  {id:"RateLock",label:"Rate Lock",cat:"product",x:42,y:56,
+   desc:"Interest rate lock commitment. Tracks lock date, expiry, extension options, and re-lock cost modeling.",
+   props:["lock_id: str","rate: Decimal","lock_date: date","expiry_date: date","lock_period_days: int","extension_fee: Decimal","relock_cost: Decimal","status: LockStatus"],
+   isa:"owl:Thing",instances:[],
+   example:"4.875% locked 30 days, expires 3/15, extension 0.125%, relock +0.25%"},
+  {id:"PropertyInfo",label:"Property",cat:"product",x:56,y:56,
+   desc:"Subject property details. Includes appraisal data, flood zone, and eligibility per product type.",
+   props:["address: str","city: str","state: str","zip: str","county: str","property_type: PropertyType","appraised_value: Decimal","purchase_price: Decimal","year_built: int","sqft: int","flood_zone: str","condo_project: str"],
+   isa:"owl:Thing",instances:[],
+   example:"123 Main St, Phoenix AZ 85001, SFR, Appraised $385,000, Zone X (not flood)"},
+  {id:"Appraisal",label:"Appraisal",cat:"product",x:68,y:56,
+   desc:"Property appraisal report. Required for purchase and most refinance transactions. URAR (1004) or drive-by (2055) forms.",
+   props:["appraisal_id: str","form_type: str","as_is_value: Decimal","after_repair_value: Decimal","appraiser: str","effective_date: date","review_type: str"],
+   isa:"Document",instances:[],
+   example:"URAR 1004, As-Is $385,000, Appraiser John Doe, Effective 2/28/2026"},
+
+  // CONDITION DOMAIN
+  {id:"Condition",label:"Underwriting Condition",cat:"condition",x:28,y:68,
+   desc:"Underwriting condition requiring resolution before closing. JARVIS handles mapping, LOE drafting, and compliance citation.",
+   props:["condition_id: str","type: ConditionType","category: ConditionCategory","status: ConditionStatus","description: str","required_docs: DocumentType[]","citation: str","due_date: date","cleared_by: str","cleared_at: datetime"],
+   isa:"owl:Thing",instances:["COND-001","COND-002","COND-003"],
+   example:"Prior-to-Close: Provide 2 months bank statements showing $15,000 reserves"},
+  {id:"ConditionType",label:"Condition Type",cat:"condition",x:42,y:68,
+   desc:"Enumeration of underwriting condition types and their severity impact on loan approval.",
+   props:["type: str","timing: str","blocking: bool","auto_clearable: bool"],
+   isa:"owl:Thing",instances:["Prior_to_Approval","Prior_to_Close","Prior_to_Funding","Post_Close","Suspense"],
+   example:"Prior-to-Approval: Must clear before conditional approval can be issued"},
+  {id:"LOE",label:"Letter of Explanation",cat:"condition",x:56,y:68,
+   desc:"Borrower letter explaining credit events, employment gaps, large deposits, or address discrepancies. JARVIS drafts these with regulatory citations.",
+   props:["loe_id: str","condition_id: str","subject: str","explanation: str","supporting_docs: str[]","citations: str[]","status: str"],
+   isa:"Document",instances:[],
+   example:"LOE for large deposit of $8,500 on 1/15/2026 — gift from parent, citing FHA HB 4000.1 II.A.4.d"},
+];
+
+const RELS = [
+  // Pipeline flow
+  {s:"LoanPipeline",p:"contains",o:"LoanFile",card:"1:N",dom:"Pipeline",desc:"Pipeline tracks all active loan files"},
+  {s:"LoanFile",p:"at_stage",o:"PipelineStage",card:"N:1",dom:"Pipeline",desc:"Each loan is at exactly one pipeline stage"},
+  {s:"PipelineStage",p:"next_stage",o:"PipelineStage",card:"1:1",dom:"Pipeline",desc:"Stages are sequentially ordered"},
+
+  // Agent operations
+  {s:"DIEGO",p:"triages",o:"LoanFile",card:"1:N",dom:"Agent",desc:"DIEGO routes new applications by product type and priority"},
+  {s:"DIEGO",p:"tracks_stage",o:"PipelineStage",card:"1:N",dom:"Agent",desc:"DIEGO monitors SLA compliance per stage"},
+  {s:"DIEGO",p:"assigns_to",o:"MARTIN",card:"1:1",dom:"Agent",desc:"DIEGO sends docs to MARTIN for classification"},
+  {s:"MARTIN",p:"classifies",o:"Document",card:"1:N",dom:"Agent",desc:"MARTIN classifies documents with OCR and AI"},
+  {s:"MARTIN",p:"audits",o:"DocumentPackage",card:"1:N",dom:"Agent",desc:"MARTIN checks completeness of doc packages"},
+  {s:"MARTIN",p:"detects_fraud",o:"Document",card:"N:N",dom:"Agent",desc:"MARTIN runs fraud detection patterns on documents"},
+  {s:"NOVA",p:"calculates",o:"IncomeCalc",card:"1:N",dom:"Agent",desc:"NOVA performs income calculations per FHA dual-method"},
+  {s:"NOVA",p:"evaluates",o:"DTITier",card:"1:N",dom:"Agent",desc:"NOVA determines qualifying DTI tier"},
+  {s:"NOVA",p:"analyzes",o:"DebtItem",card:"1:N",dom:"Agent",desc:"NOVA enumerates debts for DTI ratio"},
+  {s:"JARVIS",p:"resolves",o:"Condition",card:"1:N",dom:"Agent",desc:"JARVIS maps conditions to required documents"},
+  {s:"JARVIS",p:"drafts",o:"LOE",card:"1:N",dom:"Agent",desc:"JARVIS generates LOE letters with citations"},
+  {s:"JARVIS",p:"cites",o:"FHARule",card:"N:N",dom:"Compliance",desc:"JARVIS references FHA handbook sections"},
+  {s:"JARVIS",p:"cites",o:"FNMAGuide",card:"N:N",dom:"Compliance",desc:"JARVIS references FNMA selling guide sections"},
+
+  // Borrower relationships
+  {s:"LoanFile",p:"has_borrower",o:"Borrower",card:"1:1",dom:"Borrower",desc:"Primary borrower on the loan"},
+  {s:"LoanFile",p:"has_coborrower",o:"CoBorrower",card:"1:0..1",dom:"Borrower",desc:"Optional co-borrower on the loan"},
+  {s:"Borrower",p:"has_employment",o:"Employment",card:"1:N",dom:"Borrower",desc:"2+ years employment history required"},
+  {s:"Borrower",p:"has_credit",o:"CreditProfile",card:"1:1",dom:"Borrower",desc:"Tri-merge credit report"},
+  {s:"CoBorrower",p:"rdfs:subClassOf",o:"Borrower",card:"--",dom:"Taxonomy",desc:"Co-borrower extends Borrower class"},
+
+  // Document relationships
+  {s:"LoanFile",p:"requires",o:"DocumentPackage",card:"1:N",dom:"Document",desc:"Each stage requires specific document packages"},
+  {s:"DocumentPackage",p:"contains",o:"Document",card:"1:N",dom:"Document",desc:"Package contains individual documents"},
+  {s:"Document",p:"has_type",o:"DocumentType",card:"N:1",dom:"Document",desc:"Each document is classified to a type"},
+  {s:"Document",p:"belongs_to",o:"LoanFile",card:"N:1",dom:"Document",desc:"Documents are associated with a loan file"},
+
+  // Income/DTI relationships
+  {s:"IncomeCalc",p:"uses_data_from",o:"Employment",card:"N:N",dom:"Income",desc:"Income calculated from employment records"},
+  {s:"IncomeCalc",p:"determines",o:"DTITier",card:"1:1",dom:"Income",desc:"Income calculation determines qualifying DTI tier"},
+  {s:"DTITier",p:"requires",o:"CreditProfile",card:"N:1",dom:"Income",desc:"DTI tier may require minimum credit score"},
+  {s:"DebtItem",p:"affects",o:"DTITier",card:"N:N",dom:"Income",desc:"Debts are summed for back-end DTI ratio"},
+
+  // Compliance relationships
+  {s:"LoanFile",p:"governed_by",o:"FHARule",card:"N:N",dom:"Compliance",desc:"FHA loans must comply with HB 4000.1"},
+  {s:"LoanFile",p:"governed_by",o:"FNMAGuide",card:"N:N",dom:"Compliance",desc:"Conventional loans follow FNMA guidelines"},
+  {s:"LoanFile",p:"governed_by",o:"FHLMCGuide",card:"N:N",dom:"Compliance",desc:"Freddie Mac eligible loans follow FHLMC guide"},
+  {s:"LoanFile",p:"governed_by",o:"VARule",card:"N:N",dom:"Compliance",desc:"VA loans follow VA Lender's Handbook"},
+  {s:"LoanFile",p:"governed_by",o:"USDARule",card:"N:N",dom:"Compliance",desc:"USDA loans follow RD 3555 Handbook"},
+  {s:"LoanFile",p:"subject_to",o:"TRID",card:"1:N",dom:"Compliance",desc:"All loans subject to TRID disclosure rules"},
+  {s:"LoanFile",p:"reported_under",o:"HMDA",card:"1:1",dom:"Compliance",desc:"All originated loans reported under HMDA"},
+  {s:"NOVA",p:"cites",o:"FHARule",card:"N:N",dom:"Compliance",desc:"NOVA references FHA income calculation rules"},
+  {s:"DTITier",p:"defined_by",o:"FHARule",card:"N:1",dom:"Compliance",desc:"DTI tiers defined in FHA HB 4000.1 II.A.4.b"},
+
+  // Product relationships
+  {s:"LoanFile",p:"uses_product",o:"LoanProduct",card:"N:1",dom:"Product",desc:"Each loan uses a specific loan product"},
+  {s:"LoanFile",p:"has_lock",o:"RateLock",card:"1:0..1",dom:"Product",desc:"Loan may have an active rate lock"},
+  {s:"LoanFile",p:"secures",o:"PropertyInfo",card:"1:1",dom:"Product",desc:"Loan is secured by a property"},
+  {s:"PropertyInfo",p:"has_appraisal",o:"Appraisal",card:"1:0..1",dom:"Product",desc:"Property may have an appraisal on file"},
+  {s:"LoanProduct",p:"defines_limits",o:"DTITier",card:"1:N",dom:"Product",desc:"Product defines eligible DTI tiers"},
+
+  // Condition relationships
+  {s:"LoanFile",p:"has_condition",o:"Condition",card:"1:N",dom:"Condition",desc:"Underwriter issues conditions on the loan"},
+  {s:"Condition",p:"has_type",o:"ConditionType",card:"N:1",dom:"Condition",desc:"Each condition classified by type/timing"},
+  {s:"Condition",p:"resolved_by",o:"LOE",card:"1:0..1",dom:"Condition",desc:"Some conditions resolved via LOE"},
+  {s:"Condition",p:"maps_to_doc",o:"DocumentType",card:"1:N",dom:"Condition",desc:"Condition specifies which documents satisfy it"},
+];
+
+const PIPELINE_STAGES = [
+  {name:"Pre-Qual",sub:"Lead intake",agent:"DIEGO"},
+  {name:"Application",sub:"1003 & disclosures",agent:"DIEGO"},
+  {name:"Processing",sub:"Doc collection",agent:"MARTIN"},
+  {name:"Underwriting",sub:"Risk analysis",agent:"NOVA"},
+  {name:"Cond. Approval",sub:"Conditions issued",agent:"JARVIS"},
+  {name:"Clear to Close",sub:"All conditions met",agent:"JARVIS"},
+  {name:"Closing",sub:"TRID / signing",agent:"DIEGO"},
+  {name:"Funding",sub:"Wire & record",agent:"DIEGO"},
+  {name:"Post-Close",sub:"QC & HMDA",agent:"DIEGO"},
+];
+
+const COMPLIANCE_MATRIX = [
+  {rule:"FHA HB 4000.1",section:"II.A.5.b",applies:"W-2 Income",agent:"NOVA",validation:"Dual-method calculation required",severity:"critical"},
+  {rule:"FHA HB 4000.1",section:"II.A.4.b",applies:"DTI Limits",agent:"NOVA",validation:"31/43 standard, comp factors for higher",severity:"critical"},
+  {rule:"FHA HB 4000.1",section:"II.A.4.c.ii",applies:"Large Deposits",agent:"JARVIS",validation:"Source & document deposits >1% of purchase",severity:"high"},
+  {rule:"FHA HB 4000.1",section:"II.A.4.d.v",applies:"Collections",agent:"NOVA",validation:"5% rule: collections >$2,000 affect DTI",severity:"high"},
+  {rule:"FHA HB 4000.1",section:"II.A.6",applies:"Credit History",agent:"NOVA",validation:"Min FICO 500, 580 for 96.5% LTV",severity:"critical"},
+  {rule:"FHA HB 4000.1",section:"II.B.3",applies:"Appraisal",agent:"DIEGO",validation:"FHA roster appraiser, URAR form",severity:"high"},
+  {rule:"FNMA B3-3.1",section:"B3-3.1",applies:"Employment Verify",agent:"MARTIN",validation:"VOE or 2yr W-2 + 30-day paystub",severity:"high"},
+  {rule:"FNMA B3-4.1",section:"B3-4.1",applies:"Property Standards",agent:"DIEGO",validation:"Meet FNMA property eligibility",severity:"high"},
+  {rule:"FNMA B3-5",section:"B3-5",applies:"Credit Assessment",agent:"NOVA",validation:"Min rep FICO per DU findings",severity:"critical"},
+  {rule:"FHLMC 5301.1",section:"5301.1",applies:"Borrower Eligibility",agent:"NOVA",validation:"Age, citizenship, credit requirements",severity:"high"},
+  {rule:"FHLMC 5401.1",section:"5401.1",applies:"Property Eligibility",agent:"DIEGO",validation:"LPA property requirements",severity:"high"},
+  {rule:"VA Ch 4",section:"Ch 4",applies:"Credit Underwriting",agent:"NOVA",validation:"Residual income analysis required",severity:"critical"},
+  {rule:"VA Ch 9",section:"Ch 9",applies:"Closing Documents",agent:"JARVIS",validation:"VA-specific closing requirements",severity:"high"},
+  {rule:"USDA Ch 5",section:"Ch 5",applies:"Income Eligibility",agent:"NOVA",validation:"Household income within area limits",severity:"critical"},
+  {rule:"TRID",section:"LE 3-Day",applies:"Loan Estimate",agent:"DIEGO",validation:"LE within 3 biz days of application",severity:"critical"},
+  {rule:"TRID",section:"CD 3-Day",applies:"Closing Disclosure",agent:"DIEGO",validation:"CD at least 3 biz days before closing",severity:"critical"},
+  {rule:"HMDA",section:"Reg C",applies:"Data Collection",agent:"DIEGO",validation:"LAR data fields per CFPB spec",severity:"high"},
+];
+
+const CAT_COLORS={pipeline:"#d29922",agent:"#3fb950",borrower:"#e879f9",document:"#C0C0C0",compliance:"#f85149",income:"#06b6d4",product:"#8b5cf6",condition:"#fb923c"};
+const CAT_NAMES={pipeline:"Pipeline",agent:"Mortgage Agent",borrower:"Borrower/Applicant",document:"Document",compliance:"Compliance/Regulatory",income:"Income & DTI",product:"Loan Product",condition:"Conditions"};
+
+let activeFilter = "";
+let searchTerm = "";
+
+function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML}
+
+function updateStats(){
+  document.getElementById("stat-classes").textContent = CLASSES.length;
+  document.getElementById("stat-rels").textContent = RELS.length;
+  document.getElementById("stat-props").textContent = CLASSES.reduce((s,c)=>(s+(c.props||[]).length),0);
+  document.getElementById("stat-agents").textContent = CLASSES.filter(c=>c.cat==="agent").length;
+  document.getElementById("stat-compliance").textContent = CLASSES.filter(c=>c.cat==="compliance").length;
+  document.getElementById("stat-products").textContent = CLASSES.filter(c=>c.cat==="product").length;
+}
+
+function renderLegend(){
+  const el = document.getElementById("legend");
+  el.innerHTML = Object.entries(CAT_NAMES).map(([key,name])=>{
+    const count = CLASSES.filter(c=>c.cat===key).length;
+    return `<div class="lg ${activeFilter===key?'active':''}" onclick="filterCategory('${key}')"><div class="lg-dot" style="background:${CAT_COLORS[key]}"></div>${name} (${count})</div>`;
+  }).join("") + `<div class="lg" style="margin-left:auto;cursor:default"><span style="color:var(--t3)">Click node for full details</span></div>`;
+}
+
+function renderGraph(){
+  const g = document.getElementById("graph");
+  // Remove existing nodes
+  g.querySelectorAll(".onode").forEach(n=>n.remove());
+
+  CLASSES.forEach(c=>{
+    const el = document.createElement("div");
+    el.className = `onode cat-${c.cat}`;
+    el.dataset.id = c.id;
+    el.dataset.cat = c.cat;
+
+    const faded = (activeFilter && c.cat !== activeFilter) || (searchTerm && !c.label.toLowerCase().includes(searchTerm) && !c.id.toLowerCase().includes(searchTerm));
+    if(faded) el.classList.add("faded");
+
+    el.style.cssText = `left:${c.x}%;top:${c.y}%;`;
+    const instCount = (c.instances||[]).length;
+    el.innerHTML = `<div class="onode-h">${c.label} ${instCount?`<span class="onode-count">${instCount}</span>`:""}</div><div class="onode-b">${c.desc.substring(0,70)}${c.desc.length>70?"...":""}</div>${c.props?`<div class="onode-prop">${c.props.slice(0,3).join(" | ")}</div>`:""}`;
+    el.onclick = ()=>showDetail(c);
+    g.appendChild(el);
+    c._el = el;
+  });
+}
+
+function renderEdges(){
+  const svg = document.getElementById("edges");
+  svg.innerHTML = "";
+  const g = document.getElementById("graph");
+  const rect = g.getBoundingClientRect();
+  svg.setAttribute("viewBox",`0 0 ${rect.width} ${rect.height}`);
+
+  const domColors = {Pipeline:"#d29922",Agent:"#3fb950",Borrower:"#e879f9",Document:"#C0C0C0",Compliance:"#f85149",Income:"#06b6d4",Product:"#8b5cf6",Condition:"#fb923c",Taxonomy:"#484f58"};
+
+  RELS.forEach(r=>{
+    const from = CLASSES.find(c=>c.id===r.s);
+    const to = CLASSES.find(c=>c.id===r.o);
+    if(!from||!to) return;
+    const bothFaded = (activeFilter && from.cat!==activeFilter && to.cat!==activeFilter);
+    const fx = (from.x+6)/100*rect.width;
+    const fy = (from.y+4)/100*rect.height;
+    const tx = (to.x+6)/100*rect.width;
+    const ty = (to.y+4)/100*rect.height;
+    const mx = (fx+tx)/2;
+    const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d",`M${fx},${fy} C${mx},${fy} ${mx},${ty} ${tx},${ty}`);
+    path.setAttribute("stroke",domColors[r.dom]||"#30363d");
+    path.setAttribute("stroke-width","0.8");
+    path.setAttribute("fill","none");
+    path.setAttribute("opacity",bothFaded?"0.05":"0.3");
+    svg.appendChild(path);
+  });
+}
+
+function renderPipeline(){
+  const el = document.getElementById("pipeline-stages");
+  el.innerHTML = PIPELINE_STAGES.map((s,i)=>{
+    return (i>0?'<div class="pipeline-arrow">&rarr;</div>':'')+
+    `<div class="pipeline-stage" onclick="showStageDetail('${s.name}')">
+      ${s.name}
+      <div class="stage-sub">${s.sub}</div>
+      <div class="stage-agent">${s.agent}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderRelTable(){
+  document.getElementById("rel-count").textContent = RELS.length + " relationships";
+  document.getElementById("rel-body").innerHTML = RELS.map(r=>`<tr>
+    <td style="font-family:var(--m);font-weight:600;color:var(--t);cursor:pointer" onclick="highlightClass('${r.s}')">${r.s}</td>
+    <td style="font-family:var(--m);color:var(--purple)">${r.p}</td>
+    <td style="font-family:var(--m);font-weight:600;color:var(--t);cursor:pointer" onclick="highlightClass('${r.o}')">${r.o}</td>
+    <td style="font-family:var(--m);color:var(--t3)">${r.card}</td>
+    <td><span class="tag tag-${r.dom.toLowerCase()}">${r.dom}</span></td>
+    <td style="font-size:9px;color:var(--t3)">${r.desc||""}</td>
+  </tr>`).join("");
+}
+
+function renderTaxTable(){
+  document.getElementById("tax-count").textContent = CLASSES.length + " classes";
+  document.getElementById("tax-body").innerHTML = CLASSES.map(c=>`<tr>
+    <td style="font-family:var(--m);font-weight:600;color:var(--t);cursor:pointer" onclick="showDetail(CLASSES.find(x=>x.id==='${c.id}'))">${c.label}</td>
+    <td style="font-family:var(--m);color:var(--t2)">${c.isa}</td>
+    <td><span class="tag tag-${c.cat}">${CAT_NAMES[c.cat]||c.cat}</span></td>
+    <td style="font-size:9px;color:var(--t2)">${(c.props||[]).slice(0,4).join(", ")}${(c.props||[]).length>4?"...":""}</td>
+    <td style="font-family:var(--m);font-size:9px;color:var(--t3)">${(c.instances||[]).join(", ")||"--"}</td>
+  </tr>`).join("");
+}
+
+function renderComplianceMatrix(){
+  document.getElementById("compliance-body").innerHTML = COMPLIANCE_MATRIX.map(r=>`<tr>
+    <td style="font-family:var(--m);font-weight:600;color:var(--t)">${r.rule}</td>
+    <td style="font-family:var(--m);color:var(--err)">${r.section}</td>
+    <td>${r.applies}</td>
+    <td><span style="color:var(--ok);font-weight:600">${r.agent}</span></td>
+    <td style="font-size:9px;color:var(--t2)">${r.validation}</td>
+    <td><span class="tag tag-${r.severity==='critical'?'compliance':'condition'}">${r.severity}</span></td>
+  </tr>`).join("");
+}
+
+function showDetail(c){
+  const sb = document.getElementById("sidebar");
+  const ct = document.getElementById("sb-content");
+  let h = `<div class="sb-title">${c.label}</div>`;
+  h += `<div class="sb-type" style="background:${CAT_COLORS[c.cat]}20;color:${CAT_COLORS[c.cat]};border:1px solid ${CAT_COLORS[c.cat]}40">${CAT_NAMES[c.cat]||c.cat}</div>`;
+  h += `<div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:10px">${c.desc}</div>`;
+  if(c.isa) h += `<div class="sb-row"><b>rdfs:subClassOf</b> &rarr; ${c.isa}</div>`;
+
+  if(c.props&&c.props.length){
+    h += `<div class="sb-sec">Properties (${c.props.length})</div>`;
+    c.props.forEach(p=>h+=`<div class="sb-row" style="font-family:var(--m);font-size:10px">${p}</div>`);
+  }
+
+  const outRels = RELS.filter(r=>r.s===c.id);
+  const inRels = RELS.filter(r=>r.o===c.id);
+  if(outRels.length){
+    h += `<div class="sb-sec">Outgoing Relations (${outRels.length})</div>`;
+    outRels.forEach(r=>h+=`<div class="sb-row">&rarr; <b>${r.p}</b> &rarr; <span style="cursor:pointer;color:var(--accent)" onclick="highlightClass('${r.o}')">${r.o}</span> <span style="font-size:8px;color:var(--t3)">[${r.card}]</span><br><span style="font-size:9px;color:var(--t3)">${r.desc||""}</span></div>`);
+  }
+  if(inRels.length){
+    h += `<div class="sb-sec">Incoming Relations (${inRels.length})</div>`;
+    inRels.forEach(r=>h+=`<div class="sb-row">&larr; <span style="cursor:pointer;color:var(--accent)" onclick="highlightClass('${r.s}')">${r.s}</span> <b>${r.p}</b> <span style="font-size:8px;color:var(--t3)">[${r.card}]</span></div>`);
+  }
+
+  if(c.instances&&c.instances.length){
+    h += `<div class="sb-sec">Instances (${c.instances.length})</div>`;
+    c.instances.forEach(i=>h+=`<div class="sb-row" style="font-family:var(--m);font-size:10px">${i}</div>`);
+  }
+
+  if(c.example){
+    h += `<div class="sb-sec">Example</div>`;
+    h += `<div class="sb-example">${c.example}</div>`;
+  }
+
+  ct.innerHTML = h;
+  sb.classList.add("open");
+}
+
+function closeSB(){document.getElementById("sidebar").classList.remove("open")}
+
+function filterCategory(cat){
+  if(activeFilter===cat) activeFilter="";
+  else activeFilter=cat;
+  document.getElementById("cat-filter").value=activeFilter;
+  renderLegend();
+  renderGraph();
+  renderEdges();
+}
+
+function searchClasses(term){
+  searchTerm = term.toLowerCase();
+  renderGraph();
+}
+
+function resetView(){
+  activeFilter="";searchTerm="";
+  document.getElementById("cat-filter").value="";
+  document.getElementById("search-box").value="";
+  renderLegend();renderGraph();renderEdges();
+  closeSB();
+}
+
+function highlightClass(id){
+  const c = CLASSES.find(x=>x.id===id);
+  if(c){
+    activeFilter="";searchTerm="";
+    renderLegend();renderGraph();renderEdges();
+    showDetail(c);
+    if(c._el) c._el.scrollIntoView({behavior:"smooth",block:"center"});
+  }
+}
+
+function showStageDetail(name){
+  const stage = PIPELINE_STAGES.find(s=>s.name===name);
+  if(!stage) return;
+  const sb = document.getElementById("sidebar");
+  const ct = document.getElementById("sb-content");
+  ct.innerHTML = `<div class="sb-title">${stage.name}</div>
+    <div class="sb-type" style="background:rgba(210,153,34,.15);color:var(--warn);border:1px solid rgba(210,153,34,.3)">Pipeline Stage</div>
+    <div class="sb-row"><b>Description:</b> ${stage.sub}</div>
+    <div class="sb-row"><b>Responsible Agent:</b> <span style="color:var(--ok);font-weight:700">${stage.agent}</span></div>
+    <div class="sb-sec">Stage Requirements</div>
+    <div class="sb-row">Entry and exit criteria are defined per loan product type. SLA targets are monitored by DIEGO in real-time.</div>`;
+  sb.classList.add("open");
+}
+
+function exportJSON(){
+  const jsonld = {
+    "@context":{"@vocab":"https://mortgagefintechos.dev/ontology/mortgage#","owl":"http://www.w3.org/2002/07/owl#","rdfs":"http://www.w3.org/2000/01/rdf-schema#"},
+    "@graph":CLASSES.map(c=>({
+      "@id":"mortgage:"+c.id,"@type":c.isa||"owl:Class","rdfs:label":c.label,"rdfs:comment":c.desc,
+      "category":c.cat,"properties":(c.props||[]).map(p=>({name:p.split(":")[0].trim(),type:p.split(":")[1]?.trim()||"str"}))
+    }))
+  };
+  const blob = new Blob([JSON.stringify(jsonld,null,2)],{type:"application/ld+json"});
+  const a = document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download="mortgage-ontology.jsonld";a.click();
+}
+
+// Init
+updateStats();renderLegend();renderGraph();renderPipeline();renderRelTable();renderTaxTable();renderComplianceMatrix();
+setTimeout(renderEdges,150);
+window.addEventListener("resize",()=>{document.getElementById("edges").innerHTML="";renderEdges()});
+document.addEventListener("click",e=>{if(!e.target.closest(".onode")&&!e.target.closest(".sidebar")&&!e.target.closest(".pipeline-stage"))closeSB()});
+</script>
+</body>
+</html>

@@ -10,7 +10,7 @@
 :root {
   --bg:#0d1117;--s:#161b22;--s2:#1c2333;--b:#30363d;--b2:#21262d;
   --t:#e6edf3;--t2:#8b949e;--t3:#484f58;--t4:#6e7681;
-  --accent:#2f81f7;--accent-bright:#58a6ff;
+  --accent:#C0C0C0;--accent-bright:#D4D4D4;
   --ok:#3fb950;--ok2:#238636;--err:#f85149;--warn:#d29922;
   --f:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   --m:'SF Mono','Cascadia Code','Fira Code',Consolas,monospace;
@@ -37,7 +37,7 @@ body{font-family:var(--f);background:var(--bg);color:var(--t);overflow-x:hidden;
 
 /* Nodes */
 .node{position:absolute;background:var(--s2);border:1px solid var(--b);border-radius:6px;padding:10px 14px;cursor:default;transition:border-color .2s,box-shadow .2s}
-.node:hover{border-color:var(--accent);box-shadow:0 0 20px rgba(47,129,247,.08)}
+.node:hover{border-color:var(--accent);box-shadow:0 0 20px rgba(192,192,192,.08)}
 .node-label{font-size:11px;font-weight:700;font-family:var(--m);margin-bottom:2px;display:flex;align-items:center;gap:6px;color:var(--t)}
 .node-sub{font-size:9px;color:var(--t2);line-height:1.3}
 .node-status{width:6px;height:6px;border-radius:50%;flex-shrink:0}
@@ -68,7 +68,7 @@ body{font-family:var(--f);background:var(--bg);color:var(--t);overflow-x:hidden;
 .flow-tbl{width:100%;border-collapse:collapse;margin-top:12px}
 .flow-tbl th{text-align:left;font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);font-family:var(--m);padding:6px 10px;background:var(--s2);border-bottom:1px solid var(--b)}
 .flow-tbl td{padding:6px 10px;font-size:10px;color:var(--t2);border-bottom:1px solid var(--b2)}
-.flow-tbl tr:hover td{background:rgba(47,129,247,.04)}
+.flow-tbl tr:hover td{background:rgba(192,192,192,.04)}
 
 .tag{display:inline-flex;padding:1px 6px;border-radius:3px;font-size:8px;font-weight:600;font-family:var(--m)}
 .tag-ok{background:rgba(63,185,80,.12);color:var(--ok)}
@@ -93,6 +93,8 @@ body{font-family:var(--f);background:var(--bg);color:var(--t);overflow-x:hidden;
   <h1>Mortgage/<span>Coding OS</span> <em>Orchestration Map</em></h1>
   <div class="hdr-r">
     <div class="hdr-pill"><span class="dot"></span>LIVE SYSTEM</div>
+    <a href="/mortgage-ontology.html" class="back">Mortgage Ontology</a>
+    <a href="/coding-ontology.html" class="back">Coding Ontology</a>
     <a href="/" class="back">&larr; Dashboard</a>
   </div>
 </header>
@@ -196,7 +198,7 @@ const NODES = [
 const CONNECTIONS = [
   {from:"kernel",to:"diego",label:"dispatch"},{from:"kernel",to:"martin"},{from:"kernel",to:"nova"},{from:"kernel",to:"jarvis"},
   {from:"kernel",to:"atlas"},{from:"kernel",to:"nexus"},{from:"kernel",to:"cipher"},{from:"kernel",to:"forge"},{from:"kernel",to:"storm"},
-  {from:"diego",to:"martin",label:"docs needed",color:"#58a6ff"},{from:"martin",to:"nova",label:"income docs",color:"#58a6ff"},{from:"nova",to:"jarvis",label:"conditions",color:"#58a6ff"},
+  {from:"diego",to:"martin",label:"docs needed",color:"#D4D4D4"},{from:"martin",to:"nova",label:"income docs",color:"#D4D4D4"},{from:"nova",to:"jarvis",label:"conditions",color:"#D4D4D4"},
   {from:"atlas",to:"nexus",label:"PR review",color:"#8b949e"},{from:"nexus",to:"cipher",label:"security scan",color:"#8b949e"},{from:"cipher",to:"forge",label:"deploy",color:"#8b949e"},
   {from:"kernel",to:"puter",label:"LLM calls",color:"#3fb950"},
   {from:"kernel",to:"paperclip",label:"HTTP :3100",color:"#d29922"},

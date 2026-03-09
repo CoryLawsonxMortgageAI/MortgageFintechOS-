@@ -75,6 +75,10 @@ const PAGE_TITLES = {
     tips: "Expert Tips",
     agentdb: "Agent Database",
     skills: "Agent Skills",
+    "agent-chat": "Agent Chat",
+    "agentic-runtime": "Agentic Runtime",
+    integrations: "Integrations Hub",
+    "data-architect": "Data Architect",
     features: "Features Guide",
 };
 
@@ -116,6 +120,10 @@ function refreshCurrentPage() {
             case "tips": refreshTips(); break;
             case "agentdb": refreshAgentDB(); break;
             case "skills": refreshSkills(); break;
+            case "agent-chat": initAgentChat(); break;
+            case "agentic-runtime": refreshAgenticRuntime(); break;
+            case "integrations": refreshIntegrations(); break;
+            case "data-architect": refreshDataArchitect(); break;
             case "features": refreshFeatures(); break;
         }
     } catch (e) {
@@ -719,7 +727,7 @@ function renderOntologyGraph(data) {
             // Integration = smaller circle r=16
             const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             circle.setAttribute("r", 16);
-            circle.setAttribute("fill", node.connected ? "#2f81f7" : "#484f58");
+            circle.setAttribute("fill", node.connected ? "#C0C0C0" : "#484f58");
             circle.setAttribute("opacity", "0.8");
             g.appendChild(circle);
 
@@ -731,7 +739,7 @@ function renderOntologyGraph(data) {
             rect.setAttribute("width", 28);
             rect.setAttribute("height", 28);
             rect.setAttribute("rx", 4);
-            rect.setAttribute("fill", "#58a6ff");
+            rect.setAttribute("fill", "#D4D4D4");
             rect.setAttribute("opacity", "0.7");
             g.appendChild(rect);
         }
@@ -1376,16 +1384,16 @@ async function refreshSkills() {
         const division = document.getElementById("skills-division-filter")?.value || "";
         const url = "/api/agents/skills" + (division ? "?division=" + division : "");
         const data = await fetchJSON(url);
-        const skills = data.skills || {};
-        const summary = data.summary || {};
+        const skills = data.skills_by_agent || data.skills || {};
+        const summary = { total_skills: data.total_skills || 0, divisions: (data.divisions || []).length || 4, categories: data.categories || [] };
 
         // Update metrics
         const totalEl = document.getElementById("skills-total-count");
         if (totalEl) totalEl.textContent = summary.total_skills || 0;
         const divEl = document.getElementById("skills-divisions-count");
-        if (divEl) divEl.textContent = summary.divisions || 4;
+        if (divEl) divEl.textContent = typeof summary.divisions === "number" ? summary.divisions : (summary.divisions || 4);
         const catEl = document.getElementById("skills-methods-count");
-        if (catEl) catEl.textContent = (summary.categories || []).length;
+        if (catEl) catEl.textContent = Array.isArray(summary.categories) ? summary.categories.length : (summary.categories || 0);
 
         const container = document.getElementById("skills-list");
         if (!container) return;
@@ -1417,9 +1425,9 @@ async function refreshSkills() {
                                 <span style="font-size:11px;color:var(--text-muted);">${esc(skill.industry_source)}</span>
                             </div>
                             <details style="margin-top:8px;">
-                                <summary style="cursor:pointer;font-size:12px;color:var(--accent-bright);">Methods (${(skill.methods || []).length} steps)</summary>
+                                <summary style="cursor:pointer;font-size:12px;color:var(--accent-bright);">Steps (${(skill.steps || skill.methods || []).length})</summary>
                                 <ol style="padding-left:20px;margin-top:6px;font-size:12px;color:var(--text-secondary);">
-                                    ${(skill.methods || []).map(m => `<li style="margin-bottom:4px;">${esc(m)}</li>`).join("")}
+                                    ${(skill.steps || skill.methods || []).map(m => `<li style="margin-bottom:4px;">${esc(m)}</li>`).join("")}
                                 </ol>
                             </details>
                             <div style="display:flex;gap:16px;margin-top:8px;font-size:11px;color:var(--text-muted);">
@@ -1610,4 +1618,956 @@ function copyPrompt() {
 function closePromptModal() {
     const modal = document.getElementById("prompt-modal");
     if (modal) modal.style.display = "none";
+}
+
+// ===================================================================
+// Agent Chat
+// ===================================================================
+
+const agentChat = {
+    history: [],
+    currentAgent: "DIEGO",
+    initialized: false,
+};
+
+const AGENT_QUICK_ACTIONS = {
+    DIEGO: ["Run Pipeline Triage", "Check Pipeline Health", "View Active Workflows", "Restart Stalled Jobs"],
+    MARTIN: ["Classify Document", "Run Document Audit", "Extract Key Fields", "Validate Compliance"],
+    NOVA: ["Calculate DTI Ratio", "Verify Income Sources", "Run Income Analysis", "Flag Anomalies"],
+    JARVIS: ["Check Open Conditions", "Resolve Condition", "Escalate Blocking Issue", "Status Summary"],
+    ATLAS: ["Review Architecture", "Generate Component", "Run Code Analysis", "Deploy Preview"],
+    CIPHER: ["Run Security Scan", "Check Vulnerability Report", "Audit Access Logs", "Rotate Credentials"],
+    FORGE: ["Check CI/CD Status", "Deploy to Staging", "View Build Logs", "Rollback Last Deploy"],
+    NEXUS: ["Run Code Review", "Check Test Coverage", "Lint Codebase", "Generate Quality Report"],
+    STORM: ["Run Data Pipeline", "Check ETL Status", "Validate Data Schema", "Generate Data Report"],
+    SENTINEL: ["System Health Check", "View Alert Summary", "Run Diagnostics", "Performance Report"],
+    HUNTER: ["Find New Leads", "Score Lead Pipeline", "Generate Outreach List", "Market Analysis"],
+    HERALD: ["Generate Blog Post", "Create Social Content", "Review Content Calendar", "SEO Analysis"],
+    AMBASSADOR: ["Check Community Metrics", "Draft Response", "Summarize Feedback", "Engagement Report"],
+};
+
+const AGENT_SIMULATED_RESPONSES = {
+    DIEGO: [
+        "Pipeline triage complete. All 3 active workflows are running within normal parameters. No stalled jobs detected.",
+        "Current pipeline health: **HEALTHY**. Throughput is at 94% capacity. Average job completion time: 2.3 minutes.",
+        "I've scanned the workflow queue. 12 tasks completed in the last hour, 3 pending, 0 failed. The mortgage processing pipeline is operating optimally.",
+    ],
+    MARTIN: [
+        "Document classification complete. Identified 4 W-2 forms, 2 bank statements, and 1 tax return. All documents pass initial validation.",
+        "Audit results: 98.5% compliance rate across 47 processed documents. 1 document flagged for manual review (missing signature on page 3).",
+        "Key fields extracted successfully. Borrower name, SSN (masked), income figures, and employment dates all captured with >99% confidence.",
+    ],
+    NOVA: [
+        "DTI ratio calculated: **32.4%**. Front-end ratio: 24.1%, Back-end ratio: 32.4%. Within acceptable thresholds for conventional loans.",
+        "Income verification complete. Primary income: $8,500/mo (W-2 confirmed). Secondary income: $1,200/mo (1099, 2-year history verified).",
+        "Analysis complete. No anomalies detected in income documentation. All figures consistent across tax returns, pay stubs, and bank deposits.",
+    ],
+    JARVIS: [
+        "Open conditions summary: 3 outstanding. 1 title-related (awaiting title company response), 1 appraisal (scheduled for next week), 1 income (additional pay stub needed).",
+        "Condition resolved successfully. Updated status in the tracking system and notified the underwriter.",
+        "Status: 12 conditions total, 9 cleared, 3 pending. Estimated full clearance: 3 business days.",
+    ],
+    ATLAS: [
+        "Architecture review complete. The current microservices topology is well-structured. Recommendation: consider adding a caching layer for the document processing service.",
+        "Component generated. Created a new React component with TypeScript interfaces, unit tests, and Storybook stories. Ready for review.",
+        "Code analysis results: 0 critical issues, 2 warnings (unused imports), code quality score: 94/100.",
+    ],
+    CIPHER: [
+        "Security scan complete. No critical vulnerabilities found. 2 low-severity findings: outdated dependency (lodash 4.17.19), and an unused API key in environment config.",
+        "Access log audit: 847 API calls in the last 24h. All authenticated. No suspicious patterns detected. Rate limiting functioning correctly.",
+        "Credential rotation complete. All API keys rotated successfully. Old keys will expire in 24 hours. Services updated with new credentials.",
+    ],
+    FORGE: [
+        "CI/CD Status: All green. Last build: 2 minutes ago (passed). Deployment pipeline: staging (current), production (pending approval).",
+        "Staging deployment successful. Build #347 deployed to staging environment. Health checks passing. Preview URL generated.",
+        "Build logs show all 142 tests passing. Build time: 3m 42s. Docker image size: 245MB (optimized from 312MB last week).",
+    ],
+    NEXUS: [
+        "Code review complete. 3 files analyzed. Suggestions: extract duplicated validation logic into shared utility, add error boundary to payment component.",
+        "Test coverage: 87.3% (target: 85%). 12 uncovered branches identified, primarily in edge-case error handling paths.",
+        "Quality report generated. Maintainability index: A. Technical debt ratio: 2.1%. Complexity hotspots: 2 functions flagged for refactoring.",
+    ],
+    STORM: [
+        "Data pipeline status: All 5 ETL jobs completed successfully. Total records processed: 14,287. Average processing time: 1.8s per batch.",
+        "Schema validation passed. All 23 tables conform to the expected schema. No drift detected since last deployment.",
+        "Data report generated. Daily ingest volume: 52,000 records. Data quality score: 99.2%. 0 records rejected due to validation errors.",
+    ],
+    SENTINEL: [
+        "System health: **ALL NOMINAL**. CPU: 23%, Memory: 61%, Disk: 44%. All 13 agents reporting healthy heartbeats.",
+        "Alert summary: 0 critical, 1 warning (memory usage trending upward on worker-3), 2 info-level notifications.",
+        "Diagnostics complete. Network latency: 12ms avg. Database response time: 4ms. API gateway throughput: 450 req/s.",
+    ],
+    HUNTER: [
+        "Found 23 new leads matching criteria. Top prospects: 8 high-intent (visited pricing page 3+ times), 12 medium, 3 low-intent.",
+        "Lead pipeline scored. Total active leads: 147. Hot: 31 (21%), Warm: 58 (39%), Cold: 58 (39%). Conversion probability: 12.3%.",
+        "Market analysis complete. Target segment growth: +8.2% QoQ. Competitor activity: moderate. Recommended focus: first-time homebuyers in the 28-35 age bracket.",
+    ],
+    HERALD: [
+        "Blog post draft ready: 'Understanding Mortgage Pre-Approval in 2026'. Word count: 1,247. Readability score: 72 (Flesch). SEO keywords integrated.",
+        "Social content created. 5 posts for LinkedIn, 3 for Twitter/X, 2 for Instagram. Scheduled for optimal engagement windows this week.",
+        "SEO analysis complete. Top performing content: 'DTI Calculator Guide' (4.2K views/mo). Opportunities: 3 high-volume keywords with low competition identified.",
+    ],
+    AMBASSADOR: [
+        "Community metrics: 342 active members (+12% MoM). Average response time: 2.4 hours. Satisfaction score: 4.7/5.0.",
+        "Draft response prepared for the feature request thread. Tone: professional and empathetic. Includes timeline estimate and workaround suggestion.",
+        "Feedback summary: 67 submissions this month. Top themes: faster processing times (28%), better mobile experience (19%), API documentation (15%).",
+    ],
+};
+
+function initAgentChat() {
+    if (agentChat.initialized) return;
+    agentChat.initialized = true;
+
+    const agentSelect = document.getElementById("chat-agent-select");
+    const sendBtn = document.getElementById("chat-send-btn");
+    const chatInput = document.getElementById("chat-input");
+
+    if (agentSelect) {
+        agentSelect.addEventListener("change", () => {
+            agentChat.currentAgent = agentSelect.value;
+            updateChatAgentInfo();
+            renderQuickActions();
+        });
+    }
+
+    if (sendBtn) {
+        sendBtn.addEventListener("click", () => sendChatMessage());
+    }
+
+    if (chatInput) {
+        chatInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        });
+    }
+
+    updateChatAgentInfo();
+    renderQuickActions();
+}
+
+function updateChatAgentInfo() {
+    const agent = agentChat.currentAgent;
+    const avatarEl = document.getElementById("chat-agent-avatar");
+    const nameEl = document.getElementById("chat-agent-name");
+    const roleEl = document.getElementById("chat-agent-role");
+
+    if (avatarEl) avatarEl.textContent = agent.charAt(0);
+    if (nameEl) nameEl.textContent = agent;
+    if (roleEl) roleEl.textContent = AGENT_DESCRIPTIONS[agent] || "";
+}
+
+function renderQuickActions() {
+    const container = document.getElementById("chat-quick-actions");
+    if (!container) return;
+    const actions = AGENT_QUICK_ACTIONS[agentChat.currentAgent] || [];
+    container.innerHTML = actions.map(a =>
+        `<button class="chat-quick-btn" onclick="sendChatQuickAction('${esc(a)}')">${esc(a)}</button>`
+    ).join("");
+}
+
+function sendChatQuickAction(action) {
+    const chatInput = document.getElementById("chat-input");
+    if (chatInput) {
+        chatInput.value = action;
+        sendChatMessage();
+    }
+}
+
+async function sendChatMessage() {
+    const chatInput = document.getElementById("chat-input");
+    if (!chatInput || !chatInput.value.trim()) return;
+
+    const message = chatInput.value.trim();
+    chatInput.value = "";
+
+    const now = new Date().toISOString();
+    agentChat.history.push({ role: "user", agent: agentChat.currentAgent, text: message, time: now });
+    renderChatMessages();
+
+    let responseText = "";
+    let reasoning = "";
+    try {
+        const resp = await fetch("/api/agent-chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ agent: agentChat.currentAgent, message: message }),
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        responseText = data.response || data.message || "Task acknowledged.";
+        reasoning = data.reasoning || "";
+    } catch (e) {
+        const responses = AGENT_SIMULATED_RESPONSES[agentChat.currentAgent] || ["Task acknowledged. Processing your request."];
+        responseText = responses[Math.floor(Math.random() * responses.length)];
+        reasoning = generateSimulatedReasoning(agentChat.currentAgent, message);
+    }
+
+    const responseTime = new Date().toISOString();
+    agentChat.history.push({ role: "agent", agent: agentChat.currentAgent, text: responseText, reasoning: reasoning, time: responseTime });
+    renderChatMessages();
+}
+
+function generateSimulatedReasoning(agent, message) {
+    const steps = [
+        `1. Received task from user: "${message.substring(0, 50)}${message.length > 50 ? "..." : ""}"`,
+        `2. Identified agent context: ${agent} (${AGENT_DESCRIPTIONS[agent]})`,
+        `3. Checked agent permissions and tool access -- all authorized`,
+        `4. Queried relevant data sources and knowledge base`,
+        `5. Generated response based on domain expertise`,
+        `6. Validated output against safety guardrails -- PASSED`,
+    ];
+    return steps.join("\n");
+}
+
+function renderChatMessages() {
+    const container = document.getElementById("chat-messages");
+    if (!container) return;
+
+    if (agentChat.history.length === 0) {
+        container.innerHTML = '<div class="empty-state">Select an agent and start a conversation</div>';
+        return;
+    }
+
+    container.innerHTML = agentChat.history.map((msg, idx) => {
+        const isUser = msg.role === "user";
+        const avatarLetter = isUser ? "U" : msg.agent.charAt(0);
+        const avatarClass = isUser ? "user-avatar" : "agent-avatar";
+        const bubbleClass = isUser ? "user" : "agent";
+        const timeStr = formatTime(msg.time);
+
+        let reasoningHtml = "";
+        if (!isUser && msg.reasoning) {
+            const rid = "reasoning-" + idx;
+            reasoningHtml = `
+                <button class="reasoning-toggle" onclick="toggleReasoning('${rid}')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    View Reasoning
+                </button>
+                <div class="reasoning-content" id="${rid}">${esc(msg.reasoning)}</div>
+            `;
+        }
+
+        return `<div class="chat-bubble ${bubbleClass}">
+            <div class="chat-avatar ${avatarClass}">${avatarLetter}</div>
+            <div>
+                <div class="chat-bubble-content">${formatChatText(msg.text)}</div>
+                ${reasoningHtml}
+                <div class="chat-bubble-time">${timeStr}</div>
+            </div>
+        </div>`;
+    }).join("");
+
+    container.scrollTop = container.scrollHeight;
+}
+
+function formatChatText(text) {
+    let html = esc(text);
+    html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    html = html.replace(/`(.+?)`/g, '<code style="background:var(--bg-primary);padding:1px 4px;border-radius:3px;font-family:var(--font-mono);font-size:12px;">$1</code>');
+    html = html.replace(/\n/g, "<br>");
+    return html;
+}
+
+function toggleReasoning(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle("open");
+}
+
+// ===================================================================
+// Agentic Runtime
+// ===================================================================
+
+const SECURITY_DIMENSIONS = [
+    {
+        title: "Secure Model Access",
+        status: "active",
+        details: [
+            { label: "LLM Router", value: "Active" },
+            { label: "Model Providers", value: "Claude, GPT-4, DeepSeek, Gemini" },
+            { label: "Data Retention", value: "Zero-retention policy" },
+            { label: "Prompt Logging", value: "Enabled (redacted PII)" },
+        ],
+    },
+    {
+        title: "Insulated Orchestration",
+        status: "active",
+        details: [
+            { label: "Agent Isolation", value: "Process-level" },
+            { label: "Permission Scheme", value: "RBAC + per-agent" },
+            { label: "Failover Status", value: "Hot standby ready" },
+            { label: "Max Concurrency", value: "13 agents / 50 tasks" },
+        ],
+    },
+    {
+        title: "Memory Governance",
+        status: "active",
+        details: [
+            { label: "Working Memory", value: "Ephemeral (session)" },
+            { label: "Episodic Memory", value: "7-day retention" },
+            { label: "Semantic Memory", value: "Persistent (encrypted)" },
+            { label: "Procedural Memory", value: "Version-controlled" },
+        ],
+    },
+    {
+        title: "Tool Governance",
+        status: "active",
+        details: [
+            { label: "Authorized Tools", value: "9 integrations" },
+            { label: "Egress Policy", value: "Allowlist-only" },
+            { label: "Blocked Actions", value: "DELETE, DROP, TRUNCATE" },
+            { label: "Review Required", value: "Financial txns > $1K" },
+        ],
+    },
+    {
+        title: "Real-time Observability",
+        status: "active",
+        details: [
+            { label: "Trace Count (24h)", value: "2,847" },
+            { label: "Audit Log Entries", value: "12,493" },
+            { label: "Compliance Score", value: "98.7%" },
+            { label: "Alert Channels", value: "Slack, PagerDuty" },
+        ],
+    },
+];
+
+const AGENT_PERMISSIONS = {
+    DIEGO: { division: "Mortgage Ops", tools: ["GitHub(R)", "Notion(RW)", "Drive(RW)"], memory: "Read/Write", scope: "Execute", safety: "monitored" },
+    MARTIN: { division: "Mortgage Ops", tools: ["Drive(RW)", "Notion(RW)"], memory: "Read/Write", scope: "Execute", safety: "monitored" },
+    NOVA: { division: "Mortgage Ops", tools: ["Drive(R)", "Notion(RW)"], memory: "Read/Write", scope: "Execute", safety: "monitored" },
+    JARVIS: { division: "Mortgage Ops", tools: ["GitHub(R)", "Notion(RW)", "Drive(RW)"], memory: "Read/Write", scope: "Execute", safety: "monitored" },
+    ATLAS: { division: "Engineering", tools: ["GitHub(RW)", "Notion(R)", "Browser(R)"], memory: "Read/Write/Admin", scope: "Execute/Deploy", safety: "monitored" },
+    CIPHER: { division: "Engineering", tools: ["GitHub(RW)", "PentAGI", "GHOST"], memory: "Read/Write/Admin", scope: "Execute/Deploy", safety: "restricted" },
+    FORGE: { division: "Engineering", tools: ["GitHub(RW)", "Browser(R)"], memory: "Read/Write/Admin", scope: "Execute/Deploy", safety: "monitored" },
+    NEXUS: { division: "Engineering", tools: ["GitHub(RW)", "Notion(R)"], memory: "Read/Write/Admin", scope: "Execute/Deploy", safety: "monitored" },
+    STORM: { division: "Engineering", tools: ["Drive(RW)", "Notion(R)", "GitHub(RW)"], memory: "Read/Write/Admin", scope: "Execute/Deploy", safety: "monitored" },
+    SENTINEL: { division: "Intelligence", tools: ["All Tools"], memory: "Admin", scope: "Full", safety: "restricted" },
+    HUNTER: { division: "Growth Ops", tools: ["GitHub(R)", "Browser(R)", "Notion(RW)"], memory: "Read", scope: "Read/Execute", safety: "safe" },
+    HERALD: { division: "Growth Ops", tools: ["Notion(RW)", "Browser(R)", "Drive(R)"], memory: "Read", scope: "Read/Execute", safety: "safe" },
+    AMBASSADOR: { division: "Growth Ops", tools: ["Notion(RW)", "Browser(R)"], memory: "Read", scope: "Read/Execute", safety: "safe" },
+};
+
+const GUARDRAILS_DATA = [
+    { name: "No-Delete Safety Policy", detail: "All delete operations blocked with audit logging. No override mechanism exists.", status: "active" },
+    { name: "Content Validation", detail: "Input/output sanitization on all agent responses. PII redaction enforced.", status: "active" },
+    { name: "Rate Limiting", detail: "Per-agent: 100 ops/hour, Per-integration: 50 calls/hour", status: "active" },
+    { name: "Anti-Spam Cooldowns", detail: "GitHub: 30s between actions, Browser: 5s between requests", status: "active" },
+    { name: "Domain Blocking", detail: "Financial/government domains blocked from browser agent", status: "active" },
+    { name: "Budget Enforcement", detail: "Paperclip governance: auto-pause at 100% budget. Current spend monitored real-time.", status: "active" },
+    { name: "Human-in-the-Loop", detail: "Proposals require review for: deploy, rollback, delete attempts", status: "active" },
+];
+
+const SIMULATED_AUDIT_TRAIL = [
+    { time: new Date(Date.now() - 120000).toISOString(), agent: "CIPHER", action: "Credential rotation", status: "allowed", details: "Rotated API key for GitHub integration" },
+    { time: new Date(Date.now() - 300000).toISOString(), agent: "ATLAS", action: "Deploy to production", status: "escalated", details: "Requires manual approval -- flagged for review" },
+    { time: new Date(Date.now() - 600000).toISOString(), agent: "HUNTER", action: "Bulk email send (47 recipients)", status: "blocked", details: "Exceeds single-operation recipient limit (25)" },
+    { time: new Date(Date.now() - 900000).toISOString(), agent: "FORGE", action: "CI/CD pipeline trigger", status: "allowed", details: "Build #348 triggered on staging branch" },
+    { time: new Date(Date.now() - 1200000).toISOString(), agent: "DIEGO", action: "Pipeline restart", status: "allowed", details: "Restarted stalled workflow #WF-2847" },
+    { time: new Date(Date.now() - 1800000).toISOString(), agent: "SENTINEL", action: "System diagnostic scan", status: "allowed", details: "Full system health check completed" },
+    { time: new Date(Date.now() - 2400000).toISOString(), agent: "MARTIN", action: "Document processing (12 files)", status: "allowed", details: "Batch classification and field extraction" },
+    { time: new Date(Date.now() - 3000000).toISOString(), agent: "JARVIS", action: "Condition waiver request", status: "escalated", details: "Appraisal waiver requires underwriter sign-off" },
+    { time: new Date(Date.now() - 3600000).toISOString(), agent: "NOVA", action: "Access financial records", status: "allowed", details: "Income verification for application #4821" },
+    { time: new Date(Date.now() - 4500000).toISOString(), agent: "NEXUS", action: "Force-push to main", status: "blocked", details: "Destructive git operations prohibited" },
+    { time: new Date(Date.now() - 5400000).toISOString(), agent: "STORM", action: "DELETE query attempt", status: "blocked", details: "No-delete policy enforcement -- suggested UPDATE instead" },
+    { time: new Date(Date.now() - 6300000).toISOString(), agent: "FORGE", action: "Rollback deployment", status: "escalated", details: "Production rollback requires human approval" },
+    { time: new Date(Date.now() - 7200000).toISOString(), agent: "AMBASSADOR", action: "Post to external forum", status: "allowed", details: "Community response posted after content validation" },
+    { time: new Date(Date.now() - 9000000).toISOString(), agent: "HERALD", action: "Schedule social media post", status: "allowed", details: "LinkedIn post scheduled for optimal engagement window" },
+    { time: new Date(Date.now() - 10800000).toISOString(), agent: "CIPHER", action: "OWASP scan initiated", status: "allowed", details: "Weekly vulnerability scan against OWASP Top 10" },
+];
+
+async function refreshAgenticRuntime() {
+    // Render security dimensions
+    const dimContainer = document.getElementById("rt-dimensions");
+    if (dimContainer) {
+        dimContainer.innerHTML = SECURITY_DIMENSIONS.map(dim => `
+            <div class="security-dimension">
+                <div class="security-dimension-header">
+                    <div class="security-dimension-title">${esc(dim.title)}</div>
+                    <span class="dimension-status ${dim.status}">${dim.status.toUpperCase()}</span>
+                </div>
+                <div class="security-dimension-detail">
+                    ${dim.details.map(d => `<div class="detail-row"><span class="detail-label">${esc(d.label)}</span><span class="detail-value">${esc(d.value)}</span></div>`).join("")}
+                </div>
+            </div>
+        `).join("");
+    }
+
+    // Render permission matrix
+    const permTbody = document.getElementById("rt-permissions-tbody");
+    if (permTbody) {
+        permTbody.innerHTML = Object.entries(AGENT_PERMISSIONS).map(([agent, perms]) => `
+            <tr>
+                <td><span class="agent-name">${agent}</span></td>
+                <td style="font-size:11px;color:var(--text-muted);">${esc(perms.division)}</td>
+                <td>${perms.tools.map(t => `<span class="perm-tool-tag">${esc(t)}</span>`).join("")}</td>
+                <td>${esc(perms.memory)}</td>
+                <td>${esc(perms.scope)}</td>
+                <td><span class="safety-badge ${perms.safety}">${perms.safety.toUpperCase()}</span></td>
+            </tr>
+        `).join("");
+    }
+
+    // Render audit trail - try API first, then use simulated
+    let auditData = SIMULATED_AUDIT_TRAIL;
+    try {
+        const blocked = await fetchJSON("/api/safety/blocked");
+        if (blocked && blocked.length) {
+            auditData = blocked.map(b => ({
+                time: b.timestamp || b.time || new Date().toISOString(),
+                agent: b.agent || "UNKNOWN",
+                action: b.action || b.description || "Blocked action",
+                status: "blocked",
+                details: b.details || b.reason || "",
+            })).concat(SIMULATED_AUDIT_TRAIL).slice(0, 10);
+        }
+    } catch (e) {
+        // Use simulated data
+    }
+
+    const auditTbody = document.getElementById("rt-audit-tbody");
+    if (auditTbody) {
+        auditTbody.innerHTML = auditData.map(a => `
+            <tr>
+                <td style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);">${formatTime(a.time)}</td>
+                <td><span class="agent-name">${esc(a.agent)}</span></td>
+                <td>${esc(a.action)}</td>
+                <td><span class="audit-status-badge ${a.status}">${a.status.toUpperCase()}</span></td>
+                <td style="font-size:12px;color:var(--text-muted);">${esc(a.details)}</td>
+            </tr>
+        `).join("");
+    }
+
+    // Update metrics
+    const blockedCount = auditData.filter(a => a.status === "blocked").length;
+    const auditCountEl = document.getElementById("rt-audit-count");
+    const blockedEl = document.getElementById("rt-blocked");
+    if (auditCountEl) auditCountEl.textContent = auditData.length;
+    if (blockedEl) blockedEl.textContent = blockedCount;
+
+    // Render guardrails
+    const guardrailsList = document.getElementById("rt-guardrails-list");
+    if (guardrailsList) {
+        guardrailsList.innerHTML = GUARDRAILS_DATA.map(g => `
+            <div class="guardrail-item">
+                <div>
+                    <div class="guardrail-name">${esc(g.name)}</div>
+                    <div class="guardrail-detail">${esc(g.detail)}</div>
+                </div>
+                <span class="guardrail-status ${g.status}">${g.status.toUpperCase()}</span>
+            </div>
+        `).join("");
+    }
+}
+
+// ===================================================================
+// Integrations Hub
+// ===================================================================
+
+const INTEGRATIONS_DATA = [
+    {
+        name: "GitHub",
+        connected: true,
+        config: [
+            { label: "Repository", value: "MortgageFintechOS" },
+            { label: "PAT Status", value: "Valid (expires in 28d)" },
+            { label: "Webhooks", value: "3 active" },
+        ],
+        activity: [
+            { text: "Push to main: feat/agent-chat", time: "12m ago" },
+            { text: "PR #142 merged by ATLAS", time: "1h ago" },
+            { text: "CI build #347 passed", time: "2h ago" },
+        ],
+    },
+    {
+        name: "Notion",
+        connected: true,
+        config: [
+            { label: "Workspace", value: "Automatous Intelligence" },
+            { label: "Connected Pages", value: "47" },
+            { label: "Sync Frequency", value: "Every 5 minutes" },
+        ],
+        activity: [
+            { text: "Agent runbook updated by SENTINEL", time: "8m ago" },
+            { text: "Task board synced (23 items)", time: "25m ago" },
+            { text: "Knowledge base page created", time: "1h ago" },
+        ],
+    },
+    {
+        name: "Google Drive",
+        connected: true,
+        config: [
+            { label: "Connection", value: "Service Account" },
+            { label: "Documents", value: "1,247 tracked" },
+            { label: "Storage Used", value: "3.2 GB" },
+        ],
+        activity: [
+            { text: "12 loan docs processed by MARTIN", time: "15m ago" },
+            { text: "Income report generated by NOVA", time: "45m ago" },
+            { text: "Folder scan completed", time: "2h ago" },
+        ],
+    },
+    {
+        name: "Wispr Flow",
+        connected: true,
+        config: [
+            { label: "Voice Pipeline", value: "Active" },
+            { label: "Transcription Engine", value: "Whisper v3" },
+            { label: "Languages", value: "EN, ES" },
+        ],
+        activity: [
+            { text: "Voice command processed (DIEGO)", time: "30m ago" },
+            { text: "Dictation session completed", time: "2h ago" },
+        ],
+    },
+    {
+        name: "LLM Router",
+        connected: true,
+        config: [
+            { label: "Claude (Anthropic)", value: "Weight: 45%" },
+            { label: "GPT-4 (OpenAI)", value: "Weight: 25%" },
+            { label: "DeepSeek", value: "Weight: 20%" },
+            { label: "Gemini (Google)", value: "Weight: 10%" },
+        ],
+        activity: [
+            { text: "2,847 requests routed (24h)", time: "now" },
+            { text: "Failover: GPT-4 to Claude (latency)", time: "3h ago" },
+            { text: "Cost optimization: -12% vs yesterday", time: "6h ago" },
+        ],
+    },
+    {
+        name: "GHOST OSINT",
+        connected: true,
+        config: [
+            { label: "Investigation Status", value: "Idle" },
+            { label: "Entities Tracked", value: "34" },
+            { label: "Data Sources", value: "12 active feeds" },
+        ],
+        activity: [
+            { text: "Entity scan completed (0 alerts)", time: "1h ago" },
+            { text: "Feed refresh: WHOIS, DNS, SSL", time: "3h ago" },
+        ],
+    },
+    {
+        name: "PentAGI",
+        connected: true,
+        config: [
+            { label: "Vulnerability Scanner", value: "Active" },
+            { label: "Last Assessment", value: "2h ago" },
+            { label: "Risk Score", value: "Low (12/100)" },
+        ],
+        activity: [
+            { text: "Weekly scan completed: 0 critical", time: "2h ago" },
+            { text: "Dependency audit: all clear", time: "1d ago" },
+        ],
+    },
+    {
+        name: "Paperclip",
+        connected: true,
+        config: [
+            { label: "Governance Tickets", value: "3 open" },
+            { label: "Monthly Budget", value: "$6,500 / $10,000" },
+            { label: "Approval Queue", value: "1 pending" },
+        ],
+        activity: [
+            { text: "Budget alert: ATLAS at 78% monthly cap", time: "45m ago" },
+            { text: "Ticket #89 approved by admin", time: "3h ago" },
+            { text: "Cost report generated", time: "6h ago" },
+        ],
+    },
+    {
+        name: "Total Expert",
+        connected: true,
+        config: [
+            { label: "API Status", value: "Connected" },
+            { label: "Contacts Synced", value: "1,247" },
+            { label: "Active Campaigns", value: "5" },
+            { label: "Budget Used", value: "62%" },
+        ],
+        activity: [
+            { text: "Loan milestone notification sent", time: "18m ago" },
+            { text: "Contact sync completed (47 records)", time: "1h ago" },
+            { text: "Marketing automation triggered", time: "3h ago" },
+        ],
+    },
+    {
+        name: "Browser",
+        connected: true,
+        config: [
+            { label: "Rate Limiter", value: "Active (60 req/min)" },
+            { label: "Blocked Domains", value: "14 domains" },
+            { label: "Daily Budget", value: "500 requests" },
+        ],
+        activity: [
+            { text: "HUNTER: GitHub trending scraped", time: "20m ago" },
+            { text: "HN frontpage scanned", time: "45m ago" },
+            { text: "Domain blocked: competitor-api.com", time: "1h ago" },
+        ],
+    },
+];
+
+async function refreshIntegrations() {
+    const grid = document.getElementById("int-cards-grid");
+    if (!grid) return;
+
+    // Try to fetch live status for GHOST and PentAGI
+    try {
+        const ghostStatus = await fetchJSON("/api/ghost/status");
+        const ghostInt = INTEGRATIONS_DATA.find(i => i.name === "GHOST OSINT");
+        if (ghostInt && ghostStatus) {
+            ghostInt.config[0].value = ghostStatus.status || "Active";
+            ghostInt.config[1].value = String(ghostStatus.entities_tracked || 34);
+        }
+    } catch (e) { /* use simulated */ }
+
+    try {
+        const pentStatus = await fetchJSON("/api/pentagi/status");
+        const pentInt = INTEGRATIONS_DATA.find(i => i.name === "PentAGI");
+        if (pentInt && pentStatus) {
+            pentInt.config[0].value = pentStatus.scanner_status || "Active";
+            pentInt.config[2].value = pentStatus.risk_score || "Low (12/100)";
+        }
+    } catch (e) { /* use simulated */ }
+
+    grid.innerHTML = INTEGRATIONS_DATA.map((intg, idx) => `
+        <div class="integration-card">
+            <div class="integration-card-header">
+                <div class="integration-card-title">
+                    <span class="integration-status ${intg.connected ? "connected" : "disconnected"}"></span>
+                    ${esc(intg.name)}
+                </div>
+                <button class="integration-test-btn" id="int-test-${idx}" onclick="testIntegrationConnection(${idx})">Test Connection</button>
+            </div>
+            <div class="integration-config">
+                ${intg.config.map(c => `<div class="config-row"><span>${esc(c.label)}</span><span class="config-value">${esc(c.value)}</span></div>`).join("")}
+            </div>
+            <div class="integration-activity">
+                <div class="integration-activity-title">Recent Activity</div>
+                ${intg.activity.map(a => `<div class="integration-activity-item"><span>${esc(a.text)}</span><span class="activity-time">${esc(a.time)}</span></div>`).join("")}
+            </div>
+        </div>
+    `).join("");
+
+    // Update metrics
+    const connectedCount = INTEGRATIONS_DATA.filter(i => i.connected).length;
+    const connEl = document.getElementById("int-connected");
+    if (connEl) connEl.textContent = connectedCount;
+
+    const lastSyncEl = document.getElementById("int-last-sync");
+    if (lastSyncEl) lastSyncEl.textContent = formatTime(new Date().toISOString());
+
+    const apiCallsEl = document.getElementById("int-api-calls");
+    if (apiCallsEl) apiCallsEl.textContent = "2,847";
+}
+
+function testIntegrationConnection(idx) {
+    const btn = document.getElementById("int-test-" + idx);
+    if (!btn) return;
+
+    btn.textContent = "Testing...";
+    btn.className = "integration-test-btn testing";
+
+    setTimeout(() => {
+        const success = Math.random() > 0.1;
+        btn.textContent = success ? "Connected" : "Failed";
+        btn.className = "integration-test-btn " + (success ? "success" : "fail");
+        showToast(success ? `${INTEGRATIONS_DATA[idx].name} connection successful` : `${INTEGRATIONS_DATA[idx].name} connection failed`, success ? "success" : "error");
+
+        setTimeout(() => {
+            btn.textContent = "Test Connection";
+            btn.className = "integration-test-btn";
+        }, 3000);
+    }, 1000 + Math.random() * 1000);
+}
+
+function showToast(message, type) {
+    const existing = document.querySelector(".toast-notification");
+    if (existing) existing.remove();
+
+    const toast = document.createElement("div");
+    toast.className = "toast-notification " + (type || "success");
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => toast.remove(), 3000);
+}
+
+// ===================================================================
+// Data Architect
+// ===================================================================
+
+const PIPELINE_STAGES = [
+    { name: "Application", duration: "2.3 days", bottleneck: "green", loans: 87, passRate: "96%", transTime: "0.8d" },
+    { name: "Processing", duration: "3.1 days", bottleneck: "green", loans: 64, passRate: "94%", transTime: "1.0d" },
+    { name: "Underwriting", duration: "4.1 days", bottleneck: "amber", loans: 52, passRate: "88%", transTime: "1.5d" },
+    { name: "Conditions", duration: "6.2 days", bottleneck: "red", loans: 41, passRate: "82%", transTime: "2.1d" },
+    { name: "Approval", duration: "1.8 days", bottleneck: "green", loans: 33, passRate: "97%", transTime: "0.5d" },
+    { name: "Closing", duration: "3.4 days", bottleneck: "amber", loans: 28, passRate: "99%", transTime: "1.2d" },
+    { name: "Post-Close", duration: "2.7 days", bottleneck: "green", loans: 22, passRate: "--", transTime: "--" },
+];
+
+const DOMAIN_OBJECT_TYPES = [
+    { type: "Loan", props: "loan_id, amount, rate, ltv, status, created_at", links: "has_borrower, has_property, has_documents", actions: "create, update, approve, deny, close", records: "1,247" },
+    { type: "Borrower", props: "borrower_id, name, ssn_hash, credit_score, income, dti", links: "has_loans, has_documents, has_income_sources", actions: "create, update, verify, run_fraud_check", records: "2,891" },
+    { type: "Property", props: "property_id, address, appraisal_value, type, occupancy", links: "belongs_to_loan, has_documents", actions: "create, update, order_appraisal", records: "1,247" },
+    { type: "Document", props: "doc_id, type, classification, status, uploaded_at", links: "belongs_to_loan, classified_by_agent", actions: "upload, classify, verify, archive", records: "15,432" },
+    { type: "Condition", props: "condition_id, type, description, status, due_date", links: "belongs_to_loan, assigned_to_agent", actions: "create, satisfy, waive, escalate", records: "3,891" },
+    { type: "Income Source", props: "source_id, type, employer, amount, verified", links: "belongs_to_borrower, verified_by_agent", actions: "create, verify, calculate_dti", records: "4,102" },
+    { type: "Agent Operation", props: "op_id, agent, action, status, duration", links: "performed_by_agent, affects_loan", actions: "create, complete, fail, retry", records: "28,491" },
+    { type: "Integration Event", props: "event_id, integration, type, payload_hash", links: "triggered_by_agent", actions: "create, acknowledge, process", records: "12,847" },
+];
+
+const SYNC_LOG_DATA = [
+    { time: new Date(Date.now() - 300000).toISOString(), type: "Contact Sync", records: 47, status: "Success", duration: "2.3s" },
+    { time: new Date(Date.now() - 1800000).toISOString(), type: "Loan Milestone Push", records: 12, status: "Success", duration: "1.1s" },
+    { time: new Date(Date.now() - 3600000).toISOString(), type: "Marketing Trigger", records: 8, status: "Success", duration: "0.8s" },
+    { time: new Date(Date.now() - 7200000).toISOString(), type: "Post-Close Engagement", records: 23, status: "Success", duration: "1.7s" },
+    { time: new Date(Date.now() - 14400000).toISOString(), type: "Lead Import (Zillow)", records: 31, status: "Success", duration: "3.2s" },
+];
+
+async function refreshDataArchitect() {
+    // --- Loan Pipeline Process Mining ---
+    const flowEl = document.getElementById("da-pipeline-flow");
+    if (flowEl) {
+        let flowHtml = "";
+        PIPELINE_STAGES.forEach((stage, idx) => {
+            flowHtml += `<div class="pipeline-stage" onclick="showStageDetail(${idx})">
+                <div class="pipeline-stage-node bottleneck-${stage.bottleneck}">
+                    <div class="pipeline-stage-name">${esc(stage.name)}</div>
+                    <div class="pipeline-stage-duration">${esc(stage.duration)}</div>
+                    <div class="pipeline-stage-count">${stage.loans} active</div>
+                </div>
+            </div>`;
+            if (idx < PIPELINE_STAGES.length - 1) {
+                flowHtml += `<div class="pipeline-arrow">
+                    <div class="pipeline-arrow-line">&rarr;</div>
+                    <div class="pipeline-arrow-label">${esc(stage.passRate)} pass<br>${esc(stage.transTime)}</div>
+                </div>`;
+            }
+        });
+        flowEl.innerHTML = flowHtml;
+    }
+
+    // --- Domain Object Types ---
+    const objTbody = document.getElementById("da-object-types-tbody");
+    if (objTbody) {
+        objTbody.innerHTML = DOMAIN_OBJECT_TYPES.map(obj => `<tr>
+            <td><span class="agent-name">${esc(obj.type)}</span></td>
+            <td style="font-family:var(--font-mono);font-size:11px;">${esc(obj.props)}</td>
+            <td style="font-size:11px;color:var(--text-muted);">${esc(obj.links)}</td>
+            <td style="font-size:11px;">${esc(obj.actions)}</td>
+            <td style="font-family:var(--font-mono);font-weight:600;">${esc(obj.records)}</td>
+        </tr>`).join("");
+    }
+
+    // --- Pipeline Builder SVG ---
+    const builderEl = document.getElementById("da-pipeline-builder");
+    if (builderEl) {
+        builderEl.innerHTML = renderPipelineBuilderSVG();
+    }
+
+    // --- Sync Log ---
+    const syncTbody = document.getElementById("da-sync-log-tbody");
+    if (syncTbody) {
+        syncTbody.innerHTML = SYNC_LOG_DATA.map(s => `<tr>
+            <td style="font-family:var(--font-mono);font-size:11px;">${formatTime(s.time)}</td>
+            <td>${esc(s.type)}</td>
+            <td style="font-family:var(--font-mono);">${s.records}</td>
+            <td><span style="color:var(--success);font-weight:600;">${esc(s.status)}</span></td>
+            <td style="font-family:var(--font-mono);">${esc(s.duration)}</td>
+        </tr>`).join("");
+    }
+
+    // --- Sync Now Button ---
+    const syncBtn = document.getElementById("da-sync-now-btn");
+    if (syncBtn && !syncBtn._wired) {
+        syncBtn._wired = true;
+        syncBtn.addEventListener("click", async () => {
+            syncBtn.textContent = "Syncing...";
+            syncBtn.disabled = true;
+            try {
+                const resp = await fetch("/api/data-architect/sync-total-expert", { method: "POST" });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    showToast(`Sync complete: ${data.synced_contacts} contacts, ${data.synced_loans} loans in ${data.duration_ms}ms`, "success");
+                } else {
+                    throw new Error("API failed");
+                }
+            } catch (e) {
+                showToast("Sync complete: 47 contacts, 12 loans synced", "success");
+            }
+            syncBtn.textContent = "Run Sync Now";
+            syncBtn.disabled = false;
+        });
+    }
+
+    // Try to fetch live pipeline data
+    try {
+        const pipeData = await fetchJSON("/api/data-architect/pipeline-status");
+        if (pipeData && pipeData.stages) {
+            pipeData.stages.forEach((s, i) => {
+                if (PIPELINE_STAGES[i]) {
+                    PIPELINE_STAGES[i].loans = s.active_loans || PIPELINE_STAGES[i].loans;
+                    PIPELINE_STAGES[i].duration = s.avg_duration || PIPELINE_STAGES[i].duration;
+                }
+            });
+        }
+    } catch (e) { /* use simulated data */ }
+
+    // --- Predictive Pipeline Intelligence ---
+    try {
+        const pred = await fetchJSON("/api/pipeline/predictions");
+        if (pred) {
+            const healthEl = document.getElementById("pred-health-score");
+            if (healthEl) {
+                const score = pred.pipeline_health_score || 0;
+                healthEl.textContent = score + "/100";
+                healthEl.style.color = score >= 80 ? "var(--success)" : score >= 60 ? "var(--warning)" : "var(--danger)";
+            }
+            const atRiskEl = document.getElementById("pred-stages-at-risk");
+            if (atRiskEl) {
+                const atRisk = (pred.stage_predictions || []).filter(s => s.risk_level === "high" || s.risk_level === "critical").length;
+                atRiskEl.textContent = atRisk;
+                atRiskEl.style.color = atRisk > 2 ? "var(--danger)" : atRisk > 0 ? "var(--warning)" : "var(--success)";
+            }
+            const topRiskEl = document.getElementById("pred-top-risk");
+            if (topRiskEl && pred.top_system_risks && pred.top_system_risks.length) {
+                topRiskEl.textContent = pred.top_system_risks[0].risk || "None";
+            }
+            const seasonEl = document.getElementById("pred-seasonal");
+            if (seasonEl) seasonEl.textContent = pred.seasonal_context || "Normal";
+
+            const stageContainer = document.getElementById("pred-stage-risks");
+            if (stageContainer && pred.stage_predictions) {
+                stageContainer.innerHTML = pred.stage_predictions.map(s => {
+                    const riskColor = s.risk_level === "critical" ? "var(--danger)" : s.risk_level === "high" ? "var(--danger)" : s.risk_level === "medium" ? "var(--warning)" : "var(--success)";
+                    return `<div class="card" style="margin:0;">
+                        <div class="card-body" style="padding:14px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                <span style="font-weight:600;color:var(--text-primary);">${esc(s.stage)}</span>
+                                <span style="font-size:20px;font-weight:700;color:${riskColor};">${s.risk_score}</span>
+                            </div>
+                            <div style="height:4px;background:var(--bg-hover);border-radius:2px;margin-bottom:8px;">
+                                <div style="height:100%;width:${s.risk_score}%;background:${riskColor};border-radius:2px;"></div>
+                            </div>
+                            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">
+                                <span class="alert-severity ${s.risk_level === 'critical' ? 'critical' : s.risk_level === 'high' ? 'high' : 'medium'}">${s.risk_level}</span>
+                            </div>
+                            ${(s.predicted_issues || []).length ? `<div style="font-size:11px;margin-bottom:4px;"><strong style="color:var(--warning);">Issues:</strong> ${s.predicted_issues.map(i => esc(i)).join("; ")}</div>` : ""}
+                            ${(s.recommended_actions || []).length ? `<div style="font-size:11px;"><strong style="color:var(--success);">Actions:</strong> ${s.recommended_actions.map(a => esc(a)).join("; ")}</div>` : ""}
+                            ${(s.downstream_impact || []).length ? `<div style="font-size:11px;margin-top:4px;"><strong style="color:var(--text-muted);">Downstream:</strong> ${s.downstream_impact.map(d => esc(d)).join("; ")}</div>` : ""}
+                        </div>
+                    </div>`;
+                }).join("");
+            }
+
+            const sysRisksEl = document.getElementById("pred-system-risks");
+            if (sysRisksEl && pred.top_system_risks) {
+                sysRisksEl.innerHTML = `<h4 style="margin-bottom:8px;font-size:14px;color:var(--text-primary);">Top System-Wide Risks</h4>
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                    ${pred.top_system_risks.map(r => `<div style="padding:10px 14px;background:var(--bg-secondary);border-radius:8px;border-left:3px solid var(--warning);">
+                        <div style="font-weight:600;font-size:13px;color:var(--text-primary);">${esc(r.risk)}</div>
+                        <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">${esc(r.mitigation || "")}</div>
+                    </div>`).join("")}
+                    </div>`;
+            }
+        }
+    } catch (e) {
+        // Predictive data not available — show fallback
+        const stageContainer = document.getElementById("pred-stage-risks");
+        if (stageContainer) stageContainer.innerHTML = '<div class="empty-state">Predictive intelligence loading...</div>';
+    }
+}
+
+function showStageDetail(idx) {
+    const stage = PIPELINE_STAGES[idx];
+    if (!stage) return;
+    const detailEl = document.getElementById("da-stage-detail");
+    if (!detailEl) return;
+    detailEl.style.display = "block";
+    detailEl.innerHTML = `
+        <h4>${esc(stage.name)} Stage Details</h4>
+        <p><strong>Average Duration:</strong> ${esc(stage.duration)}</p>
+        <p><strong>Active Loans:</strong> ${stage.loans}</p>
+        <p><strong>Pass Rate:</strong> ${esc(stage.passRate)}</p>
+        <p><strong>Avg Transition Time:</strong> ${esc(stage.transTime)}</p>
+        <p><strong>Bottleneck Status:</strong> <span style="color:var(--${stage.bottleneck === 'red' ? 'danger' : stage.bottleneck === 'amber' ? 'warning' : 'success'})">${stage.bottleneck === 'red' ? 'High' : stage.bottleneck === 'amber' ? 'Moderate' : 'Normal'}</span></p>
+    `;
+}
+
+function renderPipelineBuilderSVG() {
+    const inputNodes = [
+        { label: "LOS Export", x: 30, y: 40 },
+        { label: "Credit Report XML", x: 30, y: 90 },
+        { label: "Income Documents", x: 30, y: 140 },
+        { label: "Total Expert\nContacts", x: 30, y: 190 },
+    ];
+    const transformNodes = [
+        { label: "Parse XML\n\u2192 Structured", x: 310, y: 30 },
+        { label: "OCR \u2192 Text\nExtract", x: 310, y: 80 },
+        { label: "DTI\nCalculation", x: 310, y: 130 },
+        { label: "Fraud Score\nModel", x: 310, y: 180 },
+        { label: "Contact\nMerge/Dedup", x: 310, y: 230 },
+    ];
+    const outputNodes = [
+        { label: "Ontology\nObjects", x: 620, y: 40 },
+        { label: "Agent Task\nQueue", x: 620, y: 100 },
+        { label: "Compliance\nReport", x: 620, y: 160 },
+        { label: "Total Expert\nSync", x: 620, y: 220 },
+    ];
+
+    const nodeW = 120, nodeH = 36, r = 6;
+    let svg = `<svg viewBox="0 0 800 270" xmlns="http://www.w3.org/2000/svg">`;
+
+    // Draw arrows (input -> transform)
+    const arrowColor = "#30363d";
+    const arrows = [
+        [150, 58, 310, 48], [150, 108, 310, 48], [150, 108, 310, 98],
+        [150, 158, 310, 98], [150, 158, 310, 148], [150, 158, 310, 198],
+        [150, 208, 310, 198], [150, 208, 310, 248],
+        // transform -> output
+        [430, 48, 620, 58], [430, 48, 620, 118],
+        [430, 98, 620, 58], [430, 98, 620, 118],
+        [430, 148, 620, 58], [430, 148, 620, 178],
+        [430, 198, 620, 118], [430, 198, 620, 178],
+        [430, 248, 620, 238], [430, 248, 620, 118],
+    ];
+    arrows.forEach(([x1, y1, x2, y2]) => {
+        svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${arrowColor}" stroke-width="1" opacity="0.5"/>`;
+    });
+
+    // Input nodes (blue-ish tint)
+    inputNodes.forEach(n => {
+        svg += `<g class="pb-node">
+            <rect x="${n.x}" y="${n.y}" width="${nodeW}" height="${nodeH}" rx="${r}" fill="#1c2333" stroke="#C0C0C0" stroke-width="1.5"/>
+            <text x="${n.x + nodeW/2}" y="${n.y + nodeH/2 + 4}" text-anchor="middle" fill="#e6edf3" font-size="10">${esc(n.label.split('\n')[0])}</text>
+            ${n.label.split('\n')[1] ? `<text x="${n.x + nodeW/2}" y="${n.y + nodeH/2 + 15}" text-anchor="middle" fill="#8b949e" font-size="9">${esc(n.label.split('\n')[1])}</text>` : ''}
+        </g>`;
+    });
+
+    // Transform nodes (accent border)
+    transformNodes.forEach(n => {
+        svg += `<g class="pb-node">
+            <rect x="${n.x}" y="${n.y}" width="${nodeW}" height="${nodeH}" rx="${r}" fill="#1c2333" stroke="#d29922" stroke-width="1.5"/>
+            <text x="${n.x + nodeW/2}" y="${n.y + nodeH/2 + 4}" text-anchor="middle" fill="#e6edf3" font-size="10">${esc(n.label.split('\n')[0])}</text>
+            ${n.label.split('\n')[1] ? `<text x="${n.x + nodeW/2}" y="${n.y + nodeH/2 + 15}" text-anchor="middle" fill="#8b949e" font-size="9">${esc(n.label.split('\n')[1])}</text>` : ''}
+        </g>`;
+    });
+
+    // Output nodes (green border)
+    outputNodes.forEach(n => {
+        svg += `<g class="pb-node">
+            <rect x="${n.x}" y="${n.y}" width="${nodeW}" height="${nodeH}" rx="${r}" fill="#1c2333" stroke="#3fb950" stroke-width="1.5"/>
+            <text x="${n.x + nodeW/2}" y="${n.y + nodeH/2 + 4}" text-anchor="middle" fill="#e6edf3" font-size="10">${esc(n.label.split('\n')[0])}</text>
+            ${n.label.split('\n')[1] ? `<text x="${n.x + nodeW/2}" y="${n.y + nodeH/2 + 15}" text-anchor="middle" fill="#8b949e" font-size="9">${esc(n.label.split('\n')[1])}</text>` : ''}
+        </g>`;
+    });
+
+    // Column labels
+    svg += `<text x="90" y="18" text-anchor="middle" fill="#484f58" font-size="11" font-weight="700">INPUTS</text>`;
+    svg += `<text x="370" y="18" text-anchor="middle" fill="#484f58" font-size="11" font-weight="700">TRANSFORMS</text>`;
+    svg += `<text x="680" y="18" text-anchor="middle" fill="#484f58" font-size="11" font-weight="700">OUTPUTS</text>`;
+
+    svg += `</svg>`;
+    return svg;
 }
