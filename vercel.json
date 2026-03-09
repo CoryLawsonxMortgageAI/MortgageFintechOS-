@@ -1,3 +1,10 @@
 {
-  "cleanUrls": true
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/mortgage-ontology", "destination": "/mortgage-ontology.html" },
+    { "source": "/coding-ontology", "destination": "/coding-ontology.html" },
+    { "source": "/ontology", "destination": "/ontology.html" },
+    { "source": "/orchestration", "destination": "/orchestration.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

@@ -38,8 +38,8 @@ body{font-family:var(--f);background:var(--bg);color:var(--t);overflow-x:hidden;
 .cat-agent{border:1px solid var(--accent);background:var(--s2)}
 .cat-domain .onode-h{background:#d29922;color:#0d1117}
 .cat-domain{border:1px solid #d29922;background:var(--s2)}
-.cat-integration .onode-h{background:#8b5cf6;color:#fff}
-.cat-integration{border:1px solid #8b5cf6;background:var(--s2)}
+.cat-integration .onode-h{background:#0ea5e9;color:#fff}
+.cat-integration{border:1px solid #0ea5e9;background:var(--s2)}
 .cat-data .onode-h{background:var(--t3);color:var(--t)}
 .cat-data{border:1px solid var(--b);background:var(--s2)}
 .cat-llm .onode-h{background:#06b6d4;color:#fff}
@@ -101,7 +101,7 @@ table tr:hover td{background:rgba(192,192,192,.04)}
     <div class="lg"><div class="lg-dot" style="background:var(--accent)"></div>Agent (Employee)</div>
     <div class="lg"><div class="lg-dot" style="background:#d29922"></div>Mortgage Domain</div>
     <div class="lg"><div class="lg-dot" style="background:#f85149"></div>Compliance</div>
-    <div class="lg"><div class="lg-dot" style="background:#8b5cf6"></div>Integration</div>
+    <div class="lg"><div class="lg-dot" style="background:#0ea5e9"></div>Integration</div>
     <div class="lg"><div class="lg-dot" style="background:#06b6d4"></div>AI / LLM</div>
     <div class="lg"><div class="lg-dot" style="background:var(--t3)"></div>Data Entity</div>
     <div class="lg" style="margin-left:auto"><span style="color:var(--t3)">Click any class for properties & relationships</span></div>
@@ -370,7 +370,7 @@ function renderEdges(){
   const g=document.getElementById("graph");
   const rect=g.getBoundingClientRect();
   svg.setAttribute("viewBox",`0 0 ${rect.width} ${rect.height}`);
-  const colors={Core:"#3fb950",Agent:"#484f58",Mortgage:"#d29922",Compliance:"#f85149",Coding:"#8b949e",Integration:"#8b5cf6",AI:"#06b6d4"};
+  const colors={Core:"#3fb950",Agent:"#484f58",Mortgage:"#d29922",Compliance:"#f85149",Coding:"#8b949e",Integration:"#0ea5e9",AI:"#06b6d4"};
   RELS.forEach(r=>{
     const from=CLASSES.find(c=>c.id===r.s);
     const to=CLASSES.find(c=>c.id===r.o);
@@ -394,7 +394,7 @@ function showDetail(c){
   const sb=document.getElementById("sidebar");
   const ct=document.getElementById("sb-content");
   const catNames={core:"Core System",agent:"Agent (Employee)",domain:"Mortgage Domain",compliance:"Compliance",integration:"Integration",llm:"AI / LLM",data:"Data Entity"};
-  const catColors={core:"#3fb950",agent:"#C0C0C0",domain:"#d29922",compliance:"#f85149",integration:"#8b5cf6",llm:"#06b6d4",data:"#484f58"};
+  const catColors={core:"#3fb950",agent:"#C0C0C0",domain:"#d29922",compliance:"#f85149",integration:"#0ea5e9",llm:"#06b6d4",data:"#484f58"};
   let h=`<div class="sb-title">${c.label}</div>`;
   h+=`<div class="sb-type" style="color:${catColors[c.cat]}">${catNames[c.cat]||c.cat}</div>`;
   h+=`<div style="font-size:11px;color:var(--t2);line-height:1.5;margin-bottom:8px">${c.desc}</div>`;
@@ -423,7 +423,7 @@ function showDetail(c){
 function closeSB(){document.getElementById("sidebar").classList.remove("open")}
 
 function renderRelTable(){
-  document.getElementById("rel-body").innerHTML=RELS.map(r=>`<tr><td style="font-family:var(--m);font-weight:600;color:var(--t)">${r.s}</td><td style="font-family:var(--m);color:#8b5cf6">${r.p}</td><td style="font-family:var(--m);font-weight:600;color:var(--t)">${r.o}</td><td style="font-family:var(--m);color:var(--t3)">${r.card}</td><td>${r.dom}</td></tr>`).join("");
+  document.getElementById("rel-body").innerHTML=RELS.map(r=>`<tr><td style="font-family:var(--m);font-weight:600;color:var(--t)">${r.s}</td><td style="font-family:var(--m);color:#0ea5e9">${r.p}</td><td style="font-family:var(--m);font-weight:600;color:var(--t)">${r.o}</td><td style="font-family:var(--m);color:var(--t3)">${r.card}</td><td>${r.dom}</td></tr>`).join("");
 }
 function renderTaxTable(){
   document.getElementById("tax-body").innerHTML=TAX.map(t=>`<tr><td style="font-family:var(--m);font-weight:600;color:var(--t)">${t.cls}</td><td style="font-family:var(--m);color:var(--t2)">${t.parent}</td><td style="font-size:9px;color:var(--t2)">${t.props}</td><td style="font-family:var(--m);font-size:9px;color:var(--t3)">${t.inst}</td></tr>`).join("");
