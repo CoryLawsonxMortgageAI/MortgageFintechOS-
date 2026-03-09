@@ -1,0 +1,35 @@
+[project]
+name = "mortgagefintechos"
+version = "1.0.0"
+description = "24/7 Autonomous AI Operating System for Mortgage Lending"
+requires-python = ">=3.11"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "S", "B", "A", "C4", "SIM"]
+ignore = [
+    "S101",   # assert used in tests
+    "S104",   # binding to 0.0.0.0 (intentional for dashboard)
+    "S311",   # pseudo-random not used for crypto
+    "E501",   # line length handled by formatter
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S106"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
