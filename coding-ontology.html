@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coding OS — Engineering Agents Ontology</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⬡</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d1117;--s:#161b22;--s2:#1c2333;--b:#30363d;--b2:#21262d;--t:#e6edf3;--t2:#8b949e;--t3:#484f58;--t4:#6e7681;
+--accent:#C0C0C0;--accent-bright:#D4D4D4;--ok:#3fb950;--ok2:#238636;--err:#f85149;--warn:#d29922;--purple:#8b5cf6;--cyan:#06b6d4;--pink:#ec4899;
+--f:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+--m:'SF Mono','Cascadia Code','Fira Code',Consolas,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--f);background:var(--bg);color:var(--t);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.topbar{background:var(--s);border-bottom:1px solid var(--b);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-l{display:flex;align-items:center;gap:14px}
+.topbar-l h1{font-size:15px;font-weight:800;letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
+.topbar-l h1 .accent{color:var(--cyan)}
+.topbar-l h1 .dim{font-weight:400;color:var(--t3);font-size:13px}
+.topbar-r{display:flex;gap:8px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:9px;font-weight:600;font-family:var(--m);background:rgba(6,182,212,.1);color:var(--cyan);border:1px solid rgba(6,182,212,.2);text-transform:uppercase;letter-spacing:.5px}
+.pill .dot{width:5px;height:5px;border-radius:50%;background:var(--cyan);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.nav-link{font-size:10px;color:var(--t2);text-decoration:none;font-family:var(--m);padding:5px 12px;border:1px solid var(--b);border-radius:4px;transition:.15s}
+.nav-link:hover{color:var(--t);border-color:var(--accent)}
+.nav-link.active{background:var(--cyan);color:#000;border-color:var(--cyan)}
+
+.toolbar{background:var(--s);border-bottom:1px solid var(--b);padding:8px 24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.toolbar label{font-size:10px;font-weight:600;color:var(--t3);font-family:var(--m);text-transform:uppercase;letter-spacing:.4px}
+.toolbar select,.toolbar input{padding:4px 8px;font-size:11px;background:var(--bg);color:var(--t);border:1px solid var(--b);border-radius:4px;font-family:var(--m)}
+.toolbar select:focus,.toolbar input:focus{border-color:var(--accent);outline:none}
+.toolbar .btn{padding:4px 12px;background:var(--cyan);color:#000;border:none;border-radius:4px;font-size:10px;font-weight:700;font-family:var(--m);cursor:pointer;transition:.15s}
+.toolbar .btn:hover{background:#22d3ee}
+.search-box{flex:1;min-width:160px;max-width:300px}
+
+.canvas{padding:20px 24px;max-width:1600px;margin:0 auto}
+
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px}
+.stat{background:var(--s);border:1px solid var(--b);border-radius:6px;padding:12px 14px}
+.stat-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--t4);font-family:var(--m);margin-bottom:2px}
+.stat-val{font-size:22px;font-weight:800;font-family:var(--m);letter-spacing:-.5px;line-height:1.1}
+.stat-val.cyan{color:var(--cyan)}.stat-val.green{color:var(--ok)}.stat-val.purple{color:var(--purple)}.stat-val.pink{color:var(--pink)}.stat-val.warn{color:var(--warn)}
+
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;padding:10px 14px;background:var(--s);border:1px solid var(--b);border-radius:6px}
+.lg{display:flex;align-items:center;gap:5px;font-size:9px;font-family:var(--m);color:var(--t2);cursor:pointer;padding:2px 6px;border-radius:3px;transition:.15s}
+.lg:hover{background:rgba(255,255,255,.04)}
+.lg.active{background:rgba(255,255,255,.08)}
+.lg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+#graph{width:100%;height:720px;background:var(--s);border:1px solid var(--b);border-radius:8px;position:relative;overflow:hidden;cursor:grab}
+#graph:active{cursor:grabbing}
+#graph svg{width:100%;height:100%;position:absolute;top:0;left:0;pointer-events:none}
+
+.onode{position:absolute;border-radius:6px;cursor:pointer;transition:box-shadow .2s,border-color .2s,opacity .2s,transform .2s;padding:0;overflow:hidden;min-width:130px;font-size:10px;opacity:1}
+.onode:hover{box-shadow:0 0 30px rgba(6,182,212,.2);z-index:10;transform:scale(1.03)}
+.onode.faded{opacity:.2}
+.onode-h{padding:7px 12px;font-weight:700;font-size:10px;font-family:var(--m);display:flex;align-items:center;gap:6px;letter-spacing:-.1px}
+.onode-b{padding:5px 12px;font-size:9px;color:var(--t2);line-height:1.4}
+.onode-prop{font-family:var(--m);font-size:8px;color:var(--t3);padding:3px 12px 5px}
+.onode-count{font-size:7px;font-family:var(--m);background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;color:var(--t3)}
+
+.cat-agent .onode-h{background:var(--cyan);color:#0d1117}
+.cat-agent{border:1px solid var(--cyan);background:var(--s2)}
+.cat-sdlc .onode-h{background:var(--ok);color:#fff}
+.cat-sdlc{border:1px solid var(--ok);background:var(--s2)}
+.cat-security .onode-h{background:var(--err);color:#fff}
+.cat-security{border:1px solid var(--err);background:var(--s2)}
+.cat-devops .onode-h{background:var(--warn);color:#0d1117}
+.cat-devops{border:1px solid var(--warn);background:var(--s2)}
+.cat-data .onode-h{background:var(--purple);color:#fff}
+.cat-data{border:1px solid var(--purple);background:var(--s2)}
+.cat-infra .onode-h{background:var(--t3);color:var(--t)}
+.cat-infra{border:1px solid var(--b);background:var(--s2)}
+.cat-ai .onode-h{background:var(--pink);color:#fff}
+.cat-ai{border:1px solid var(--pink);background:var(--s2)}
+.cat-quality .onode-h{background:var(--accent);color:#0d1117}
+.cat-quality{border:1px solid var(--accent);background:var(--s2)}
+.cat-growth .onode-h{background:#a3e635;color:#0d1117}
+.cat-growth{border:1px solid #a3e635;background:var(--s2)}
+
+.sidebar{position:fixed;right:0;top:52px;width:380px;height:calc(100vh - 52px);background:var(--s);border-left:1px solid var(--b);overflow-y:auto;transform:translateX(100%);transition:transform .25s ease;z-index:99;padding:18px}
+.sidebar.open{transform:translateX(0)}
+.sb-close{position:absolute;top:12px;right:12px;background:none;border:1px solid var(--b);color:var(--t2);width:24px;height:24px;border-radius:4px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
+.sb-close:hover{color:var(--t);border-color:var(--accent)}
+.sb-title{font-size:16px;font-weight:800;margin-bottom:2px;color:var(--t)}
+.sb-type{font-size:9px;font-family:var(--m);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;padding:3px 8px;border-radius:3px;display:inline-block}
+.sb-sec{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);font-family:var(--m);margin-top:16px;margin-bottom:6px;padding-top:12px;border-top:1px solid var(--b)}
+.sb-row{font-size:11px;color:var(--t2);margin-bottom:5px;padding:4px 0;line-height:1.4}
+.sb-row b{color:var(--t);font-weight:600}
+.sb-example{background:var(--bg);border:1px solid var(--b);border-radius:4px;padding:8px 10px;font-family:var(--m);font-size:9px;color:var(--t2);margin-top:6px;line-height:1.5;white-space:pre-wrap}
+
+/* SDLC Pipeline */
+.sdlc-viz{margin-top:16px;padding:16px;background:var(--s);border:1px solid var(--b);border-radius:8px}
+.sdlc-row{display:flex;align-items:center;gap:0;overflow-x:auto;padding:8px 0}
+.sdlc-stage{flex-shrink:0;padding:10px 18px;font-size:10px;font-weight:700;font-family:var(--m);color:var(--t);border:1px solid var(--b);border-radius:4px;background:var(--s2);text-align:center;min-width:110px;cursor:pointer;transition:.2s}
+.sdlc-stage:hover{border-color:var(--cyan);background:rgba(6,182,212,.06)}
+.sdlc-stage .stage-sub{font-size:8px;font-weight:400;color:var(--t3);margin-top:2px}
+.sdlc-stage .stage-agent{font-size:7px;font-weight:600;color:var(--cyan);margin-top:3px}
+.sdlc-arrow{flex-shrink:0;width:28px;text-align:center;color:var(--t3);font-size:14px}
+
+.tbl-section{margin-top:16px;background:var(--s);border:1px solid var(--b);border-radius:8px;overflow:hidden}
+.tbl-h{padding:10px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--b);color:var(--t);display:flex;align-items:center;justify-content:space-between}
+.tbl-h .count{font-size:9px;font-weight:400;color:var(--t3);font-family:var(--m)}
+table{width:100%;border-collapse:collapse}
+table th{text-align:left;padding:7px 12px;font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);font-family:var(--m);background:var(--s2);border-bottom:1px solid var(--b)}
+table td{padding:7px 12px;font-size:10px;color:var(--t2);border-bottom:1px solid var(--b2)}
+table tr:hover td{background:rgba(6,182,212,.03)}
+.tag{display:inline-flex;padding:1px 6px;border-radius:3px;font-size:8px;font-weight:600;font-family:var(--m)}
+.tag-agent{background:rgba(6,182,212,.12);color:var(--cyan)}
+.tag-sdlc{background:rgba(63,185,80,.12);color:var(--ok)}
+.tag-security{background:rgba(248,81,73,.12);color:var(--err)}
+.tag-devops{background:rgba(210,153,34,.12);color:var(--warn)}
+.tag-data{background:rgba(139,92,246,.12);color:var(--purple)}
+.tag-infra{background:rgba(72,79,88,.2);color:var(--t2)}
+.tag-ai{background:rgba(236,72,153,.12);color:var(--pink)}
+.tag-quality{background:rgba(192,192,192,.12);color:var(--accent)}
+.tag-growth{background:rgba(163,230,53,.12);color:#a3e635}
+.tag-taxonomy{background:rgba(72,79,88,.2);color:var(--t2)}
+
+.footer{text-align:center;padding:20px;font-size:9px;color:var(--t3);font-family:var(--m);margin-top:16px;border-top:1px solid var(--b)}
+.footer a{color:var(--t2);text-decoration:none}.footer a:hover{color:var(--cyan)}
+
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--b);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--t3)}
+@media(max-width:900px){.stats{grid-template-columns:repeat(3,1fr)}.canvas{padding:12px}.sidebar{width:100%}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-l">
+    <h1><span class="accent">Coding</span> Agents Ontology <span class="dim">v2.0</span></h1>
+  </div>
+  <div class="topbar-r">
+    <div class="pill"><span class="dot"></span>ENGINEERING</div>
+    <a href="/" class="nav-link">Dashboard</a>
+    <a href="/mortgage-ontology.html" class="nav-link">Mortgage Ontology</a>
+    <a href="/orchestration.html" class="nav-link">Orchestration</a>
+  </div>
+</header>
+
+<div class="toolbar">
+  <label>Filter:</label>
+  <select id="cat-filter" onchange="filterCategory(this.value)">
+    <option value="">All Categories</option>
+    <option value="agent">Agents</option>
+    <option value="sdlc">SDLC</option>
+    <option value="security">Security</option>
+    <option value="devops">DevOps</option>
+    <option value="data">Data Engineering</option>
+    <option value="infra">Infrastructure</option>
+    <option value="ai">AI / LLM</option>
+    <option value="quality">Quality</option>
+    <option value="growth">Growth Ops</option>
+  </select>
+  <label>Search:</label>
+  <input type="text" id="search-box" class="search-box" placeholder="Search classes..." oninput="searchClasses(this.value)">
+  <button class="btn" onclick="resetView()">Reset View</button>
+  <button class="btn" onclick="exportJSON()" style="background:var(--s);color:var(--t);border:1px solid var(--b)">Export JSON-LD</button>
+</div>
+
+<div class="canvas">
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Classes</div><div class="stat-val cyan" id="stat-classes">0</div></div>
+    <div class="stat"><div class="stat-label">Relationships</div><div class="stat-val green" id="stat-rels">0</div></div>
+    <div class="stat"><div class="stat-label">Agents</div><div class="stat-val cyan" id="stat-agents">0</div></div>
+    <div class="stat"><div class="stat-label">Security Rules</div><div class="stat-val" style="color:var(--err)" id="stat-security">0</div></div>
+    <div class="stat"><div class="stat-label">Integrations</div><div class="stat-val warn" id="stat-integrations">0</div></div>
+    <div class="stat"><div class="stat-label">LLM Models</div><div class="stat-val pink" id="stat-llm">0</div></div>
+  </div>
+
+  <div class="legend" id="legend"></div>
+
+  <div id="graph">
+    <svg id="edges"></svg>
+  </div>
+
+  <!-- SDLC Pipeline -->
+  <div class="sdlc-viz">
+    <div class="tbl-h">Engineering SDLC Pipeline<span class="count">Agent-Driven CI/CD Workflow</span></div>
+    <div class="sdlc-row" id="sdlc-stages"></div>
+  </div>
+
+  <!-- Relationship Table -->
+  <div class="tbl-section">
+    <div class="tbl-h">Ontology Relationships <span class="count" id="rel-count"></span></div>
+    <table>
+      <thead><tr><th>Subject</th><th>Predicate</th><th>Object</th><th>Cardinality</th><th>Domain</th><th>Description</th></tr></thead>
+      <tbody id="rel-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Class Hierarchy -->
+  <div class="tbl-section" style="margin-top:12px">
+    <div class="tbl-h">Class Hierarchy (Taxonomy) <span class="count" id="tax-count"></span></div>
+    <table>
+      <thead><tr><th>Class</th><th>Parent</th><th>Category</th><th>Properties</th><th>Instances</th></tr></thead>
+      <tbody id="tax-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Security Framework -->
+  <div class="tbl-section" style="margin-top:12px">
+    <div class="tbl-h">Security & Compliance Framework <span class="count">OWASP / SOC2 / PCI / GLBA</span></div>
+    <table>
+      <thead><tr><th>Framework</th><th>Control</th><th>Applies To</th><th>Agent</th><th>Validation</th><th>Severity</th></tr></thead>
+      <tbody id="security-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="sidebar" class="sidebar">
+  <button class="sb-close" onclick="closeSB()">x</button>
+  <div id="sb-content"></div>
+</div>
+
+<footer class="footer">Coding Agents Ontology v2.0 &middot; Cory Lawson / The Lawson Group &middot; <a href="https://github.com/CoryLawsonxMortgageAI/MortgageFintechOS-">GitHub</a></footer>
+
+<script>
+// ========================================================
+// CODING AGENTS ONTOLOGY MODEL
+// ========================================================
+
+const CLASSES = [
+  // ENGINEERING AGENTS
+  {id:"BaseAgent",label:"BaseAgent",cat:"agent",x:2,y:2,
+   desc:"Abstract base class for all engineering agents. Defines execute(), health_check(), run_task() with retry logic, circuit breaker pattern, and state persistence hooks.",
+   props:["name: str","status: AgentStatus","last_heartbeat: datetime","error_count: int","tasks_completed: int","max_retries: int","circuit_breaker: CircuitState","health_score: float"],
+   isa:"owl:Thing",instances:[],
+   example:"All 9 agents inherit from BaseAgent with retry logic and health monitoring"},
+  {id:"ATLAS",label:"ATLAS",cat:"agent",x:2,y:14,
+   desc:"Full-Stack Engineering Agent. Generates APIs, builds features, runs database migrations, scaffolds React/Vue/Angular components, and manages workspace branches. Produces code for NEXUS to review.",
+   props:["workspace: str","active_branch: str","active_pr: str","scaffolding_templates: dict","migration_engine: str","framework_targets: str[]"],
+   isa:"BaseAgent",instances:["atlas_001"],
+   example:"ATLAS scaffolds REST API with FastAPI, generates React components, opens PR #147"},
+  {id:"NEXUS",label:"NEXUS",cat:"agent",x:2,y:28,
+   desc:"Code Quality Agent. Reviews PRs with multi-pass analysis (logic, style, performance, security), generates unit/integration tests, analyzes tech debt with SQALE methodology, and suggests refactoring opportunities.",
+   props:["review_queue: PR[]","coverage_target: float","current_coverage: float","debt_score: float","review_rules: ReviewConfig","test_framework: str"],
+   isa:"BaseAgent",instances:["nexus_001"],
+   example:"NEXUS reviews PR #147: 3 logic issues, 1 perf suggestion, coverage 87% -> 92%"},
+  {id:"CIPHER",label:"CIPHER",cat:"agent",x:2,y:42,
+   desc:"Security Engineering Agent. Runs OWASP Top 10 scanning, SOC2/PCI-DSS/GLBA compliance checks, encryption audit (TLS, at-rest, key rotation), dependency vulnerability scanning (CVE), and penetration test coordination.",
+   props:["scan_results: VulnReport[]","frameworks: str[]","cve_db: CVEDatabase","encryption_standards: str[]","pentest_schedule: str","compliance_score: float"],
+   isa:"BaseAgent",instances:["cipher_001"],
+   example:"CIPHER scans PR #147: 0 critical CVEs, SOC2 compliant, TLS 1.3 verified"},
+  {id:"FORGE",label:"FORGE",cat:"agent",x:2,y:56,
+   desc:"DevOps Engineering Agent. Manages deployments (blue-green, canary, rolling), rollbacks, CI/CD pipeline orchestration, infrastructure-as-code (Terraform/Pulumi), secret rotation, and environment management.",
+   props:["deploy_history: Deploy[]","active_env: str","rollback_window: int","pipeline_config: CIConfig","secret_rotation_interval: int","deployment_strategy: str"],
+   isa:"BaseAgent",instances:["forge_001"],
+   example:"FORGE deploys v2.4.1 via blue-green to production, keeps rollback window 15min"},
+  {id:"STORM",label:"STORM",cat:"agent",x:2,y:70,
+   desc:"Data Engineering Agent. Builds ETL/ELT pipelines (Airflow/dbt), generates HMDA regulatory reports, ULDD Fannie Mae exports, query optimization (EXPLAIN ANALYZE), data warehouse schema management, and data quality monitoring.",
+   props:["pipelines: ETLPipeline[]","schedules: CronExpr[]","dbt_models: str[]","warehouse_schema: str","data_quality_rules: DQRule[]","query_optimizer: bool"],
+   isa:"BaseAgent",instances:["storm_001"],
+   example:"STORM optimizes query from 12s to 0.3s, builds dbt model for HMDA LAR export"},
+
+  // GROWTH OPS AGENTS
+  {id:"SENTINEL",label:"SENTINEL",cat:"agent",x:2,y:84,
+   desc:"System Intelligence Agent. Monitors platform health, generates daily intelligence reports, anomaly detection, capacity planning, and predictive failure analysis.",
+   props:["report_schedule: str","anomaly_threshold: float","capacity_model: str","alert_channels: str[]"],
+   isa:"BaseAgent",instances:["sentinel_001"],
+   example:"SENTINEL detects 3x error spike on STORM, triggers auto-scaling recommendation"},
+  {id:"HUNTER",label:"HUNTER",cat:"growth",x:16,y:84,
+   desc:"Lead Generation Agent. Scrapes mortgage professional directories, LinkedIn outreach, identifies high-intent prospects, scores leads by conversion probability, and manages drip campaigns.",
+   props:["sources: str[]","lead_score_model: str","active_campaigns: int","daily_scan_limit: int","enrichment_apis: str[]"],
+   isa:"BaseAgent",instances:["hunter_001"],
+   example:"HUNTER identifies 47 high-intent leads from LO directories, scores 12 as hot"},
+  {id:"HERALD",label:"HERALD",cat:"growth",x:30,y:84,
+   desc:"Content Marketing Agent. Generates SEO-optimized blog posts, social media content, email newsletters, and thought leadership pieces targeting mortgage technology audience.",
+   props:["content_queue: Content[]","seo_keywords: str[]","publishing_schedule: str","tone_profile: str","platforms: str[]"],
+   isa:"BaseAgent",instances:["herald_001"],
+   example:"HERALD publishes 'AI in Mortgage Underwriting' blog, 2.3k organic views day 1"},
+  {id:"AMBASSADOR",label:"AMBASSADOR",cat:"growth",x:44,y:84,
+   desc:"Community Engagement Agent. Manages GitHub community interactions, responds to issues, moderates discussions, tracks contributor sentiment, and coordinates open-source contributions.",
+   props:["platforms: str[]","response_sla: int","sentiment_score: float","community_size: int","contribution_guidelines: str"],
+   isa:"BaseAgent",instances:["ambassador_001"],
+   example:"AMBASSADOR responds to 15 GitHub issues, avg response time 4.2 hours"},
+
+  // SDLC DOMAIN
+  {id:"Repository",label:"Repository",cat:"sdlc",x:22,y:2,
+   desc:"Git repository containing source code, configuration, and documentation. Managed by ATLAS and FORGE.",
+   props:["repo_url: str","default_branch: str","total_commits: int","contributors: int","languages: str[]","license: str","ci_status: str"],
+   isa:"owl:Thing",instances:["MortgageFintechOS-","MortgageAI-Docs"],
+   example:"github.com/CoryLawsonxMortgageAI/MortgageFintechOS-, Python/JS, MIT license"},
+  {id:"PullRequest",label:"Pull Request",cat:"sdlc",x:22,y:14,
+   desc:"Code change proposal requiring review. ATLAS creates, NEXUS reviews, CIPHER security-scans, FORGE deploys.",
+   props:["pr_id: int","title: str","author: str","branch: str","status: PRStatus","files_changed: int","additions: int","deletions: int","reviewers: str[]","checks_passed: bool","created_at: datetime","merged_at: datetime"],
+   isa:"owl:Thing",instances:["PR-147","PR-148","PR-152"],
+   example:"PR #147: Add predictive telemetry module, +342/-18, 4 reviewers, all checks pass"},
+  {id:"Branch",label:"Branch",cat:"sdlc",x:36,y:2,
+   desc:"Git branch representing a line of development. Feature branches follow naming convention: feature/, bugfix/, hotfix/.",
+   props:["name: str","base: str","ahead: int","behind: int","protected: bool","author: str","created_at: datetime"],
+   isa:"owl:Thing",instances:["main","develop","feature/telemetry","bugfix/auth-fix"],
+   example:"feature/telemetry: 12 ahead of main, 0 behind, CI passing"},
+  {id:"Commit",label:"Commit",cat:"sdlc",x:36,y:14,
+   desc:"Atomic code change with author, message, and diff. Follows conventional commits specification.",
+   props:["hash: str","message: str","author: str","timestamp: datetime","files: str[]","insertions: int","deletions: int","signed: bool"],
+   isa:"owl:Thing",instances:[],
+   example:"feat(telemetry): add predictive failure analysis module -- signed GPG"},
+  {id:"CodeReview",label:"Code Review",cat:"quality",x:22,y:28,
+   desc:"Multi-pass review process by NEXUS. Covers logic correctness, style compliance, performance analysis, and security surface review.",
+   props:["review_id: str","pr_id: int","reviewer: str","status: ReviewStatus","passes: ReviewPass[]","comments: int","approval: bool","score: float"],
+   isa:"owl:Thing",instances:[],
+   example:"Review of PR #147: Pass 1 (Logic OK), Pass 2 (Style 2 nits), Pass 3 (Perf OK), approved"},
+  {id:"TestSuite",label:"Test Suite",cat:"quality",x:36,y:28,
+   desc:"Collection of unit, integration, and e2e tests. NEXUS generates tests and tracks coverage metrics.",
+   props:["suite_id: str","framework: str","total_tests: int","passing: int","failing: int","skipped: int","coverage_pct: float","execution_time_ms: int"],
+   isa:"owl:Thing",instances:["unit_tests","integration_tests","e2e_tests"],
+   example:"Unit suite: 342 tests, 340 pass, 2 skip, 91.3% coverage, 4.2s runtime"},
+  {id:"TechDebt",label:"Tech Debt",cat:"quality",x:22,y:42,
+   desc:"Tracked technical debt items identified by NEXUS using SQALE methodology. Prioritized by remediation cost vs risk.",
+   props:["debt_id: str","category: DebtCategory","severity: str","estimated_hours: float","file_path: str","description: str","sqale_rating: str"],
+   isa:"owl:Thing",instances:[],
+   example:"TD-042: Complex function in orchestrator.py (cyclomatic 23), est 4h to refactor, SQALE B"},
+
+  // SECURITY DOMAIN
+  {id:"VulnReport",label:"Vulnerability Report",cat:"security",x:50,y:2,
+   desc:"CIPHER's security scan output. Covers OWASP Top 10, CVE database matches, and custom security rules.",
+   props:["report_id: str","scan_type: str","findings: Finding[]","critical: int","high: int","medium: int","low: int","scan_duration_ms: int","remediation_plan: str"],
+   isa:"owl:Thing",instances:[],
+   example:"Scan #89: 0 critical, 1 high (outdated jsonwebtoken), 3 medium, remediation ETA 2h"},
+  {id:"OWASPRule",label:"OWASP Top 10",cat:"security",x:50,y:14,
+   desc:"OWASP Top 10 2021 vulnerability categories. CIPHER scans against all categories with custom detection rules.",
+   props:["category: str","owasp_id: str","name: str","cwe_ids: str[]","detection_method: str","auto_fix: bool"],
+   isa:"SecurityFramework",instances:["A01_BrokenAccess","A02_CryptoFailures","A03_Injection","A04_InsecureDesign","A05_Misconfig","A06_VulnComponents","A07_AuthFailures","A08_Integrity","A09_Logging","A10_SSRF"],
+   example:"A03 Injection: SQL/NoSQL/OS/LDAP injection detection via AST + taint analysis"},
+  {id:"ComplianceCheck",label:"Compliance Check",cat:"security",x:64,y:2,
+   desc:"SOC2, PCI-DSS, and GLBA compliance validation. CIPHER runs automated checks against control frameworks.",
+   props:["framework: str","control_id: str","status: CheckStatus","evidence: str","last_checked: datetime","next_due: datetime"],
+   isa:"owl:Thing",instances:["SOC2_CC6.1","PCI_6.5","GLBA_501b"],
+   example:"SOC2 CC6.1: Logical access controls verified, evidence collected, next audit Q2"},
+  {id:"EncryptionAudit",label:"Encryption Audit",cat:"security",x:64,y:14,
+   desc:"Encryption standards verification by CIPHER. Covers TLS configuration, at-rest encryption, key rotation schedules, and certificate management.",
+   props:["tls_version: str","cipher_suites: str[]","key_rotation_days: int","cert_expiry: date","at_rest_algorithm: str","kms_provider: str"],
+   isa:"owl:Thing",instances:[],
+   example:"TLS 1.3 enforced, AES-256-GCM at rest, keys rotated every 90 days via AWS KMS"},
+  {id:"CVEEntry",label:"CVE Entry",cat:"security",x:50,y:28,
+   desc:"Common Vulnerabilities and Exposures database entry. CIPHER cross-references all dependencies against NVD.",
+   props:["cve_id: str","severity: str","cvss_score: float","affected_package: str","affected_version: str","fixed_version: str","published: date"],
+   isa:"owl:Thing",instances:["CVE-2025-12345","CVE-2025-67890"],
+   example:"CVE-2025-12345: jsonwebtoken <9.0.2, CVSS 7.8, fixed in 9.0.2"},
+
+  // DEVOPS DOMAIN
+  {id:"Deployment",label:"Deployment",cat:"devops",x:50,y:42,
+   desc:"Production deployment managed by FORGE. Supports blue-green, canary, and rolling strategies with automatic rollback.",
+   props:["deploy_id: str","version: str","environment: str","strategy: DeployStrategy","status: DeployStatus","started_at: datetime","completed_at: datetime","rollback_available: bool","health_check_url: str"],
+   isa:"owl:Thing",instances:["deploy-v2.4.1","deploy-v2.4.0"],
+   example:"v2.4.1 blue-green deploy to production, health checks passing, rollback available"},
+  {id:"CIPipeline",label:"CI/CD Pipeline",cat:"devops",x:64,y:42,
+   desc:"Continuous integration and deployment pipeline. FORGE configures and monitors GitHub Actions / GitLab CI workflows.",
+   props:["pipeline_id: str","provider: str","stages: str[]","trigger: str","duration_avg_ms: int","success_rate: float","artifacts: str[]"],
+   isa:"owl:Thing",instances:["gh_actions_main","gh_actions_pr"],
+   example:"GitHub Actions: lint -> test -> build -> security-scan -> deploy, avg 4.2min, 97% success"},
+  {id:"Environment",label:"Environment",cat:"devops",x:50,y:56,
+   desc:"Deployment target environment. FORGE manages promotion across dev -> staging -> production.",
+   props:["name: str","url: str","region: str","provider: str","auto_deploy: bool","approval_required: bool","secrets_count: int"],
+   isa:"owl:Thing",instances:["development","staging","production"],
+   example:"production: us-east-1, Netlify, auto-deploy off, approval required, 14 secrets"},
+  {id:"SecretVault",label:"Secret Vault",cat:"devops",x:64,y:56,
+   desc:"Encrypted secret storage managed by FORGE. Handles API keys, tokens, certificates with rotation schedules.",
+   props:["vault_provider: str","total_secrets: int","rotation_policy: str","access_log: bool","encryption: str"],
+   isa:"owl:Thing",instances:["vault_prod"],
+   example:"AWS Secrets Manager, 14 secrets, 90-day rotation, full access logging, AES-256"},
+
+  // DATA ENGINEERING DOMAIN
+  {id:"ETLPipeline",label:"ETL Pipeline",cat:"data",x:78,y:2,
+   desc:"Extract-Transform-Load pipeline built by STORM. Supports batch and streaming modes with data quality checks at each stage.",
+   props:["pipeline_id: str","source: str","destination: str","schedule: str","mode: str","last_run: datetime","records_processed: int","error_rate: float"],
+   isa:"owl:Thing",instances:["etl_hmda","etl_daily_report","etl_loan_export"],
+   example:"HMDA LAR export: daily 2am, PostgreSQL -> CSV, 2,847 records, 0% error rate"},
+  {id:"DataModel",label:"Data Model",cat:"data",x:78,y:14,
+   desc:"Database schema managed by STORM. Includes table definitions, indexes, constraints, and migration history.",
+   props:["model_id: str","tables: int","views: int","indexes: int","constraints: int","version: str","orm: str"],
+   isa:"owl:Thing",instances:["mortgage_db_v3","analytics_warehouse"],
+   example:"mortgage_db_v3: 24 tables, 8 views, 47 indexes, SQLAlchemy ORM, Alembic migrations"},
+  {id:"DataQuality",label:"Data Quality Rule",cat:"data",x:92,y:2,
+   desc:"Data quality validation rules enforced by STORM. Covers completeness, accuracy, consistency, timeliness, and uniqueness.",
+   props:["rule_id: str","dimension: str","table: str","column: str","expression: str","threshold: float","action_on_fail: str"],
+   isa:"owl:Thing",instances:["dq_ssn_format","dq_loan_amount_range","dq_fico_valid"],
+   example:"dq_fico_valid: credit_score BETWEEN 300 AND 850, threshold 99.9%, block on fail"},
+  {id:"QueryOptimization",label:"Query Optimization",cat:"data",x:92,y:14,
+   desc:"SQL query optimization results from STORM's EXPLAIN ANALYZE. Identifies slow queries and suggests index/rewrite fixes.",
+   props:["query_hash: str","original_ms: float","optimized_ms: float","improvement_pct: float","suggestions: str[]","applied: bool"],
+   isa:"owl:Thing",instances:[],
+   example:"Query #472: 12,400ms -> 340ms (97% improvement), added composite index on (loan_id, stage)"},
+
+  // INFRASTRUCTURE
+  {id:"Netlify",label:"Netlify",cat:"infra",x:78,y:42,
+   desc:"Static site hosting for dashboard UI. FORGE manages deployments, preview URLs, and CDN configuration.",
+   props:["site_id: str","url: str","branch_deploys: bool","functions: int","bandwidth: str"],
+   isa:"ExternalService",instances:["site_d8f73846"],
+   example:"mortgagefintechos-dashboard.netlify.app, branch deploys enabled, 3 serverless functions"},
+  {id:"Vercel",label:"Vercel",cat:"infra",x:92,y:42,
+   desc:"Edge deployment platform. FORGE uses for Next.js and serverless function deployments with global CDN.",
+   props:["project_id: str","framework: str","regions: str[]","edge_functions: int"],
+   isa:"ExternalService",instances:["vercel_prod"],
+   example:"Next.js deployment, 12 edge regions, 5 serverless functions, ISR enabled"},
+  {id:"GitHub",label:"GitHub",cat:"infra",x:78,y:56,
+   desc:"Source code repository and CI/CD platform. ATLAS commits, FORGE configures Actions, AMBASSADOR manages community.",
+   props:["repo: str","stars: int","forks: int","issues_open: int","prs_open: int","actions_minutes: int"],
+   isa:"ExternalService",instances:["gh_repo"],
+   example:"CoryLawsonxMortgageAI/MortgageFintechOS-, GitHub Actions CI/CD, issue tracking"},
+  {id:"PostgreSQL",label:"PostgreSQL",cat:"infra",x:92,y:56,
+   desc:"Primary relational database. STORM manages schema, migrations, and query optimization.",
+   props:["version: str","port: int","max_connections: int","replication: str","backup_schedule: str"],
+   isa:"ExternalService",instances:["pg_prod"],
+   example:"PostgreSQL 16, port 5432, 100 connections, streaming replication, daily WAL backup"},
+  {id:"Redis",label:"Redis",cat:"infra",x:78,y:70,
+   desc:"In-memory cache and message broker. Used for task queue, session management, and real-time pub/sub.",
+   props:["version: str","port: int","max_memory: str","eviction_policy: str","persistence: str"],
+   isa:"ExternalService",instances:["redis_prod"],
+   example:"Redis 7.2, port 6379, 2GB max, allkeys-lru eviction, AOF persistence"},
+
+  // AI / LLM DOMAIN
+  {id:"PuterJS",label:"Puter.js Gateway",cat:"ai",x:50,y:70,
+   desc:"Client-side LLM gateway providing access to 500+ models. No API keys required — user-pays model via CDN.",
+   props:["models_available: int","protocol: str","auth: str","latency_avg_ms: int","supported_tasks: str[]"],
+   isa:"ExternalService",instances:["puter_cdn"],
+   example:"500+ models via CDN, no API keys, avg 800ms latency, chat/code/analysis tasks"},
+  {id:"LLMModel",label:"LLM Model",cat:"ai",x:64,y:70,
+   desc:"Language model accessible via Puter.js. Agents use for code generation, analysis, and reasoning tasks.",
+   props:["name: str","provider: str","context_window: int","cost_tier: str","capabilities: str[]","benchmark_score: float"],
+   isa:"owl:Thing",instances:["Claude_4.5_Sonnet","GPT-5","DeepSeek_R1","Qwen_3.5","Mistral_Large_3","Kimi_K2.5","Codestral","Devstral","Hermes_4_405B","Dolphin_3"],
+   example:"Claude 4.5 Sonnet: 200k context, code+analysis, top-tier reasoning benchmark"},
+  {id:"PromptTemplate",label:"Prompt Template",cat:"ai",x:50,y:84,
+   desc:"Reusable prompt templates for agent tasks. Version-controlled with A/B testing support.",
+   props:["template_id: str","agent: str","task: str","template: str","version: int","success_rate: float"],
+   isa:"owl:Thing",instances:["pt_code_review","pt_security_scan","pt_test_gen"],
+   example:"Code review prompt v3: 94.2% acceptance rate, structured JSON output format"},
+];
+
+const RELS = [
+  // Agent hierarchy
+  {s:"ATLAS",p:"rdfs:subClassOf",o:"BaseAgent",card:"--",dom:"Taxonomy",desc:"ATLAS inherits BaseAgent"},
+  {s:"NEXUS",p:"rdfs:subClassOf",o:"BaseAgent",card:"--",dom:"Taxonomy",desc:"NEXUS inherits BaseAgent"},
+  {s:"CIPHER",p:"rdfs:subClassOf",o:"BaseAgent",card:"--",dom:"Taxonomy",desc:"CIPHER inherits BaseAgent"},
+  {s:"FORGE",p:"rdfs:subClassOf",o:"BaseAgent",card:"--",dom:"Taxonomy",desc:"FORGE inherits BaseAgent"},
+  {s:"STORM",p:"rdfs:subClassOf",o:"BaseAgent",card:"--",dom:"Taxonomy",desc:"STORM inherits BaseAgent"},
+  {s:"SENTINEL",p:"rdfs:subClassOf",o:"BaseAgent",card:"--",dom:"Taxonomy",desc:"SENTINEL inherits BaseAgent"},
+  {s:"HUNTER",p:"rdfs:subClassOf",o:"BaseAgent",card:"--",dom:"Taxonomy",desc:"HUNTER inherits BaseAgent"},
+  {s:"HERALD",p:"rdfs:subClassOf",o:"BaseAgent",card:"--",dom:"Taxonomy",desc:"HERALD inherits BaseAgent"},
+  {s:"AMBASSADOR",p:"rdfs:subClassOf",o:"BaseAgent",card:"--",dom:"Taxonomy",desc:"AMBASSADOR inherits BaseAgent"},
+
+  // SDLC flow (agent-driven pipeline)
+  {s:"ATLAS",p:"creates",o:"PullRequest",card:"1:N",dom:"SDLC",desc:"ATLAS opens PRs with generated code"},
+  {s:"ATLAS",p:"commits_to",o:"Repository",card:"1:N",dom:"SDLC",desc:"ATLAS pushes code to repos"},
+  {s:"ATLAS",p:"creates",o:"Branch",card:"1:N",dom:"SDLC",desc:"ATLAS creates feature branches"},
+  {s:"ATLAS",p:"writes",o:"Commit",card:"1:N",dom:"SDLC",desc:"ATLAS produces commits"},
+  {s:"NEXUS",p:"reviews",o:"PullRequest",card:"1:N",dom:"SDLC",desc:"NEXUS reviews PRs multi-pass"},
+  {s:"NEXUS",p:"produces",o:"CodeReview",card:"1:N",dom:"Quality",desc:"NEXUS outputs structured review"},
+  {s:"NEXUS",p:"generates",o:"TestSuite",card:"1:N",dom:"Quality",desc:"NEXUS creates test suites"},
+  {s:"NEXUS",p:"tracks",o:"TechDebt",card:"1:N",dom:"Quality",desc:"NEXUS identifies tech debt items"},
+  {s:"CIPHER",p:"scans",o:"PullRequest",card:"1:N",dom:"Security",desc:"CIPHER security-scans PRs before merge"},
+  {s:"CIPHER",p:"produces",o:"VulnReport",card:"1:N",dom:"Security",desc:"CIPHER outputs vulnerability reports"},
+  {s:"CIPHER",p:"checks_against",o:"OWASPRule",card:"N:N",dom:"Security",desc:"CIPHER validates OWASP Top 10 compliance"},
+  {s:"CIPHER",p:"validates",o:"ComplianceCheck",card:"1:N",dom:"Security",desc:"CIPHER runs SOC2/PCI/GLBA checks"},
+  {s:"CIPHER",p:"audits",o:"EncryptionAudit",card:"1:N",dom:"Security",desc:"CIPHER verifies encryption standards"},
+  {s:"CIPHER",p:"cross_references",o:"CVEEntry",card:"N:N",dom:"Security",desc:"CIPHER checks deps against CVE database"},
+  {s:"CIPHER",p:"clears_for",o:"FORGE",card:"1:1",dom:"Agent",desc:"CIPHER security-clears code for deployment"},
+
+  // Deployment chain
+  {s:"FORGE",p:"deploys",o:"Deployment",card:"1:N",dom:"DevOps",desc:"FORGE manages deployments"},
+  {s:"FORGE",p:"configures",o:"CIPipeline",card:"1:N",dom:"DevOps",desc:"FORGE sets up CI/CD pipelines"},
+  {s:"FORGE",p:"manages",o:"Environment",card:"1:N",dom:"DevOps",desc:"FORGE manages environments"},
+  {s:"FORGE",p:"rotates",o:"SecretVault",card:"1:1",dom:"DevOps",desc:"FORGE handles secret rotation"},
+  {s:"FORGE",p:"deploys_to",o:"Netlify",card:"1:N",dom:"Infra",desc:"FORGE deploys dashboard to Netlify"},
+  {s:"FORGE",p:"deploys_to",o:"Vercel",card:"1:N",dom:"Infra",desc:"FORGE deploys edge functions to Vercel"},
+  {s:"Deployment",p:"targets",o:"Environment",card:"N:1",dom:"DevOps",desc:"Deployments target an environment"},
+  {s:"CIPipeline",p:"triggers",o:"Deployment",card:"1:N",dom:"DevOps",desc:"Pipeline triggers deployments"},
+
+  // Data engineering
+  {s:"STORM",p:"builds",o:"ETLPipeline",card:"1:N",dom:"Data",desc:"STORM constructs ETL pipelines"},
+  {s:"STORM",p:"manages",o:"DataModel",card:"1:N",dom:"Data",desc:"STORM manages database schemas"},
+  {s:"STORM",p:"enforces",o:"DataQuality",card:"1:N",dom:"Data",desc:"STORM applies data quality rules"},
+  {s:"STORM",p:"optimizes",o:"QueryOptimization",card:"1:N",dom:"Data",desc:"STORM runs query optimization"},
+  {s:"STORM",p:"queries",o:"PostgreSQL",card:"1:N",dom:"Infra",desc:"STORM executes DB queries"},
+  {s:"ETLPipeline",p:"reads_from",o:"PostgreSQL",card:"N:1",dom:"Data",desc:"ETL pipelines source from PostgreSQL"},
+  {s:"DataModel",p:"stored_in",o:"PostgreSQL",card:"1:1",dom:"Data",desc:"Data models live in PostgreSQL"},
+
+  // Growth Ops
+  {s:"HUNTER",p:"identifies",o:"Repository",card:"N:N",dom:"Growth",desc:"HUNTER finds potential users/contributors"},
+  {s:"HERALD",p:"promotes",o:"Repository",card:"1:N",dom:"Growth",desc:"HERALD creates content about the platform"},
+  {s:"AMBASSADOR",p:"manages",o:"GitHub",card:"1:1",dom:"Growth",desc:"AMBASSADOR manages GitHub community"},
+
+  // AI connections
+  {s:"BaseAgent",p:"uses",o:"PuterJS",card:"N:1",dom:"AI",desc:"All agents access LLMs via Puter.js"},
+  {s:"PuterJS",p:"provides",o:"LLMModel",card:"1:N",dom:"AI",desc:"Puter.js gateway provides 500+ models"},
+  {s:"BaseAgent",p:"uses",o:"PromptTemplate",card:"N:N",dom:"AI",desc:"Agents use versioned prompt templates"},
+
+  // Infrastructure connections
+  {s:"ATLAS",p:"pushes_to",o:"GitHub",card:"1:1",dom:"Infra",desc:"ATLAS pushes code to GitHub"},
+  {s:"Repository",p:"hosted_on",o:"GitHub",card:"1:1",dom:"Infra",desc:"Repos hosted on GitHub"},
+  {s:"CIPipeline",p:"runs_on",o:"GitHub",card:"N:1",dom:"Infra",desc:"CI pipelines run on GitHub Actions"},
+
+  // Code quality chain
+  {s:"PullRequest",p:"has_review",o:"CodeReview",card:"1:N",dom:"Quality",desc:"PRs receive code reviews"},
+  {s:"PullRequest",p:"has_tests",o:"TestSuite",card:"1:1",dom:"Quality",desc:"PRs must pass test suite"},
+  {s:"PullRequest",p:"has_scan",o:"VulnReport",card:"1:1",dom:"Security",desc:"PRs require security scan"},
+  {s:"PullRequest",p:"contains",o:"Commit",card:"1:N",dom:"SDLC",desc:"PRs contain commits"},
+  {s:"Branch",p:"has_prs",o:"PullRequest",card:"1:N",dom:"SDLC",desc:"Branches have PRs"},
+  {s:"Repository",p:"has_branches",o:"Branch",card:"1:N",dom:"SDLC",desc:"Repos have branches"},
+];
+
+const SDLC_STAGES = [
+  {name:"Plan",sub:"Architecture & design",agent:"ATLAS"},
+  {name:"Code",sub:"Feature development",agent:"ATLAS"},
+  {name:"PR Created",sub:"Open pull request",agent:"ATLAS"},
+  {name:"Code Review",sub:"Multi-pass analysis",agent:"NEXUS"},
+  {name:"Test Suite",sub:"Unit + integration",agent:"NEXUS"},
+  {name:"Security Scan",sub:"OWASP + CVE + audit",agent:"CIPHER"},
+  {name:"Compliance",sub:"SOC2 / PCI / GLBA",agent:"CIPHER"},
+  {name:"Build",sub:"CI pipeline",agent:"FORGE"},
+  {name:"Deploy Staging",sub:"Preview environment",agent:"FORGE"},
+  {name:"Deploy Prod",sub:"Blue-green rollout",agent:"FORGE"},
+  {name:"Monitor",sub:"Health + telemetry",agent:"SENTINEL"},
+];
+
+const SECURITY_MATRIX = [
+  {framework:"OWASP",control:"A01",applies:"Broken Access Control",agent:"CIPHER",validation:"RBAC audit, auth bypass testing, IDOR checks",severity:"critical"},
+  {framework:"OWASP",control:"A02",applies:"Cryptographic Failures",agent:"CIPHER",validation:"TLS 1.3 enforcement, key rotation, algorithm audit",severity:"critical"},
+  {framework:"OWASP",control:"A03",applies:"Injection",agent:"CIPHER",validation:"SQL/NoSQL/OS/LDAP injection via AST + taint analysis",severity:"critical"},
+  {framework:"OWASP",control:"A04",applies:"Insecure Design",agent:"CIPHER",validation:"Threat modeling, abuse case testing, design review",severity:"high"},
+  {framework:"OWASP",control:"A05",applies:"Security Misconfiguration",agent:"CIPHER",validation:"Default creds, unnecessary features, error exposure",severity:"high"},
+  {framework:"OWASP",control:"A06",applies:"Vulnerable Components",agent:"CIPHER",validation:"CVE cross-reference, SCA scanning, dep updates",severity:"critical"},
+  {framework:"OWASP",control:"A07",applies:"Auth Failures",agent:"CIPHER",validation:"Brute force protection, session management, MFA",severity:"critical"},
+  {framework:"OWASP",control:"A08",applies:"Software Integrity",agent:"CIPHER",validation:"CI/CD pipeline integrity, signed commits, SBOM",severity:"high"},
+  {framework:"OWASP",control:"A09",applies:"Logging Failures",agent:"SENTINEL",validation:"Audit log completeness, alerting, log injection",severity:"medium"},
+  {framework:"OWASP",control:"A10",applies:"SSRF",agent:"CIPHER",validation:"URL validation, allowlisting, network segmentation",severity:"high"},
+  {framework:"SOC2",control:"CC6.1",applies:"Logical Access",agent:"CIPHER",validation:"Role-based access, least privilege, access reviews",severity:"critical"},
+  {framework:"SOC2",control:"CC6.6",applies:"System Operations",agent:"FORGE",validation:"Change management, deployment approval, rollback",severity:"high"},
+  {framework:"SOC2",control:"CC7.2",applies:"System Monitoring",agent:"SENTINEL",validation:"Real-time monitoring, anomaly detection, alerting",severity:"high"},
+  {framework:"PCI-DSS",control:"Req 6.5",applies:"Secure Development",agent:"NEXUS",validation:"Secure coding standards, code review, testing",severity:"critical"},
+  {framework:"PCI-DSS",control:"Req 10",applies:"Track & Monitor",agent:"SENTINEL",validation:"Audit trails, log review, incident detection",severity:"high"},
+  {framework:"GLBA",control:"501(b)",applies:"Info Security",agent:"CIPHER",validation:"Data encryption, access control, privacy compliance",severity:"critical"},
+];
+
+const CAT_COLORS={agent:"#06b6d4",sdlc:"#3fb950",security:"#f85149",devops:"#d29922",data:"#8b5cf6",infra:"#484f58",ai:"#ec4899",quality:"#C0C0C0",growth:"#a3e635"};
+const CAT_NAMES={agent:"Engineering Agent",sdlc:"SDLC",security:"Security",devops:"DevOps",data:"Data Engineering",infra:"Infrastructure",ai:"AI / LLM",quality:"Code Quality",growth:"Growth Ops"};
+
+let activeFilter = "";
+let searchTerm = "";
+
+function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML}
+
+function updateStats(){
+  document.getElementById("stat-classes").textContent = CLASSES.length;
+  document.getElementById("stat-rels").textContent = RELS.length;
+  document.getElementById("stat-agents").textContent = CLASSES.filter(c=>c.cat==="agent"||c.cat==="growth").length;
+  document.getElementById("stat-security").textContent = CLASSES.filter(c=>c.cat==="security").length;
+  document.getElementById("stat-integrations").textContent = CLASSES.filter(c=>c.cat==="infra").length;
+  document.getElementById("stat-llm").textContent = (CLASSES.find(c=>c.id==="LLMModel")?.instances||[]).length;
+}
+
+function renderLegend(){
+  const el = document.getElementById("legend");
+  el.innerHTML = Object.entries(CAT_NAMES).map(([key,name])=>{
+    const count = CLASSES.filter(c=>c.cat===key).length;
+    return `<div class="lg ${activeFilter===key?'active':''}" onclick="filterCategory('${key}')"><div class="lg-dot" style="background:${CAT_COLORS[key]}"></div>${name} (${count})</div>`;
+  }).join("") + `<div class="lg" style="margin-left:auto;cursor:default"><span style="color:var(--t3)">Click node for full details</span></div>`;
+}
+
+function renderGraph(){
+  const g = document.getElementById("graph");
+  g.querySelectorAll(".onode").forEach(n=>n.remove());
+  CLASSES.forEach(c=>{
+    const el = document.createElement("div");
+    el.className = `onode cat-${c.cat}`;
+    el.dataset.id = c.id;
+    el.dataset.cat = c.cat;
+    const faded = (activeFilter && c.cat !== activeFilter) || (searchTerm && !c.label.toLowerCase().includes(searchTerm) && !c.id.toLowerCase().includes(searchTerm));
+    if(faded) el.classList.add("faded");
+    el.style.cssText = `left:${c.x}%;top:${c.y}%;`;
+    const instCount = (c.instances||[]).length;
+    el.innerHTML = `<div class="onode-h">${c.label} ${instCount?`<span class="onode-count">${instCount}</span>`:""}</div><div class="onode-b">${c.desc.substring(0,70)}${c.desc.length>70?"...":""}</div>${c.props?`<div class="onode-prop">${c.props.slice(0,3).join(" | ")}</div>`:""}`;
+    el.onclick = ()=>showDetail(c);
+    g.appendChild(el);
+    c._el = el;
+  });
+}
+
+function renderEdges(){
+  const svg = document.getElementById("edges");
+  svg.innerHTML = "";
+  const g = document.getElementById("graph");
+  const rect = g.getBoundingClientRect();
+  svg.setAttribute("viewBox",`0 0 ${rect.width} ${rect.height}`);
+  const domColors = {Taxonomy:"#484f58",SDLC:"#3fb950",Quality:"#C0C0C0",Security:"#f85149",DevOps:"#d29922",Data:"#8b5cf6",Infra:"#484f58",AI:"#ec4899",Agent:"#06b6d4",Growth:"#a3e635"};
+  RELS.forEach(r=>{
+    const from = CLASSES.find(c=>c.id===r.s);
+    const to = CLASSES.find(c=>c.id===r.o);
+    if(!from||!to) return;
+    const bothFaded = activeFilter && from.cat!==activeFilter && to.cat!==activeFilter;
+    const fx = (from.x+6)/100*rect.width;
+    const fy = (from.y+4)/100*rect.height;
+    const tx = (to.x+6)/100*rect.width;
+    const ty = (to.y+4)/100*rect.height;
+    const mx = (fx+tx)/2;
+    const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d",`M${fx},${fy} C${mx},${fy} ${mx},${ty} ${tx},${ty}`);
+    path.setAttribute("stroke",domColors[r.dom]||"#30363d");
+    path.setAttribute("stroke-width","0.8");
+    path.setAttribute("fill","none");
+    path.setAttribute("opacity",bothFaded?"0.05":"0.3");
+    svg.appendChild(path);
+  });
+}
+
+function renderSDLC(){
+  const el = document.getElementById("sdlc-stages");
+  el.innerHTML = SDLC_STAGES.map((s,i)=>{
+    return (i>0?'<div class="sdlc-arrow">&rarr;</div>':'')+
+    `<div class="sdlc-stage" onclick="showStageDetail('${s.name}')">
+      ${s.name}
+      <div class="stage-sub">${s.sub}</div>
+      <div class="stage-agent">${s.agent}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderRelTable(){
+  document.getElementById("rel-count").textContent = RELS.length + " relationships";
+  document.getElementById("rel-body").innerHTML = RELS.map(r=>`<tr>
+    <td style="font-family:var(--m);font-weight:600;color:var(--t);cursor:pointer" onclick="highlightClass('${r.s}')">${r.s}</td>
+    <td style="font-family:var(--m);color:var(--purple)">${r.p}</td>
+    <td style="font-family:var(--m);font-weight:600;color:var(--t);cursor:pointer" onclick="highlightClass('${r.o}')">${r.o}</td>
+    <td style="font-family:var(--m);color:var(--t3)">${r.card}</td>
+    <td><span class="tag tag-${r.dom.toLowerCase()}">${r.dom}</span></td>
+    <td style="font-size:9px;color:var(--t3)">${r.desc||""}</td>
+  </tr>`).join("");
+}
+
+function renderTaxTable(){
+  document.getElementById("tax-count").textContent = CLASSES.length + " classes";
+  document.getElementById("tax-body").innerHTML = CLASSES.map(c=>`<tr>
+    <td style="font-family:var(--m);font-weight:600;color:var(--t);cursor:pointer" onclick="showDetail(CLASSES.find(x=>x.id==='${c.id}'))">${c.label}</td>
+    <td style="font-family:var(--m);color:var(--t2)">${c.isa}</td>
+    <td><span class="tag tag-${c.cat}">${CAT_NAMES[c.cat]||c.cat}</span></td>
+    <td style="font-size:9px;color:var(--t2)">${(c.props||[]).slice(0,4).join(", ")}${(c.props||[]).length>4?"...":""}</td>
+    <td style="font-family:var(--m);font-size:9px;color:var(--t3)">${(c.instances||[]).join(", ")||"--"}</td>
+  </tr>`).join("");
+}
+
+function renderSecurityMatrix(){
+  document.getElementById("security-body").innerHTML = SECURITY_MATRIX.map(r=>`<tr>
+    <td style="font-family:var(--m);font-weight:600;color:var(--t)">${r.framework}</td>
+    <td style="font-family:var(--m);color:var(--err)">${r.control}</td>
+    <td>${r.applies}</td>
+    <td><span style="color:var(--cyan);font-weight:600">${r.agent}</span></td>
+    <td style="font-size:9px;color:var(--t2)">${r.validation}</td>
+    <td><span class="tag tag-${r.severity==='critical'?'security':r.severity==='high'?'devops':'quality'}">${r.severity}</span></td>
+  </tr>`).join("");
+}
+
+function showDetail(c){
+  const sb = document.getElementById("sidebar");
+  const ct = document.getElementById("sb-content");
+  let h = `<div class="sb-title">${c.label}</div>`;
+  h += `<div class="sb-type" style="background:${CAT_COLORS[c.cat]}20;color:${CAT_COLORS[c.cat]};border:1px solid ${CAT_COLORS[c.cat]}40">${CAT_NAMES[c.cat]||c.cat}</div>`;
+  h += `<div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:10px">${c.desc}</div>`;
+  if(c.isa) h += `<div class="sb-row"><b>rdfs:subClassOf</b> &rarr; ${c.isa}</div>`;
+  if(c.props&&c.props.length){
+    h += `<div class="sb-sec">Properties (${c.props.length})</div>`;
+    c.props.forEach(p=>h+=`<div class="sb-row" style="font-family:var(--m);font-size:10px">${p}</div>`);
+  }
+  const outRels = RELS.filter(r=>r.s===c.id);
+  const inRels = RELS.filter(r=>r.o===c.id);
+  if(outRels.length){
+    h += `<div class="sb-sec">Outgoing Relations (${outRels.length})</div>`;
+    outRels.forEach(r=>h+=`<div class="sb-row">&rarr; <b>${r.p}</b> &rarr; <span style="cursor:pointer;color:var(--accent)" onclick="highlightClass('${r.o}')">${r.o}</span> <span style="font-size:8px;color:var(--t3)">[${r.card}]</span><br><span style="font-size:9px;color:var(--t3)">${r.desc||""}</span></div>`);
+  }
+  if(inRels.length){
+    h += `<div class="sb-sec">Incoming Relations (${inRels.length})</div>`;
+    inRels.forEach(r=>h+=`<div class="sb-row">&larr; <span style="cursor:pointer;color:var(--accent)" onclick="highlightClass('${r.s}')">${r.s}</span> <b>${r.p}</b> <span style="font-size:8px;color:var(--t3)">[${r.card}]</span></div>`);
+  }
+  if(c.instances&&c.instances.length){
+    h += `<div class="sb-sec">Instances (${c.instances.length})</div>`;
+    c.instances.forEach(i=>h+=`<div class="sb-row" style="font-family:var(--m);font-size:10px">${i}</div>`);
+  }
+  if(c.example){
+    h += `<div class="sb-sec">Example</div>`;
+    h += `<div class="sb-example">${c.example}</div>`;
+  }
+  ct.innerHTML = h;
+  sb.classList.add("open");
+}
+
+function closeSB(){document.getElementById("sidebar").classList.remove("open")}
+
+function filterCategory(cat){
+  if(activeFilter===cat) activeFilter="";
+  else activeFilter=cat;
+  document.getElementById("cat-filter").value=activeFilter;
+  renderLegend();renderGraph();renderEdges();
+}
+
+function searchClasses(term){searchTerm=term.toLowerCase();renderGraph()}
+
+function resetView(){
+  activeFilter="";searchTerm="";
+  document.getElementById("cat-filter").value="";
+  document.getElementById("search-box").value="";
+  renderLegend();renderGraph();renderEdges();closeSB();
+}
+
+function highlightClass(id){
+  const c = CLASSES.find(x=>x.id===id);
+  if(c){activeFilter="";searchTerm="";renderLegend();renderGraph();renderEdges();showDetail(c);if(c._el) c._el.scrollIntoView({behavior:"smooth",block:"center"})}
+}
+
+function showStageDetail(name){
+  const stage = SDLC_STAGES.find(s=>s.name===name);
+  if(!stage) return;
+  const sb = document.getElementById("sidebar");
+  const ct = document.getElementById("sb-content");
+  ct.innerHTML = `<div class="sb-title">${stage.name}</div>
+    <div class="sb-type" style="background:rgba(6,182,212,.15);color:var(--cyan);border:1px solid rgba(6,182,212,.3)">SDLC Stage</div>
+    <div class="sb-row"><b>Description:</b> ${stage.sub}</div>
+    <div class="sb-row"><b>Responsible Agent:</b> <span style="color:var(--cyan);font-weight:700">${stage.agent}</span></div>
+    <div class="sb-sec">Workflow</div>
+    <div class="sb-row">This stage is part of the automated engineering SDLC pipeline. Each stage has quality gates enforced by the responsible agent before allowing progression.</div>`;
+  sb.classList.add("open");
+}
+
+function exportJSON(){
+  const jsonld = {
+    "@context":{"@vocab":"https://mortgagefintechos.dev/ontology/coding#","owl":"http://www.w3.org/2002/07/owl#","rdfs":"http://www.w3.org/2000/01/rdf-schema#"},
+    "@graph":CLASSES.map(c=>({
+      "@id":"coding:"+c.id,"@type":c.isa||"owl:Class","rdfs:label":c.label,"rdfs:comment":c.desc,
+      "category":c.cat,"properties":(c.props||[]).map(p=>({name:p.split(":")[0].trim(),type:p.split(":")[1]?.trim()||"str"}))
+    }))
+  };
+  const blob = new Blob([JSON.stringify(jsonld,null,2)],{type:"application/ld+json"});
+  const a = document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download="coding-ontology.jsonld";a.click();
+}
+
+// Init
+updateStats();renderLegend();renderGraph();renderSDLC();renderRelTable();renderTaxTable();renderSecurityMatrix();
+setTimeout(renderEdges,150);
+window.addEventListener("resize",()=>{document.getElementById("edges").innerHTML="";renderEdges()});
+document.addEventListener("click",e=>{if(!e.target.closest(".onode")&&!e.target.closest(".sidebar")&&!e.target.closest(".sdlc-stage"))closeSB()});
+</script>
+</body>
+</html>

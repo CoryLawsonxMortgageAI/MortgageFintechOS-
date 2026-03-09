@@ -180,6 +180,14 @@ class DashboardServer:
         # Predictive Pipeline Intelligence
         self._app.router.add_get("/api/pipeline/predictions", self._handle_predictive_pipeline)
 
+        # Ontology pages (served from project root)
+        root_dir = Path(__file__).parent.parent
+        self._app.router.add_get("/mortgage-ontology.html", self._handle_mortgage_ontology)
+        self._app.router.add_get("/coding-ontology.html", self._handle_coding_ontology)
+        self._app.router.add_get("/ontology.html", self._handle_ontology_page)
+        self._app.router.add_get("/orchestration.html", self._handle_orchestration_page)
+        self._root_dir = root_dir
+
         # Static files
         self._app.router.add_static("/static", STATIC_DIR, show_index=False)
 
@@ -202,6 +210,18 @@ class DashboardServer:
 
     async def _handle_index(self, request: web.Request) -> web.Response:
         return web.FileResponse(STATIC_DIR / "index.html")
+
+    async def _handle_mortgage_ontology(self, request: web.Request) -> web.Response:
+        return web.FileResponse(self._root_dir / "mortgage-ontology.html")
+
+    async def _handle_coding_ontology(self, request: web.Request) -> web.Response:
+        return web.FileResponse(self._root_dir / "coding-ontology.html")
+
+    async def _handle_ontology_page(self, request: web.Request) -> web.Response:
+        return web.FileResponse(self._root_dir / "ontology.html")
+
+    async def _handle_orchestration_page(self, request: web.Request) -> web.Response:
+        return web.FileResponse(self._root_dir / "orchestration.html")
 
     async def _handle_status(self, request: web.Request) -> web.Response:
         return web.json_response(self.orchestrator.get_status(), dumps=_json_dumps)

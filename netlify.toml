@@ -3,6 +3,26 @@
   command = "echo 'Static site ready'"
 
 [[redirects]]
+  from = "/mortgage-ontology"
+  to = "/mortgage-ontology.html"
+  status = 200
+
+[[redirects]]
+  from = "/coding-ontology"
+  to = "/coding-ontology.html"
+  status = 200
+
+[[redirects]]
+  from = "/ontology"
+  to = "/ontology.html"
+  status = 200
+
+[[redirects]]
+  from = "/orchestration"
+  to = "/orchestration.html"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
