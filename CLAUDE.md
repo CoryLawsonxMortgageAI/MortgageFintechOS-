@@ -155,7 +155,7 @@ Skills have hard-routed boundaries preventing cross-invocation. v2 skills take p
 
 ### Connected Systems — MCP Bridge
 
-Monday.com (6 mortgage workflow boards), Google Calendar, Gmail, Notion (Intelligence Hub), GitHub (4 repos: nightvault-mortgage-ocr, agenty-layer-platform, agentyvault-mobileapp, nightvault-orchestrator-os), Railway, Total Expert CRM (809 records, 13-segment refinance strategy).
+Monday.com (6 mortgage workflow boards), Google Calendar, Gmail, Microsoft Outlook (via Zapier MCP — Send Email, Send Draft Email, Update Calendar Event, Update Contact, API Request + 9 more tools), Notion (Intelligence Hub), GitHub (4 repos: nightvault-mortgage-ocr, agenty-layer-platform, agentyvault-mobileapp, nightvault-orchestrator-os), Railway, Total Expert CRM (809 records, 13-segment refinance strategy), Zapier MCP (orchestrates cross-platform automations).
 
 ### v7.0 Enforcement Rules
 
