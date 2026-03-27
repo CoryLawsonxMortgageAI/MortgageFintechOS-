@@ -84,9 +84,94 @@ POST endpoints for task submission use `await self.orchestrator.submit_task(agen
 
 Default to high-contrast, monochromatic themes: black backgrounds, white/grey text, silver accents. Professional institutional feel. Fonts: Instrument Sans + IBM Plex Mono. Avoid colorful palettes.
 
+---
+
+## Cowork Suite Configuration (v7.0 Architect Edition)
+
+### Hub-and-Spoke Agent Orchestration
+
+DIEGO is the sole hub. All agent communication routes through DIEGO. No direct spoke-to-spoke calls. Agents have hard domain boundaries that are never crossed.
+
+**DIEGO** — Master Orchestrator / Hub. Never touches documents directly. All comms route here. 4 tools max.
+**MARTIN** — Document Intelligence. OCR, parsing, fraud, PII. NEVER makes compliance calls. Parses raw docs only.
+**JARVIS** — Compliance Engine. Compliance, DTI, CFPB, audit. NEVER parses raw documents.
+**NOVA** — Income Calculation Engine. W-2, 1099, self-employed, rental, VA income types.
+**APEX** — Credit Analysis. Tri-merge review, BNPL account detection.
+**ORACLE** — Guideline RAG. HUD 4000.1, FNMA, FHLMC guideline retrieval.
+**SCOUT** — Lead Intelligence. Total Expert CRM, referral partners, Columbus market.
+**ATLAS** — Data Integration. Cross-repo data synchronization operations.
+**NEXUS** — Cross-System Coordination. Inter-system coordination between MCP-connected services.
+
+**Critical boundary**: MARTIN and JARVIS have a hard wall between them. MARTIN never makes compliance calls. JARVIS never parses raw documents.
+
+### 9 Installed Skills — Auto-Routing
+
+Skills have hard-routed boundaries preventing cross-invocation. v2 skills take priority over v1. Read SKILL.md FIRST before executing. Conditions emails route through mortgage-underwriting-v2 Phase 5.
+
+**Mortgage Domain**:
+- `mortgage-underwriting-v2` → NOVA, APEX, JARVIS (triggers: underwrite, income, DTI, conditions, LOE, credit)
+- `loan-officer-strategic-tool-v2` → JARVIS (triggers: approval chances, DU, LP, pre-qual)
+- `refinance-payment-summary-v2` → NOVA (triggers: refi summary, payment comparison, savings)
+- `fha-condo-lookup` → ORACLE (triggers: FHA condo, HUD condo, SUA)
+- `title-tax-proration-worksheet` → ORACLE (triggers: tax proration, buyer credit, ALTA)
+- `bnpl-liability-review` → APEX (triggers: BNPL, Affirm, Klarna, Afterpay, Sezzle)
+- `refinance-closing-benefit` → JARVIS (triggers: cash to close, escrow refund, net out-of-pocket)
+- `post-closing-audit` → JARVIS (triggers: investor rejected, buyback demand, QC finding)
+
+**Intelligence Domain**:
+- `franchise-intelligence-report` → NOVA (triggers: franchise report, FDD, TheMachine3.0)
+
+**Cross-Invoke Boundaries** (NEVER cross-invoke):
+- mortgage-underwriting-v2 ← NEVER → loan-officer-strategic-tool-v2
+- loan-officer-strategic-tool-v2 ← NEVER → refinance-payment-summary-v2
+
+### 5 BrowserOS Workspaces
+
+- **Mortgage Operations** (DIEGO) — Daily pipeline, borrower comms, compliance, commission structure
+- **AgentyVault Engineering** (Engineering Expert) — React 19, Node 22, tRPC, Drizzle, strict TypeScript, Decimal.js
+- **Income and Credit** (NOVA + APEX) — All income types, agency citation rules, credit analysis
+- **Investigative Analysis** (BPR Analyst) — Bayesian methodology, forensic analysis, cold case work
+- **CRM and Lead Intelligence** (SCOUT) — Total Expert CRM, 809 records, referral partner outreach
+
+### COWORK-PROMPTS.md — 9 Prompt Categories (30+)
+
+1. Loan File Review (5+) → DIEGO, JARVIS
+2. Income Calculations (5+) → NOVA
+3. Credit Analysis (3+) → APEX
+4. Compliance Checks (3+) → ORACLE, JARVIS
+5. Client Communications (4+) → DIEGO
+6. Pipeline Management (3+) → DIEGO
+7. Document Processing (3+) → MARTIN, JARVIS
+8. Automation Setup (4+) → NEXUS, ATLAS
+9. Lead Gen (12) → SCOUT
+
+### Five-Layer Platform Ecosystem
+
+1. **NightVault** — Document intelligence and OCR (SPECTRAL TRIAD 3-pass pipeline)
+2. **AgentyVault** — Autonomous loan processing platform
+3. **BusinessCheckIQ** — Non-QM risk intelligence (FastAPI + React/Vite)
+4. **KM Technologies** — Lead generation engine
+5. **Command Center** — Operator dashboard orchestrating all layers
+
+### Connected Systems — MCP Bridge
+
+Monday.com (6 mortgage workflow boards), Google Calendar, Gmail, Notion (Intelligence Hub), GitHub (4 repos: nightvault-mortgage-ocr, agenty-layer-platform, agentyvault-mobileapp, nightvault-orchestrator-os), Railway, Total Expert CRM (809 records, 13-segment refinance strategy).
+
+### v7.0 Enforcement Rules
+
+**Agentic Execution**: Agentic loops use stop_reason not text parsing. Subagents have isolated context. 4-5 tools per agent max. 4 error categories: transient, validation, business, permission. Persistent case facts block is never summarised.
+
+**Workflow Orchestration**: Plan first for 3+ step tasks — specs upfront. STOP and re-plan if task goes sideways. Financial and compliance ops use programmatic hooks, not prompts. Subagents get one task each — offload research.
+
+**Quality Gates**: Self-improvement loop: tasks/lessons.md updated after corrections, reviewed at session start. Verify before done: prove it works, diff main, run tests, staff-engineer bar. Demand elegance on non-trivial work, skip for simple fixes. Autonomous bug fixing: just fix it, zero user context-switching, fix CI unprompted.
+
+**Task Management**: Plan first with tasks/todo.md, verify plan before coding. Track progress, explain changes, document results, capture lessons. Simplicity first: minimal code impact, no temporary fixes, root causes only. Minimal impact: touch only what is necessary. Exhaustive switch statements, parameterized queries only.
+
+---
+
 ## Custom Claude Skills
 
-The project includes 4 custom skills for Claude:
+The project includes 4 custom skills for Claude (plus 9 installed in Cowork):
 
 `loan-officer-strategic-tool` — Reverse-engineered DU/LP scoring algorithms for mortgage approval probability analysis. Run via Python scripts in the skill's scripts/ directory.
 
