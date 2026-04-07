@@ -4,6 +4,9 @@ version = "1.0.0"
 description = "24/7 Autonomous AI Operating System for Mortgage Lending"
 requires-python = ">=3.11"
 
+[project.scripts]
+badclaude = "tools.badclaude:main"
+
 [tool.ruff]
 target-version = "py311"
 line-length = 120
